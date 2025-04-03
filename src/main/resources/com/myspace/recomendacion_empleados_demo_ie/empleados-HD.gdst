@@ -61,7 +61,7 @@
     <org.drools.workbench.models.guided.dtable.shared.model.BRLConditionColumn>
       <hideColumn>true</hideColumn>
       <width>-1</width>
-      <header>Recomendación empleados</header>
+      <header>RecomendacionEmpleados</header>
       <constraintValueType>1</constraintValueType>
       <parameters/>
       <definition>
@@ -79,7 +79,7 @@
           </typedDefaultValue>
           <hideColumn>true</hideColumn>
           <width>100</width>
-          <header>Recomendación empleados</header>
+          <header>RecomendacionEmpleados</header>
           <constraintValueType>1</constraintValueType>
           <fieldType>Boolean</fieldType>
           <parameters/>
