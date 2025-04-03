@@ -76,7 +76,7 @@
             <isOtherwise>false</isOtherwise>
           </typedDefaultValue>
           <hideColumn>false</hideColumn>
-          <width>167</width>
+          <width>100</width>
           <header>Hora Inicial (incluida)</header>
           <constraintValueType>1</constraintValueType>
           <fieldType>Object</fieldType>
@@ -122,7 +122,7 @@
       <parameters/>
       <definition>
         <org.drools.workbench.models.datamodel.rule.FreeFormLine>
-          <text>eval(dr.CalculationDateTime().toLocalTime() &lt; LocalTime.parse(&quot;@{&lt;}&quot;))</text>
+          <text>eval(er.CalculationDateTime().toLocalTime() &lt; LocalTime.parse(&quot;@{&lt;}&quot;))</text>
         </org.drools.workbench.models.datamodel.rule.FreeFormLine>
       </definition>
       <childColumns>
