@@ -1,11 +1,13 @@
-<?xml version="1.0" encoding="UTF-8"?><project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<?xml version="1.0" encoding="UTF-8"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
-  <artifactId>base-kie-project</artifactId>
-  <groupId>org.kie.templates</groupId>
-  <version>1.0.0</version>
+  <groupId>com.myspace</groupId>
+  <artifactId>recomendacion-empleados-demo-ie</artifactId>
+  <version>1.0.0-SNAPSHOT</version>
   <packaging>kjar</packaging>
-  <name>base-kie-project</name>
-  <description>Base KIE project</description>
+  <name>recomendacion-empleados-demo-ie</name>
+  <description></description>
   <dependencies>
     <dependency>
       <groupId>org.kie</groupId>
