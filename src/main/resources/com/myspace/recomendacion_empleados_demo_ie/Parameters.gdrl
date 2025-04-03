@@ -1,0 +1,3 @@
+package com.myspace.recomendacion_empleados_demo_ie;
+
+global com.myspace.recomendacion_empleados_demo_ie.EmployeeRecommendation employeeRecommendation;

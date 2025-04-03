@@ -1,0 +1,9 @@
+package com.myspace.recomendacion_empleados_demo_ie;
+
+rule "init.inicializacion-salida"
+salience 100
+    when
+    then
+        employeeRecommendation = new EmployeeRecommendation();
+        insert(employeeRecommendation);
+end

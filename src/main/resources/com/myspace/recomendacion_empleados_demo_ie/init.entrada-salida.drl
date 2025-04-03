@@ -1,0 +1,11 @@
+package com.myspace.recomendacion_empleados_demo_ie;
+
+rule "init.entrada-salida"
+salience 95
+    when
+        restaurantData : RestaurantData()
+        empRecommendation : EmployeeRecommendation()
+    then
+        empRecommendation.setCompanyId(restaurantData.getCompanyId());
+        empRecommendation.setRestaurantId(restaurantData.getRestaurantId());
+end
