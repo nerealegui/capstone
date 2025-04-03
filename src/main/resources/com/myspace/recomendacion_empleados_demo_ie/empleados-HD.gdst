@@ -233,7 +233,7 @@
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>14:00:00</valueString>
+        <valueString>14:00</valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
@@ -244,7 +244,7 @@
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>15:00:00</valueString>
+        <valueString>15:00</valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
@@ -283,7 +283,7 @@
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>21:00:00</valueString>
+        <valueString>21:00</valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
@@ -294,7 +294,7 @@
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>22:00:00</valueString>
+        <valueString>22:00</valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
@@ -333,7 +333,7 @@
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>14:00:00</valueString>
+        <valueString>14:00</valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
@@ -344,7 +344,7 @@
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>15:00:00</valueString>
+        <valueString>15:00</valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
@@ -383,7 +383,7 @@
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>21:00:00</valueString>
+        <valueString>21:00</valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
@@ -394,7 +394,7 @@
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>22:00:00</valueString>
+        <valueString>22:00</valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
@@ -433,7 +433,7 @@
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>14:00:00</valueString>
+        <valueString>14:00</valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
@@ -444,7 +444,7 @@
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>15:00:00</valueString>
+        <valueString>15:00</valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
@@ -483,7 +483,7 @@
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>21:00:00</valueString>
+        <valueString>21:00</valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
@@ -494,7 +494,7 @@
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>22:00:00</valueString>
+        <valueString>22:00</valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
