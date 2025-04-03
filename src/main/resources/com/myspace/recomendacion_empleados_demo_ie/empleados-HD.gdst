@@ -123,7 +123,7 @@
       <header>Empleados HD</header>
       <definition>
         <org.drools.workbench.models.datamodel.rule.FreeFormLine>
-          <text>er.setHomeDeliveryEmployees(@{Empleados HD})</text>
+          <text>er.setHomeDeliveryEmployees(@{})</text>
         </org.drools.workbench.models.datamodel.rule.FreeFormLine>
       </definition>
       <childColumns>
@@ -136,7 +136,7 @@
           <hideColumn>false</hideColumn>
           <width>100</width>
           <header>Empleados HD</header>
-          <varName>Empleados HD</varName>
+          <varName></varName>
           <fieldType>Object</fieldType>
         </org.drools.workbench.models.guided.dtable.shared.model.BRLActionVariableColumn>
       </childColumns>
