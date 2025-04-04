@@ -93,7 +93,7 @@
       <parameters/>
       <definition>
         <org.drools.workbench.models.datamodel.rule.FreeFormLine>
-          <text>eval(rd.getCalculationDateTime().plusMinutes((-(@{&gt;=})*60)) &gt;= rd.getCalculationDateTime())</text>
+          <text>eval(rd.getCalculationDateTime().toLocalTime().plusMinutes((-(@{&gt;=})*60)) &gt;= rd.getCalculationDateTime().toLocalTime())</text>
         </org.drools.workbench.models.datamodel.rule.FreeFormLine>
       </definition>
       <childColumns>
@@ -121,7 +121,7 @@
       <parameters/>
       <definition>
         <org.drools.workbench.models.datamodel.rule.FreeFormLine>
-          <text>eval(rd.getCalculationDateTime().plusMinutes((-(@{&lt;})*60)) &gt;= rd.getCalculationDateTime())</text>
+          <text>eval(rd.getCalculationDateTime().toLocalTime().plusMinutes((-(@{&lt;})*60)) &gt;= rd.getCalculationDateTime().toLocalTime())</text>
         </org.drools.workbench.models.datamodel.rule.FreeFormLine>
       </definition>
       <childColumns>
@@ -216,7 +216,7 @@
   <imports>
     <imports>
       <org.kie.soup.project.datamodel.imports.Import>
-        <type>java.time.LocalDateTime</type>
+        <type>java.time.LocalTime</type>
       </org.kie.soup.project.datamodel.imports.Import>
     </imports>
   </imports>
