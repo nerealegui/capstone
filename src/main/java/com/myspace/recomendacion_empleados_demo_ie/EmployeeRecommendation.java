@@ -78,6 +78,14 @@ public class EmployeeRecommendation implements java.io.Serializable {
 	public void addRestaurantExtraEmployees(int restaurantExtraEmployees){
 	    this.restaurantExtraEmployees += restaurantExtraEmployees;
 	}
+	
+	public void addLocation(String key) {
+		if (!locationBreakdown.containsKey(key)) {
+			mapNeeds.put(key, 1);
+		} else {
+			locationBreakdown.put(key, locationBreakdown.get(key) + 1);
+		}
+	}
 
 	public EmployeeRecommendation(java.lang.String calculationDateTime,
 			java.lang.Integer restaurantEmployees,
