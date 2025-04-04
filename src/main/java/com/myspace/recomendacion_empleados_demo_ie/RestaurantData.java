@@ -12,6 +12,7 @@ public class RestaurantData implements java.io.Serializable {
 	private java.lang.Boolean hasAutoking;
 	private double totalExpectedSales;
 	private double timeSlotExpectedSales;
+	private double previousDaySales;
 	private java.time.LocalDateTime calculationDateTime;
 	private java.time.LocalDateTime openLocalDateTime;
 	private java.time.LocalDateTime closeLocalDateTime;
@@ -53,6 +54,14 @@ public class RestaurantData implements java.io.Serializable {
 
 	public void setTimeSlotExpectedSales(double timeSlotExpectedSales) {
 		this.timeSlotExpectedSales = timeSlotExpectedSales;
+	}
+	
+	public double getPreviousDaySales() {
+		return this.previousDaySales;
+	}
+
+	public void setPpreviousDaySales(double previousDaySales) {
+		this.previousDaySales = previousDaySales;
 	}
 
 	public java.time.LocalDateTime getCalculationDateTime() {
