@@ -305,7 +305,7 @@
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>ENTREGAS</valueString>
+        <valueString>AUTOS</valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
