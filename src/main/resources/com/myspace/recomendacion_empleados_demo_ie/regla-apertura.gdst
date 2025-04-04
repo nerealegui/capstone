@@ -123,7 +123,7 @@
       <parameters/>
       <definition>
         <org.drools.workbench.models.datamodel.rule.FreeFormLine>
-          <text>eval(rd.getCalculationDateTime().toLocalTime().plusMinutes((-(@{&gt;=})*60)) &gt;= rd.getCalculationDateTime().toLocalTime())</text>
+          <text>eval(rd.getCalculationDateTime().toLocalTime().plusMinutes((-(@{&gt;=})*60)) &gt;= rd.getOpenLocalDateTime().toLocalTime())</text>
         </org.drools.workbench.models.datamodel.rule.FreeFormLine>
       </definition>
       <childColumns>
@@ -151,7 +151,7 @@
       <parameters/>
       <definition>
         <org.drools.workbench.models.datamodel.rule.FreeFormLine>
-          <text>eval(rd.getCalculationDateTime().toLocalTime().plusMinutes((-(@{&lt;})*60)) &lt;rd.getCalculationDateTime().toLocalTime())</text>
+          <text>eval(rd.getCalculationDateTime().toLocalTime().plusMinutes((-(@{&lt;})*60)) &lt;rd.getOpenLocalDateTime().toLocalTime())</text>
         </org.drools.workbench.models.datamodel.rule.FreeFormLine>
       </definition>
       <childColumns>
