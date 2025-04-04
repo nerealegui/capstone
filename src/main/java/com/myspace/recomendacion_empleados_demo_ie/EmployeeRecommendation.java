@@ -95,13 +95,15 @@ public class EmployeeRecommendation implements java.io.Serializable {
 			java.lang.Integer restaurantEmployees,
 			java.lang.Integer restaurantExtraEmployees,
 			java.lang.Integer homeDeliveryEmployees,
-			java.lang.String companyId, java.lang.String restaurantId) {
+			java.lang.String companyId, java.lang.String restaurantId,
+			java.util.Map<String, Integer> locationBreakdown) {
 		this.calculationDateTime = calculationDateTime;
 		this.restaurantEmployees = restaurantEmployees;
 		this.restaurantExtraEmployees = restaurantExtraEmployees;
 		this.homeDeliveryEmployees = homeDeliveryEmployees;
 		this.companyId = companyId;
 		this.restaurantId = restaurantId;
+		this.locationBreakdown = locationBreakdown;
 	}
 
 }
