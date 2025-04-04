@@ -93,7 +93,7 @@
     <org.drools.workbench.models.guided.dtable.shared.model.BRLActionColumn>
       <hideColumn>false</hideColumn>
       <width>-1</width>
-      <header>Puesto</header>
+      <header>Empleados</header>
       <definition>
         <org.drools.workbench.models.datamodel.rule.FreeFormLine>
           <text>er.addLocation(&quot;@{Puesto}&quot;)</text>
@@ -108,7 +108,7 @@
           </typedDefaultValue>
           <hideColumn>false</hideColumn>
           <width>100</width>
-          <header>Puesto</header>
+          <header>Empleados</header>
           <varName>Puesto</varName>
           <fieldType>Object</fieldType>
         </org.drools.workbench.models.guided.dtable.shared.model.BRLActionVariableColumn>
