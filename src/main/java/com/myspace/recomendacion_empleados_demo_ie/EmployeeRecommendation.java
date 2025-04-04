@@ -86,7 +86,7 @@ public class EmployeeRecommendation implements java.io.Serializable {
 
     public void addLocation(String key) {
 		if (!locationBreakdown.containsKey(key)) {
-			mapNeeds.put(key, 1);
+			locationBreakdown.put(key, 1);
 		} else {
 			locationBreakdown.put(key, locationBreakdown.get(key) + 1);
 		}
