@@ -13,7 +13,6 @@ public class EmployeeRecommendation implements java.io.Serializable {
 	private java.lang.Integer restaurantEmployees = 0;
 	private java.lang.Integer restaurantExtraEmployees = 0;
 	private java.lang.Integer homeDeliveryEmployees = 0;
-	private java.util.Map<String, Integer> locationBreakdown = new  java.util.HashMap();
 
 	private java.lang.String companyId;
 
@@ -83,27 +82,19 @@ public class EmployeeRecommendation implements java.io.Serializable {
 	    this.restaurantExtraEmployees += restaurantExtraEmployees;
 	}
 	
-	public void addLocation(String key) {
-		if (!locationBreakdown.containsKey(key)) {
-			mapNeeds.put(key, 1);
-		} else {
-			locationBreakdown.put(key, locationBreakdown.get(key) + 1);
-		}
-	}
+
 
 	public EmployeeRecommendation(java.lang.String calculationDateTime,
 			java.lang.Integer restaurantEmployees,
 			java.lang.Integer restaurantExtraEmployees,
 			java.lang.Integer homeDeliveryEmployees,
-			java.lang.String companyId, java.lang.String restaurantId,
-			java.util.Map<String, Integer> locationBreakdown) {
+			java.lang.String companyId, java.lang.String restaurantId) {
 		this.calculationDateTime = calculationDateTime;
 		this.restaurantEmployees = restaurantEmployees;
 		this.restaurantExtraEmployees = restaurantExtraEmployees;
 		this.homeDeliveryEmployees = homeDeliveryEmployees;
 		this.companyId = companyId;
 		this.restaurantId = restaurantId;
-		this.locationBreakdown = locationBreakdown;
 	}
 
 }
