@@ -134,7 +134,7 @@
             <isOtherwise>false</isOtherwise>
           </typedDefaultValue>
           <hideColumn>false</hideColumn>
-          <width>100</width>
+          <width>176</width>
           <header>Horas hasta apertura (incluida)</header>
           <constraintValueType>1</constraintValueType>
           <fieldType>Object</fieldType>
@@ -162,7 +162,7 @@
             <isOtherwise>false</isOtherwise>
           </typedDefaultValue>
           <hideColumn>false</hideColumn>
-          <width>100</width>
+          <width>251</width>
           <header>Horas hasta apertura (excluida)</header>
           <constraintValueType>1</constraintValueType>
           <fieldType>Object</fieldType>
@@ -278,12 +278,12 @@
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>3</valueString>
+        <valueString>-3</valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>2.5</valueString>
+        <valueString>-2.5</valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
@@ -334,12 +334,12 @@
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>2.5</valueString>
+        <valueString>-2.5</valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>2</valueString>
+        <valueString>-2</valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
@@ -390,12 +390,12 @@
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>2</valueString>
+        <valueString>-2</valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>1.5</valueString>
+        <valueString>-1.5</valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
@@ -446,12 +446,12 @@
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>1.5</valueString>
+        <valueString>-1.5</valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>1</valueString>
+        <valueString>-1</valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
@@ -502,12 +502,12 @@
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>1</valueString>
+        <valueString>-1</valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>0.5</valueString>
+        <valueString>-0.5</valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
@@ -558,12 +558,12 @@
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>0.5</valueString>
+        <valueString>-0.5</valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>0</valueString>
+        <valueString>-0</valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
