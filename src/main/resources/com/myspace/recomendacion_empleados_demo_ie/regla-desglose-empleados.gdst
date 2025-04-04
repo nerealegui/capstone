@@ -1,5 +1,5 @@
 <decision-table52>
-  <tableName>desglose-empleados</tableName>
+  <tableName>regla-desglose-empleados</tableName>
   <rowNumberCol>
     <hideColumn>false</hideColumn>
     <width>-1</width>
