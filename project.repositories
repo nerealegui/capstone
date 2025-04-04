@@ -3,17 +3,25 @@
     <repository>
       <include>true</include>
       <metadata>
-        <id>central</id>
-        <url>https://artifactory.prosegur.com/artifactory/mvn-virtual-newton-odm-rel</url>
+        <id>local</id>
+        <url>C:/maven/localrepository</url>
+        <source>LOCAL</source>
+      </metadata>
+    </repository>
+    <repository>
+      <include>true</include>
+      <metadata>
+        <id>snapshots</id>
+        <url>https://artifactory.prosegur.com/artifactory/plugins-release</url>
         <source>SETTINGS</source>
       </metadata>
     </repository>
     <repository>
       <include>true</include>
       <metadata>
-        <id>local</id>
-        <url>C:/maven/localrepository</url>
-        <source>LOCAL</source>
+        <id>central</id>
+        <url>https://artifactory.prosegur.com/artifactory/plugins-release</url>
+        <source>SETTINGS</source>
       </metadata>
     </repository>
     <repository>
@@ -28,15 +36,7 @@
       <include>true</include>
       <metadata>
         <id>central</id>
-        <url>https://artifactory.prosegur.com/artifactory/plugins-release</url>
-        <source>SETTINGS</source>
-      </metadata>
-    </repository>
-    <repository>
-      <include>true</include>
-      <metadata>
-        <id>snapshots</id>
-        <url>https://artifactory.prosegur.com/artifactory/plugins-release</url>
+        <url>https://artifactory.prosegur.com/artifactory/mvn-virtual-newton-odm-rel</url>
         <source>SETTINGS</source>
       </metadata>
     </repository>

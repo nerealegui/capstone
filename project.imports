@@ -25,6 +25,9 @@
       <import>
         <type>java.util.ArrayList</type>
       </import>
+      <import>
+        <type>java.time.LocalTime</type>
+      </import>
     </imports>
   </imports>
   <version>1.0</version>
