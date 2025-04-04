@@ -21,7 +21,7 @@
         <dataType>NUMERIC_INTEGER</dataType>
         <isOtherwise>false</isOtherwise>
       </typedDefaultValue>
-      <hideColumn>false</hideColumn>
+      <hideColumn>true</hideColumn>
       <width>130</width>
       <attribute>salience</attribute>
       <reverseOrder>false</reverseOrder>
@@ -30,7 +30,7 @@
   </attributeCols>
   <conditionPatterns>
     <org.drools.workbench.models.guided.dtable.shared.model.BRLConditionColumn>
-      <hideColumn>false</hideColumn>
+      <hideColumn>true</hideColumn>
       <width>-1</width>
       <header>RecomendacionEmpleados</header>
       <constraintValueType>1</constraintValueType>
@@ -48,8 +48,8 @@
             <dataType>BOOLEAN</dataType>
             <isOtherwise>false</isOtherwise>
           </typedDefaultValue>
-          <hideColumn>false</hideColumn>
-          <width>206</width>
+          <hideColumn>true</hideColumn>
+          <width>100</width>
           <header>RecomendacionEmpleados</header>
           <constraintValueType>1</constraintValueType>
           <fieldType>Boolean</fieldType>
