@@ -69,8 +69,6 @@ public class EmployeeRecommendation implements java.io.Serializable {
 	public void setRestaurantId(java.lang.String restaurantId) {
 		this.restaurantId = restaurantId;
 	}
-
-	}
 	
 	public void addRestaurantEmployees(int restaurantEmployees){
 	    this.restaurantEmployees += restaurantEmployees;
@@ -79,8 +77,6 @@ public class EmployeeRecommendation implements java.io.Serializable {
 	public void addRestaurantExtraEmployees(int restaurantExtraEmployees){
 	    this.restaurantExtraEmployees += restaurantExtraEmployees;
 	}
-	
-
 
 	public EmployeeRecommendation(java.lang.String calculationDateTime,
 			java.lang.Integer restaurantEmployees,
