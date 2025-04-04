@@ -525,7 +525,7 @@
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>ENTREGAS</valueString>
+        <valueString>FREIDORAS</valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
@@ -661,7 +661,7 @@
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>ENTREGAS</valueString>
+        <valueString>FREIDORAS</valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
