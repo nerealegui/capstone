@@ -121,23 +121,18 @@
       <parameters/>
       <definition>
         <org.drools.workbench.models.datamodel.rule.FreeFormLine>
-          <text>eval(rd.getCalculationDateTime().plusMinutes((-(@{&gt;=})*60)) &gt;= rd.getCalculationDateTime())</text>
+          <text>eval(rd.getCalculationDateTime().plusMinutes((-(@{&lt;})*60)) &gt;= rd.getCalculationDateTime())</text>
         </org.drools.workbench.models.datamodel.rule.FreeFormLine>
       </definition>
       <childColumns>
         <org.drools.workbench.models.guided.dtable.shared.model.BRLConditionVariableColumn>
-          <typedDefaultValue>
-            <valueString></valueString>
-            <dataType>STRING</dataType>
-            <isOtherwise>false</isOtherwise>
-          </typedDefaultValue>
           <hideColumn>false</hideColumn>
-          <width>378</width>
+          <width>100</width>
           <header>Horas hasta apertura (excluida)</header>
           <constraintValueType>1</constraintValueType>
           <fieldType>Object</fieldType>
           <parameters/>
-          <varName>&gt;=</varName>
+          <varName>&lt;</varName>
         </org.drools.workbench.models.guided.dtable.shared.model.BRLConditionVariableColumn>
       </childColumns>
     </org.drools.workbench.models.guided.dtable.shared.model.BRLConditionColumn>
@@ -219,7 +214,11 @@
     <entries/>
   </auditLog>
   <imports>
-    <imports/>
+    <imports>
+      <org.kie.soup.project.datamodel.imports.Import>
+        <type>java.time.LocalDateTime</type>
+      </org.kie.soup.project.datamodel.imports.Import>
+    </imports>
   </imports>
   <packageName>com.myspace.recomendacion_empleados_demo_ie</packageName>
   <version>739</version>
@@ -266,7 +265,7 @@
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>2.5</valueString>
+        <valueString></valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
@@ -322,7 +321,7 @@
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>2</valueString>
+        <valueString></valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
@@ -378,7 +377,7 @@
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>1.5</valueString>
+        <valueString></valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
@@ -434,7 +433,7 @@
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>1</valueString>
+        <valueString></valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
@@ -490,7 +489,7 @@
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>0.5</valueString>
+        <valueString></valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
@@ -546,7 +545,7 @@
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>0</valueString>
+        <valueString></valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
