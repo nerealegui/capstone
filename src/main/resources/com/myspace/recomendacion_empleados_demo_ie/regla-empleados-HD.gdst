@@ -244,7 +244,7 @@
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>empleados HD</valueString>
+        <valueString></valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
@@ -300,7 +300,7 @@
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>empleados HD</valueString>
+        <valueString></valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
@@ -356,7 +356,7 @@
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>empleados HD</valueString>
+        <valueString></valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
