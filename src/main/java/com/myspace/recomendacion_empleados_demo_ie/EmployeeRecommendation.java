@@ -96,5 +96,12 @@ public class EmployeeRecommendation implements java.io.Serializable {
 		this.companyId = companyId;
 		this.restaurantId = restaurantId;
 	}
+	public void addLocation(String key) {
+		if (!locationBreakdown.containsKey(key)) {
+			mapNeeds.put(key, 1);
+		} else {
+			locationBreakdown.put(key, locationBreakdown.get(key) + 1);
+		}
+	}
 
 }
