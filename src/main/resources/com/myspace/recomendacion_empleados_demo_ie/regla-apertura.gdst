@@ -77,7 +77,7 @@
             <isOtherwise>false</isOtherwise>
           </typedDefaultValue>
           <hideColumn>false</hideColumn>
-          <width>100</width>
+          <width>248</width>
           <header>Ventas dia anterior</header>
           <constraintValueType>1</constraintValueType>
           <fieldType>Object</fieldType>
@@ -339,7 +339,7 @@
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>1</valueString>
+        <valueString>3</valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
@@ -395,7 +395,7 @@
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>1</valueString>
+        <valueString>3</valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
@@ -507,7 +507,7 @@
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>3</valueString>
+        <valueString>1</valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
@@ -563,7 +563,7 @@
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>3</valueString>
+        <valueString>1</valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
