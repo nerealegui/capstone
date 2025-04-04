@@ -13,7 +13,7 @@ public class EmployeeRecommendation implements java.io.Serializable {
 	private java.lang.Integer restaurantEmployees = 0;
 	private java.lang.Integer restaurantExtraEmployees = 0;
 	private java.lang.Integer homeDeliveryEmployees = 0;
-	private java.util.Map locationBreakdown = new  java.util.HashMap<String,Integer>();
+	private java.util.Map<String, Integer> locationBreakdown = new  java.util.HashMap();
 
 	private java.lang.String companyId;
 
