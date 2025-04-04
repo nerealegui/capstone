@@ -21,7 +21,7 @@
         <dataType>NUMERIC_INTEGER</dataType>
         <isOtherwise>false</isOtherwise>
       </typedDefaultValue>
-      <hideColumn>false</hideColumn>
+      <hideColumn>true</hideColumn>
       <width>130</width>
       <attribute>salience</attribute>
       <reverseOrder>false</reverseOrder>
