@@ -71,7 +71,7 @@
           </typedDefaultValue>
           <hideColumn>false</hideColumn>
           <width>244</width>
-          <header>Ventar por franja igual o mayores a</header>
+          <header>Ventas por franja igual o mayores a</header>
           <constraintValueType>1</constraintValueType>
           <factField>timeSlotExpectedSales</factField>
           <fieldType>Double</fieldType>
