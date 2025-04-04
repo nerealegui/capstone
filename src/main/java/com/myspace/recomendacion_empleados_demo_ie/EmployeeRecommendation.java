@@ -84,6 +84,14 @@ public class EmployeeRecommendation implements java.io.Serializable {
 	    this.restaurantExtraEmployees += restaurantExtraEmployees;
 	}
 
+    public void addLocation(String key) {
+		if (!locationBreakdown.containsKey(key)) {
+			mapNeeds.put(key, 1);
+		} else {
+			locationBreakdown.put(key, locationBreakdown.get(key) + 1);
+		}
+	}
+
 	public EmployeeRecommendation(java.lang.String calculationDateTime,
 			java.lang.Integer restaurantEmployees,
 			java.lang.Integer restaurantExtraEmployees,
@@ -96,12 +104,6 @@ public class EmployeeRecommendation implements java.io.Serializable {
 		this.companyId = companyId;
 		this.restaurantId = restaurantId;
 	}
-	public void addLocation(String key) {
-		if (!locationBreakdown.containsKey(key)) {
-			mapNeeds.put(key, 1);
-		} else {
-			locationBreakdown.put(key, locationBreakdown.get(key) + 1);
-		}
-	}
+	
 
 }
