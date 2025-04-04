@@ -71,6 +71,10 @@ public class EmployeeRecommendation implements java.io.Serializable {
 		this.restaurantId = restaurantId;
 	}
 	
+	public Map<String, Integer> getLocationBreakdown(){
+	    return this.locationBreakdown;
+	}
+	
 	public void addRestaurantEmployees(int restaurantEmployees){
 	    this.restaurantEmployees += restaurantEmployees;
 	}
