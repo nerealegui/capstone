@@ -89,7 +89,7 @@
       <entryPointName></entryPointName>
     </Pattern52>
     <org.drools.workbench.models.guided.dtable.shared.model.BRLConditionColumn>
-      <hideColumn>false</hideColumn>
+      <hideColumn>true</hideColumn>
       <width>-1</width>
       <header>Tramo apertura</header>
       <constraintValueType>1</constraintValueType>
@@ -106,7 +106,7 @@
             <dataType>BOOLEAN</dataType>
             <isOtherwise>false</isOtherwise>
           </typedDefaultValue>
-          <hideColumn>false</hideColumn>
+          <hideColumn>true</hideColumn>
           <width>100</width>
           <header>Tramo apertura</header>
           <constraintValueType>1</constraintValueType>
