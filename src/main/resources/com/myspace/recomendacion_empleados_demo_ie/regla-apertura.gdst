@@ -200,7 +200,7 @@
     <org.drools.workbench.models.guided.dtable.shared.model.BRLActionColumn>
       <hideColumn>true</hideColumn>
       <width>-1</width>
-      <header>apertura</header>
+      <header>Tramo apertura</header>
       <definition>
         <org.drools.workbench.models.datamodel.rule.FreeFormLine>
           <text>er.addRuleExecuted(&quot;apertura&quot;)</text>
@@ -216,7 +216,7 @@
           </typedDefaultValue>
           <hideColumn>true</hideColumn>
           <width>100</width>
-          <header>apertura</header>
+          <header>Tramo apertura</header>
           <varName></varName>
           <fieldType>Boolean</fieldType>
         </org.drools.workbench.models.guided.dtable.shared.model.BRLActionVariableColumn>
