@@ -96,13 +96,12 @@
       <parameters/>
       <definition>
         <org.drools.workbench.models.datamodel.rule.FreeFormLine>
-          <text>er.containsRuleExecuted(&quot;apertura&quot;)</text>
+          <text>eval(er.containsRuleExecuted(&quot;apertura&quot;))</text>
         </org.drools.workbench.models.datamodel.rule.FreeFormLine>
       </definition>
       <childColumns>
         <org.drools.workbench.models.guided.dtable.shared.model.BRLConditionVariableColumn>
           <typedDefaultValue>
-            <valueBoolean>true</valueBoolean>
             <valueString></valueString>
             <dataType>BOOLEAN</dataType>
             <isOtherwise>false</isOtherwise>
