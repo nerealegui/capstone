@@ -162,7 +162,7 @@
     <org.drools.workbench.models.guided.dtable.shared.model.BRLActionColumn>
       <hideColumn>false</hideColumn>
       <width>-1</width>
-      <header>cierre</header>
+      <header>Tramo cierre</header>
       <definition>
         <org.drools.workbench.models.datamodel.rule.FreeFormLine>
           <text>er.addRuleExecuted(&quot;cierre&quot;)</text>
@@ -178,7 +178,7 @@
           </typedDefaultValue>
           <hideColumn>false</hideColumn>
           <width>100</width>
-          <header>cierre</header>
+          <header>Tramo cierre</header>
           <varName></varName>
           <fieldType>Boolean</fieldType>
         </org.drools.workbench.models.guided.dtable.shared.model.BRLActionVariableColumn>
