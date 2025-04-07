@@ -109,7 +109,10 @@
       <parameters/>
       <definition>
         <org.drools.workbench.models.datamodel.rule.FreeFormLine>
-          <text>eval((dr.getCalculationDateTime().isAfter(dr.getOpenLocalDateTime()) || dr.getCalculationDateTime().equals(dr.getOpenLocalDateTime())) &amp;&amp; dr.getCalculationDateTime().isBefore(dr.getCloseLocalDateTime()))</text>
+          <text>rd : RestaurantData()</text>
+        </org.drools.workbench.models.datamodel.rule.FreeFormLine>
+        <org.drools.workbench.models.datamodel.rule.FreeFormLine>
+          <text>eval((rd.getCalculationDateTime().isAfter(rd.getOpenLocalDateTime()) || rd.getCalculationDateTime().equals(rd.getOpenLocalDateTime())) &amp;&amp; rd.getCalculationDateTime().isBefore(rd.getCloseLocalDateTime()))</text>
         </org.drools.workbench.models.datamodel.rule.FreeFormLine>
       </definition>
       <childColumns>
