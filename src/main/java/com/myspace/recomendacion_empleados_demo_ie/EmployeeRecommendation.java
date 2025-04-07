@@ -20,7 +20,7 @@ public class EmployeeRecommendation implements java.io.Serializable {
 
 	private java.lang.String restaurantId;
 
-	private java.util.List<java.lang.String> rulesExecuted;
+	private java.util.List<java.lang.String> rulesExecuted = new ArrayList<>();
 
 	public EmployeeRecommendation() {
 	}
@@ -100,6 +100,14 @@ public class EmployeeRecommendation implements java.io.Serializable {
 
 	public void setRulesExecuted(java.util.List<java.lang.String> rulesExecuted) {
 		this.rulesExecuted = rulesExecuted;
+	}
+	
+	public void addRuleExecuted(String rule){
+	    this.rulesExecuted.add(rule);
+	}
+	
+	public boolean containsRuleExecuted(String rule){
+	    return this.rulesExecuted.contains(rule);
 	}
 
 	public EmployeeRecommendation(java.lang.String calculationDateTime,
