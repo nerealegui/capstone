@@ -109,7 +109,7 @@
       <parameters/>
       <definition>
         <org.drools.workbench.models.datamodel.rule.FreeFormLine>
-          <text>	eval((dr.getCalculationDateTime().isAfter(dr.getOpenLocalDateTime()) || dr.getCalculationDateTime().equals(dr.getOpenLocalDateTime())) &amp;&amp; dr.getCalculationDateTime().isBefore(dr.getCloseLocalDateTime()))</text>
+          <text>eval((dr.getCalculationDateTime().isAfter(dr.getOpenLocalDateTime()) || dr.getCalculationDateTime().equals(dr.getOpenLocalDateTime())) &amp;&amp; dr.getCalculationDateTime().isBefore(dr.getCloseLocalDateTime()))</text>
         </org.drools.workbench.models.datamodel.rule.FreeFormLine>
       </definition>
       <childColumns>
