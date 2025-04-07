@@ -1,5 +1,5 @@
 <decision-table52>
-  <tableName>desglose-apertura</tableName>
+  <tableName>regla-desglose-apertura</tableName>
   <rowNumberCol>
     <hideColumn>false</hideColumn>
     <width>50</width>
