@@ -265,7 +265,7 @@
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>CAJA</valueString>
+        <valueString>AUTO</valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
@@ -305,7 +305,7 @@
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>AUTO</valueString>
+        <valueString>CAJA</valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
@@ -625,7 +625,7 @@
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>FREIDORAS</valueString>
+        <valueString>MESA</valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
