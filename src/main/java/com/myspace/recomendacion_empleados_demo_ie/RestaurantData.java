@@ -22,6 +22,8 @@ public class RestaurantData implements java.io.Serializable {
 
 	private double previousDaySales;
 
+	private java.lang.String distanceHD;
+
 	public RestaurantData() {
 	}
 
@@ -110,6 +112,14 @@ public class RestaurantData implements java.io.Serializable {
 		this.previousDaySales = previousDaySales;
 	}
 
+	public java.lang.String getDistanceHD() {
+		return this.distanceHD;
+	}
+
+	public void setDistanceHD(java.lang.String distanceHD) {
+		this.distanceHD = distanceHD;
+	}
+
 	public RestaurantData(java.lang.String restaurantSize,
 			java.lang.Boolean hasAutoking, double totalExpectedSales,
 			double timeSlotExpectedSales,
@@ -117,7 +127,7 @@ public class RestaurantData implements java.io.Serializable {
 			java.time.LocalDateTime openLocalDateTime,
 			java.time.LocalDateTime closeLocalDateTime,
 			java.lang.String companyId, java.lang.String restaurantId,
-			double previousDaySales) {
+			double previousDaySales, java.lang.String distanceHD) {
 		this.restaurantSize = restaurantSize;
 		this.hasAutoking = hasAutoking;
 		this.totalExpectedSales = totalExpectedSales;
@@ -128,6 +138,7 @@ public class RestaurantData implements java.io.Serializable {
 		this.companyId = companyId;
 		this.restaurantId = restaurantId;
 		this.previousDaySales = previousDaySales;
+		this.distanceHD = distanceHD;
 	}
 
 }
