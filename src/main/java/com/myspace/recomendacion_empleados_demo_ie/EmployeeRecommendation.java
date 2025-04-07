@@ -20,7 +20,7 @@ public class EmployeeRecommendation implements java.io.Serializable {
 
 	private java.lang.String restaurantId;
 
-	private java.util.List<java.lang.String> rulesExecuted = new ArrayList<>();
+	private java.util.List<java.lang.String> rulesExecuted = new java.util.ArrayList<>();
 
 	public EmployeeRecommendation() {
 	}
