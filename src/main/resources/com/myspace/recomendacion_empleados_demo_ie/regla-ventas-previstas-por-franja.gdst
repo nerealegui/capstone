@@ -111,9 +111,6 @@
         <org.drools.workbench.models.datamodel.rule.FreeFormLine>
           <text>rd : RestaurantData</text>
         </org.drools.workbench.models.datamodel.rule.FreeFormLine>
-        <org.drools.workbench.models.datamodel.rule.FreeFormLine>
-          <text>eval((rd.getCalculationDateTime().isAfter(rd.getOpenLocalDateTime()) || rd.getCalculationDateTime().equals(rd.getOpenLocalDateTime())) &amp;&amp; rd.getCalculationDateTime().isBefore(rd.getCloseLocalDateTime()))</text>
-        </org.drools.workbench.models.datamodel.rule.FreeFormLine>
       </definition>
       <childColumns>
         <org.drools.workbench.models.guided.dtable.shared.model.BRLConditionVariableColumn>
