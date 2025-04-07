@@ -113,28 +113,23 @@
     <org.drools.workbench.models.guided.dtable.shared.model.BRLConditionColumn>
       <hideColumn>false</hideColumn>
       <width>-1</width>
-      <header>Horas hasta apertura (excluida)</header>
+      <header>Horas desde cierre (incluida)</header>
       <constraintValueType>1</constraintValueType>
       <parameters/>
       <definition>
         <org.drools.workbench.models.datamodel.rule.FreeFormLine>
-          <text>eval(rd.getCalculationDateTime().toLocalTime().plusMinutes((-(@{&lt;})*60)) &lt;rd.getOpenLocalDateTime().toLocalTime())</text>
+          <text>eval(rd.getCalculationDateTime().toLocalTime().plusMinutes((-(@{&lt;=})*60)) &lt;=rd.getCloseLocalDateTime().toLocalTime())</text>
         </org.drools.workbench.models.datamodel.rule.FreeFormLine>
       </definition>
       <childColumns>
         <org.drools.workbench.models.guided.dtable.shared.model.BRLConditionVariableColumn>
-          <typedDefaultValue>
-            <valueString></valueString>
-            <dataType>STRING</dataType>
-            <isOtherwise>false</isOtherwise>
-          </typedDefaultValue>
           <hideColumn>false</hideColumn>
-          <width>251</width>
-          <header>Horas hasta apertura (excluida)</header>
+          <width>100</width>
+          <header>Horas desde cierre (incluida)</header>
           <constraintValueType>1</constraintValueType>
           <fieldType>Object</fieldType>
           <parameters/>
-          <varName>&lt;</varName>
+          <varName>&lt;=</varName>
         </org.drools.workbench.models.guided.dtable.shared.model.BRLConditionVariableColumn>
       </childColumns>
     </org.drools.workbench.models.guided.dtable.shared.model.BRLConditionColumn>
@@ -245,7 +240,7 @@
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>-2.5</valueString>
+        <valueString></valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
@@ -296,7 +291,7 @@
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>-2</valueString>
+        <valueString></valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
@@ -347,7 +342,7 @@
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>-1.5</valueString>
+        <valueString></valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
@@ -398,7 +393,7 @@
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>-1</valueString>
+        <valueString></valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
@@ -449,7 +444,7 @@
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>-0.5</valueString>
+        <valueString></valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
@@ -500,7 +495,7 @@
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>-0</valueString>
+        <valueString></valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
