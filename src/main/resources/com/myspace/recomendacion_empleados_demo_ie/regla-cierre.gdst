@@ -95,7 +95,7 @@
       <parameters/>
       <definition>
         <org.drools.workbench.models.datamodel.rule.FreeFormLine>
-          <text>eval(rd.getCalculationDateTime().toLocalTime().plusMinutes((-(@{&gt;})*60)) &gt; rd.getCloseLocalDateTime().toLocalTime())</text>
+          <text>eval(rd.getCalculationDateTime().toLocalTime().plusMinutes((-(@{&lt;})*60)) &lt; rd.getCloseLocalDateTime().toLocalTime())</text>
         </org.drools.workbench.models.datamodel.rule.FreeFormLine>
       </definition>
       <childColumns>
@@ -106,7 +106,7 @@
           <constraintValueType>1</constraintValueType>
           <fieldType>Object</fieldType>
           <parameters/>
-          <varName>&gt;</varName>
+          <varName>&lt;</varName>
         </org.drools.workbench.models.guided.dtable.shared.model.BRLConditionVariableColumn>
       </childColumns>
     </org.drools.workbench.models.guided.dtable.shared.model.BRLConditionColumn>
@@ -118,7 +118,7 @@
       <parameters/>
       <definition>
         <org.drools.workbench.models.datamodel.rule.FreeFormLine>
-          <text>eval(rd.getCalculationDateTime().toLocalTime().plusMinutes((-(@{&lt;=})*60)) &lt;=rd.getCloseLocalDateTime().toLocalTime())</text>
+          <text>eval(rd.getCalculationDateTime().toLocalTime().plusMinutes((-(@{&gt;=})*60)) &gt;=rd.getCloseLocalDateTime().toLocalTime())</text>
         </org.drools.workbench.models.datamodel.rule.FreeFormLine>
       </definition>
       <childColumns>
@@ -129,7 +129,7 @@
           <constraintValueType>1</constraintValueType>
           <fieldType>Object</fieldType>
           <parameters/>
-          <varName>&lt;=</varName>
+          <varName>&gt;=</varName>
         </org.drools.workbench.models.guided.dtable.shared.model.BRLConditionVariableColumn>
       </childColumns>
     </org.drools.workbench.models.guided.dtable.shared.model.BRLConditionColumn>
@@ -235,12 +235,12 @@
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>3</valueString>
+        <valueString></valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>2.5</valueString>
+        <valueString></valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
@@ -286,12 +286,12 @@
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>2.5</valueString>
+        <valueString></valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>2</valueString>
+        <valueString></valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
@@ -337,12 +337,12 @@
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>2</valueString>
+        <valueString></valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>1.5</valueString>
+        <valueString></valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
@@ -388,12 +388,12 @@
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>1.5</valueString>
+        <valueString></valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>1</valueString>
+        <valueString></valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
@@ -439,12 +439,12 @@
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>1</valueString>
+        <valueString></valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>0.5</valueString>
+        <valueString></valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
@@ -490,12 +490,12 @@
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>0.5</valueString>
+        <valueString></valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
       <value>
-        <valueString>0</valueString>
+        <valueString></valueString>
         <dataType>STRING</dataType>
         <isOtherwise>false</isOtherwise>
       </value>
