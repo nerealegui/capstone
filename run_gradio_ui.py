@@ -14,7 +14,7 @@ def check_dependencies():
     """Check if required dependencies are installed, install if missing."""
     dependencies = [
         "gradio",
-        "google.generativeai",
+        "google-generativeai",
         "gradio_pdf",
         "python-dotenv"  # Added dotenv dependency
     ]

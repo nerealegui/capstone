@@ -40,111 +40,74 @@ def preview_apply_rule():
     # Placeholder for preview & apply functionality
     return "Rule applied successfully!"
 
+# Placeholder function for chat interaction
+# This function should be replaced with the actual chat logic
+def echo(message, history):
+    return message
+
 def create_gradio_interface():
     """Create and return the Gradio interface for the Gemini Chat Application."""
-    # Define the custom CSS to match the UI in the image
-    custom_css = """
-    body, .gradio-container {
-        background-color: #0F1623 !important;
-        color: white !important;
-    }
     
-    .dark-blue-box {
-        background-color: #1F2B47 !important;
-        border-radius: 8px !important;
-        padding: 10px !important;
-        margin: 10px 0 !important;
-        color: white !important;
-    }
-    
-    .dark-red-box {
-        background-color: #342431 !important;
-        border-radius: 8px !important;
-        padding: 10px !important;
-        margin: 10px 0 !important;
-        color: white !important;
-    }
-    
-    .gr-button.gr-button-lg {
-        background-color: #4056F4 !important;
-        color: white !important;
-        border: none !important;
-    }
-    
-    .gr-button.gr-button-lg:hover {
-        background-color: #3045E3 !important;
-    }
-    
-    .gr-input, textarea, input {
-        background-color: #121B2B !important;
-        border: 1px solid #1F2B47 !important;
-        color: white !important;
-    }
-    
-    .gr-panel {
-        background-color: #0F1623 !important;
-        border-color: #1F2B47 !important;
-    }
-    
-    .gr-box {
-        background-color: #121B2B !important;
-        border-color: #1F2B47 !important;
-    }
-    
-    label {
-        color: white !important;
-    }
-    
-    h1, h2, h3, h4, p {
-        color: white !important;
-    }
-    """
-    
-    # Create the interface with the custom theme
-    with gr.Blocks(css=custom_css, theme=gr.themes.Base()) as demo:
+    # Create the interface with the base theme
+    with gr.Blocks(theme=gr.themes.Base(), css="""
+        /* Remove grey backgrounds from all relevant elements */
+        .gradio-container .gr-box, 
+        .gradio-container .gr-group,
+        .gradio-container .gr-panel,
+        .gradio-container .gr-block {
+            border: none !important;
+            background-color: transparent !important;
+            box-shadow: none !important;
+        }
+        /* Hide footer and labels */
+        footer {visibility: hidden}
+        label[data-testid='block-label'] {visibility: hidden}
+    """) as demo:
         with gr.Row():
-            # Left panel - Gemini Chat
+            # Left panel
+            
             with gr.Column(scale=1):
-                gr.Markdown("# Gemini Chat")
-                
-                user_input = gr.Textbox(
-                    label="Your Message",
-                    placeholder="For part-time employees, change the maximum hours per week from 30 to 25"
+                # Chat Section
+                gr.Markdown("# Rule Management Bot")
+                gr.ChatInterface(
+                    fn=echo,
+                    chatbot=gr.Chatbot(),
+                    textbox=gr.Textbox(
+                        placeholder="Message...",
+                        scale=7
+                    ),
+                    undo_btn=None,
+                    clear_btn=None,
+                    retry_btn=None,
                 )
                 
-                chat_output = gr.Textbox(
-                    label="Chat Response",
-                    value="I'm ready to help you with your rules and questions.",
-                    interactive=False
-                )
-                
-                send_button = gr.Button("Send", variant="primary", size="lg")
-                
-                gr.Markdown("## Rule Resumes")
-                rule_items = gr.Textbox(value="Discount Rule", interactive=False)
-                
-            # Right panel - Rule Management
+            # Right panel
             with gr.Column(scale=1):
-                gr.Markdown("# Rule Management")
+                # Existing Rules Header
+                gr.Markdown("# Existing Rules")
                 
-                gr.Markdown("## Rule Summary")
+                # Existing Rules Section - Using Group instead of deprecated Box
+                with gr.Group(elem_classes=["rules-section"]):
+                    gr.Markdown("Rule 1")
+                    gr.Markdown("Rule 2")
+                    gr.Markdown("Rule 3")
+
+                # Rule Summary Header
+                gr.Markdown("# Rule Summary")
                 
-                with gr.Row():
-                    with gr.Column():
-                        gr.Markdown("### Part-Time Employee Hours")
-                        
-                        with gr.Column(elem_classes=["dark-blue-box"]):
-                            gr.Markdown("#### Before")
-                            gr.Markdown("Maximum hours per week: 30")
-                        
-                        with gr.Column(elem_classes=["dark-red-box"]):
-                            gr.Markdown("#### After")
-                            gr.Markdown("Maximum hours per week: 25")
+                # Rule Content - Using Group instead of deprecated Box
+                with gr.Group(elem_classes=["rules-section"]):
+                    gr.Markdown("## Part-Time Employee Hours")
+                    
+                    gr.Markdown("### Before")
+                    gr.Markdown("Maximum hours per week: 30")
+                    
+                    gr.Markdown("### After")
+                    gr.Markdown("Maximum hours per week: 25")
                 
-                preview_button = gr.Button("Preview & Apply", variant="primary", size="lg")
+                preview_button = gr.Button("Preview & Apply", variant="primary")
         
         # Define interactions
-        send_button.click(chat_function, inputs=user_input, outputs=chat_output)
         preview_button.click(preview_apply_rule)
     
     return demo

@@ -10,14 +10,26 @@ from pathlib import Path
 def check_dependencies():
     """Check if required dependencies are installed, install if missing."""
     dependencies = [
-        "gradio",
-        "google.generativeai",
-        "gradio_pdf",
-        "python-dotenv"  # Added dotenv dependency
+        "gradio==4.44.1",  # Specific newer version with Box component
+        "google-generativeai",  # Correct package name with hyphen
+        "python-dotenv"
     ]
     
     for dep in dependencies:
         try:
+            # For gradio, check if we need to upgrade
+            if dep.startswith("gradio"):
+                import gradio
+                current_version = gradio.__version__
+                required_version = dep.split("==")[1]
+                if current_version != required_version:
+                    print(f"Upgrading gradio from {current_version} to {required_version}...")
+                    subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", dep])
+                    print(f"Successfully upgraded gradio to {required_version}")
+                else:
+                    print(f"Gradio {current_version} is already installed")
+                continue
+                
             __import__(dep.split('.')[0])
         except ImportError:
             print(f"Installing {dep}...")
