@@ -1,6 +1,8 @@
 import os
 import gradio as gr
 
+prompt = (f"You are an expert in translating restaurant business rules into structured logic. Your task is to extract the key logic (conditions and actions) from the user's sentence. Here is the sentence: ")
+
 def initialize_gemini():
     """Initialize the Gemini API with the API key from environment variables."""
     # Import the module here so it's only imported after dependencies are installed
@@ -21,17 +23,28 @@ def initialize_gemini():
     }
     
     model = genai.GenerativeModel(
-        model_name="gemini-pro",
+        model_name="gemini-2.0-flash",
         generation_config=generation_config
     )
     
     return model
 
-def chat_function(user_input):
+
+
+
+def chat_function(user_input,history):
     """Process user input and get response from Gemini API."""
     try:
         model = initialize_gemini()
-        response = model.generate_content(user_input)
+        # We can use the history parameter to provide context from previous exchanges:
+        # For example:
+        # context = ""
+        # if history:
+        #     for human_msg, ai_msg in history[-3:]:  # Use the last 3 exchanges
+        #         context += f"User: {human_msg}\nAssistant: {ai_msg}\n"
+        # full_prompt = f"{context}{prompt}{user_input}"
+        # response = model.generate_content(full_prompt)
+        response = model.generate_content(prompt + user_input)
         return response.text
     except Exception as e:
         return f"Error: {str(e)}"
@@ -50,15 +63,6 @@ def create_gradio_interface():
     
     # Create the interface with the base theme
     with gr.Blocks(theme=gr.themes.Base(), css="""
-        /* Remove grey backgrounds from all relevant elements */
-        .gradio-container .gr-box, 
-        .gradio-container .gr-group,
-        .gradio-container .gr-panel,
-        .gradio-container .gr-block {
-            border: none !important;
-            background-color: transparent !important;
-            box-shadow: none !important;
-        }
         /* Hide footer and labels */
         footer {visibility: hidden}
         label[data-testid='block-label'] {visibility: hidden}
@@ -70,7 +74,7 @@ def create_gradio_interface():
                 # Chat Section
                 gr.Markdown("# Rule Management Bot")
                 gr.ChatInterface(
-                    fn=echo,
+                    fn=chat_function,
                     chatbot=gr.Chatbot(),
                     textbox=gr.Textbox(
                         placeholder="Message...",
