@@ -1,0 +1,2 @@
+- Always use the Google Gen AI SDK as a reference. This is the URL https://googleapis.github.io/python-genai/index.html
+- Use google.genai whenever possible over google.generativeai
