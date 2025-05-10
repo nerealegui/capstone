@@ -1,0 +1,7 @@
+rule "Restaurant_Size_Small"
+when
+    Restaurant( size == "Small" )
+    Forecast( total_sales >= 0, total_sales < 50 )
+then
+    Staffing.base_employees = 2;
+end

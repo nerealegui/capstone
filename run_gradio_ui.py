@@ -8,24 +8,35 @@ import subprocess
 import webbrowser
 from pathlib import Path
 import gradio as gr
-from gemini_chat_app import create_gradio_interface
 
 def check_dependencies():
     """Check if required dependencies are installed, install if missing."""
-    dependencies = [
-        "gradio",
-        "google-generativeai",
-        "gradio_pdf",
-        "python-dotenv"  # Added dotenv dependency
-    ]
+    # First, check if requirements.txt exists
+    req_path = Path(__file__).parent / 'gemini-gradio-poc' / 'requirements.txt'
     
-    for dep in dependencies:
-        try:
-            __import__(dep.split('.')[0])
-        except ImportError:
-            print(f"Installing {dep}...")
-            subprocess.check_call([sys.executable, "-m", "pip", "install", dep])
-            print(f"Successfully installed {dep}")
+    if req_path.exists():
+        print(f"Installing dependencies from {req_path}...")
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", str(req_path)])
+    else:
+        # Fallback to basic dependencies
+        dependencies = [
+            "gradio",
+            "google-generativeai",
+            "pandas",
+            "numpy",
+            "scikit-learn",
+            "python-docx",
+            "PyPDF2",
+            "python-dotenv"
+        ]
+        
+        for dep in dependencies:
+            try:
+                __import__(dep.split('.')[0])
+            except ImportError:
+                print(f"Installing {dep}...")
+                subprocess.check_call([sys.executable, "-m", "pip", "install", dep])
+                print(f"Successfully installed {dep}")
     
     # Now that we've ensured python-dotenv is installed, import it
     from dotenv import load_dotenv
@@ -55,6 +66,9 @@ def check_api_key():
 
 def run_gradio_app():
     """Create and run a simple Gradio chat app."""
+    # Import after dependencies are installed
+    sys.path.append(str(Path(__file__).parent))
+    from gemini_gradio_poc.chat_app import create_gradio_interface
     
     demo = create_gradio_interface()
 
