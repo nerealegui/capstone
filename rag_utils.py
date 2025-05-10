@@ -8,6 +8,9 @@ import numpy as np
 import pandas as pd
 from docx import Document
 import PyPDF2
+import requests
+import tempfile
+import io
 from typing import List, Dict, Any, Optional, Union
 from sklearn.metrics.pairwise import cosine_similarity
 from google import genai
@@ -43,6 +46,44 @@ def read_pdf(file_path: str) -> str:
         reader = PyPDF2.PdfReader(f)
         return "\n".join([page.extract_text() for page in reader.pages if page.extract_text()])
 
+def read_remote_docx(url: str) -> str:
+    """
+    Read text content from a remote .docx file
+    
+    Args:
+        url: URL to the .docx file
+        
+    Returns:
+        String containing the text content of the file
+    """
+    response = requests.get(url)
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.docx') as temp_file:
+        temp_file.write(response.content)
+        temp_file_path = temp_file.name
+    
+    try:
+        text = read_docx(temp_file_path)
+        os.unlink(temp_file_path)  # Delete the temp file
+        return text
+    except Exception as e:
+        os.unlink(temp_file_path)  # Delete the temp file even if there's an error
+        raise e
+
+def read_remote_pdf(url: str) -> str:
+    """
+    Read text content from a remote .pdf file
+    
+    Args:
+        url: URL to the .pdf file
+        
+    Returns:
+        String containing the text content of the file
+    """
+    response = requests.get(url)
+    pdf_file = io.BytesIO(response.content)
+    reader = PyPDF2.PdfReader(pdf_file)
+    return "\n".join([page.extract_text() for page in reader.pages if page.extract_text()])
+
 def read_documents(folder_path: str) -> List[Dict[str, str]]:
     """
     Read all documents (docx and pdf) from a folder
@@ -74,6 +115,33 @@ def read_documents(folder_path: str) -> List[Dict[str, str]]:
                 documents.append({'filename': filename, 'text': text})
             except Exception as e:
                 print(f"Error reading PDF {filename}: {e}")
+    return documents
+
+def read_remote_documents(urls: List[str]) -> List[Dict[str, str]]:
+    """
+    Read documents from remote URLs
+    
+    Args:
+        urls: List of URLs pointing to documents (docx or pdf)
+        
+    Returns:
+        List of dictionaries with URL and text content
+    """
+    documents = []
+    
+    for url in urls:
+        try:
+            if url.lower().endswith('.docx'):
+                text = read_remote_docx(url)
+                documents.append({'filename': url, 'text': text})
+            elif url.lower().endswith('.pdf'):
+                text = read_remote_pdf(url)
+                documents.append({'filename': url, 'text': text})
+            else:
+                print(f"Warning: Unsupported file format for URL {url}")
+        except Exception as e:
+            print(f"Error reading URL {url}: {e}")
+    
     return documents
 
 def chunk_text(text: str, chunk_size: int = 500, chunk_overlap: int = 50) -> List[str]:
@@ -202,6 +270,34 @@ def setup_rag_system(documents_folder: str,
     
     # Read documents
     documents = read_documents(documents_folder)
+    
+    # Process into chunks
+    df = process_documents(documents, chunk_size, chunk_overlap)
+    
+    # Add embeddings
+    df_with_embeddings = create_embedding_df(df, client)
+    
+    return df_with_embeddings
+
+def setup_remote_rag_system(urls: List[str],
+                          chunk_size: int = 500,
+                          chunk_overlap: int = 50) -> pd.DataFrame:
+    """
+    Set up a complete RAG system from remote documents
+    
+    Args:
+        urls: List of URLs pointing to documents
+        chunk_size: Size of each chunk in characters
+        chunk_overlap: Number of characters to overlap between chunks
+        
+    Returns:
+        Dataframe with processed documents ready for retrieval
+    """
+    # Make sure the client is initialized
+    client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
+    
+    # Read remote documents
+    documents = read_remote_documents(urls)
     
     # Process into chunks
     df = process_documents(documents, chunk_size, chunk_overlap)

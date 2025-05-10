@@ -37,10 +37,22 @@ if os.path.exists("restaurant_content.docx"):
     shutil.copy("restaurant_content.docx", os.path.join(AGENT1_KB_PATH, "restaurant_content.docx"))
     print(f"Copied restaurant_content.docx to {AGENT1_KB_PATH}")
 
+# Example of remote document URLs (these are placeholders, you would replace with real URLs)
+# For a real implementation, you would use URLs pointing to your actual documents
+AGENT1_REMOTE_URLS = [
+    # Example: "https://example.com/restaurant_rules.pdf",
+    # Example: "https://example.com/restaurant_policies.docx"
+]
+
+AGENT2_REMOTE_URLS = [
+    # Example: "https://example.com/drools_examples.pdf",
+    # Example: "https://example.com/business_rule_templates.docx"
+]
+
 # Example rule to process
 example_rule = "Modification to the restaurant size rule. The required base number of employees for large restaurants increases from 10 to 12."
 
-print("\n=== Processing Rule with RAG Enabled ===")
+print("\n=== Processing Rule with Local RAG Enabled ===")
 drl_content = process_rule_to_drl(
     example_rule,
     agent1_kb_path=AGENT1_KB_PATH,
@@ -49,15 +61,31 @@ drl_content = process_rule_to_drl(
     use_rag=True
 )
 
-print("\n=== Generated DRL Content ===")
+print("\n=== Generated DRL Content (Local RAG) ===")
 print(drl_content)
 
-# Example of using Agent 1 and Agent 2 separately
-print("\n=== Using Agents Separately ===")
+# If remote URLs are provided, demonstrate remote RAG
+if AGENT1_REMOTE_URLS or AGENT2_REMOTE_URLS:
+    print("\n=== Processing Rule with Remote RAG Enabled ===")
+    drl_content_remote = process_rule_to_drl(
+        example_rule,
+        agent1_kb_path=AGENT1_KB_PATH,
+        agent2_kb_path=AGENT2_KB_PATH,
+        output_path=OUTPUT_PATH,
+        use_rag=True,
+        agent1_remote_urls=AGENT1_REMOTE_URLS,
+        agent2_remote_urls=AGENT2_REMOTE_URLS
+    )
+    
+    print("\n=== Generated DRL Content (Remote RAG) ===")
+    print(drl_content_remote)
 
-# Initialize agents
-agent1 = Agent1(knowledge_base_path=AGENT1_KB_PATH)
-agent2 = Agent2(knowledge_base_path=AGENT2_KB_PATH, output_path=OUTPUT_PATH)
+# Example of using agents with combined local and remote knowledge bases
+print("\n=== Using Agents with Combined Knowledge Bases ===")
+
+# Initialize agents with both local and remote knowledge bases
+agent1 = Agent1(knowledge_base_path=AGENT1_KB_PATH, remote_urls=AGENT1_REMOTE_URLS)
+agent2 = Agent2(knowledge_base_path=AGENT2_KB_PATH, output_path=OUTPUT_PATH, remote_urls=AGENT2_REMOTE_URLS)
 
 # Process through Agent 1
 print("\n🔍 Agent 1: Processing natural language rule...")

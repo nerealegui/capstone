@@ -44,14 +44,16 @@ class Agent1:
     Converts natural language rules into structured JSON format.
     """
     
-    def __init__(self, knowledge_base_path: str = DEFAULT_AGENT1_KB_PATH):
+    def __init__(self, knowledge_base_path: str = DEFAULT_AGENT1_KB_PATH, remote_urls: List[str] = None):
         """
         Initialize Agent 1 with a knowledge base
         
         Args:
             knowledge_base_path: Path to the folder containing the knowledge base documents
+            remote_urls: List of URLs to remote documents to include in the knowledge base
         """
         self.knowledge_base_path = knowledge_base_path
+        self.remote_urls = remote_urls or []
         self.knowledge_base_df = None
         self._ensure_knowledge_base()
     
@@ -63,8 +65,29 @@ class Agent1:
         # Load and process the knowledge base if it's not already loaded
         if self.knowledge_base_df is None:
             try:
-                self.knowledge_base_df = rag_utils.setup_rag_system(self.knowledge_base_path)
-                print(f"Agent 1 knowledge base loaded with {len(self.knowledge_base_df)} chunks")
+                # Load local documents
+                local_df = pd.DataFrame(columns=['filename', 'chunk', 'embedding'])
+                if os.listdir(self.knowledge_base_path):
+                    local_df = rag_utils.setup_rag_system(self.knowledge_base_path)
+                    print(f"Agent 1 local knowledge base loaded with {len(local_df)} chunks")
+                
+                # Load remote documents if URLs provided
+                remote_df = pd.DataFrame(columns=['filename', 'chunk', 'embedding'])
+                if self.remote_urls:
+                    remote_df = rag_utils.setup_remote_rag_system(self.remote_urls)
+                    print(f"Agent 1 remote knowledge base loaded with {len(remote_df)} chunks")
+                
+                # Combine local and remote knowledge bases if both exist
+                if not local_df.empty and not remote_df.empty:
+                    self.knowledge_base_df = pd.concat([local_df, remote_df], ignore_index=True)
+                elif not local_df.empty:
+                    self.knowledge_base_df = local_df
+                elif not remote_df.empty:
+                    self.knowledge_base_df = remote_df
+                else:
+                    # Create an empty dataframe with the right columns as a fallback
+                    self.knowledge_base_df = pd.DataFrame(columns=['filename', 'chunk', 'embedding'])
+                    
             except Exception as e:
                 print(f"Warning: Could not load knowledge base: {e}")
                 # Create an empty dataframe with the right columns as a fallback
@@ -164,16 +187,19 @@ class Agent2:
     """
     
     def __init__(self, knowledge_base_path: str = DEFAULT_AGENT2_KB_PATH, 
-                 output_path: str = DEFAULT_DRL_OUTPUT_PATH):
+                 output_path: str = DEFAULT_DRL_OUTPUT_PATH,
+                 remote_urls: List[str] = None):
         """
         Initialize Agent 2 with a knowledge base
         
         Args:
             knowledge_base_path: Path to the folder containing the knowledge base documents
             output_path: Path to save generated DRL files
+            remote_urls: List of URLs to remote documents to include in the knowledge base
         """
         self.knowledge_base_path = knowledge_base_path
         self.output_path = output_path
+        self.remote_urls = remote_urls or []
         self.knowledge_base_df = None
         self._ensure_knowledge_base()
         
@@ -185,8 +211,29 @@ class Agent2:
         # Load and process the knowledge base if it's not already loaded
         if self.knowledge_base_df is None:
             try:
-                self.knowledge_base_df = rag_utils.setup_rag_system(self.knowledge_base_path)
-                print(f"Agent 2 knowledge base loaded with {len(self.knowledge_base_df)} chunks")
+                # Load local documents
+                local_df = pd.DataFrame(columns=['filename', 'chunk', 'embedding'])
+                if os.listdir(self.knowledge_base_path):
+                    local_df = rag_utils.setup_rag_system(self.knowledge_base_path)
+                    print(f"Agent 2 local knowledge base loaded with {len(local_df)} chunks")
+                
+                # Load remote documents if URLs provided
+                remote_df = pd.DataFrame(columns=['filename', 'chunk', 'embedding'])
+                if self.remote_urls:
+                    remote_df = rag_utils.setup_remote_rag_system(self.remote_urls)
+                    print(f"Agent 2 remote knowledge base loaded with {len(remote_df)} chunks")
+                
+                # Combine local and remote knowledge bases if both exist
+                if not local_df.empty and not remote_df.empty:
+                    self.knowledge_base_df = pd.concat([local_df, remote_df], ignore_index=True)
+                elif not local_df.empty:
+                    self.knowledge_base_df = local_df
+                elif not remote_df.empty:
+                    self.knowledge_base_df = remote_df
+                else:
+                    # Create an empty dataframe with the right columns as a fallback
+                    self.knowledge_base_df = pd.DataFrame(columns=['filename', 'chunk', 'embedding'])
+                    
             except Exception as e:
                 print(f"Warning: Could not load knowledge base: {e}")
                 # Create an empty dataframe with the right columns as a fallback
@@ -333,7 +380,9 @@ def process_rule_to_drl(natural_language_rule: str,
                        agent1_kb_path: str = DEFAULT_AGENT1_KB_PATH,
                        agent2_kb_path: str = DEFAULT_AGENT2_KB_PATH,
                        output_path: str = DEFAULT_DRL_OUTPUT_PATH,
-                       use_rag: bool = True) -> str:
+                       use_rag: bool = True,
+                       agent1_remote_urls: List[str] = None,
+                       agent2_remote_urls: List[str] = None) -> str:
     """
     Process a natural language rule through both agents to generate a DRL file
     
@@ -343,13 +392,15 @@ def process_rule_to_drl(natural_language_rule: str,
         agent2_kb_path: Path to Agent 2's knowledge base
         output_path: Path to save the generated DRL file
         use_rag: Whether to use RAG for both agents
+        agent1_remote_urls: List of URLs to remote documents for Agent 1
+        agent2_remote_urls: List of URLs to remote documents for Agent 2
         
     Returns:
         The generated DRL content
     """
     # Initialize agents
-    agent1 = Agent1(knowledge_base_path=agent1_kb_path)
-    agent2 = Agent2(knowledge_base_path=agent2_kb_path, output_path=output_path)
+    agent1 = Agent1(knowledge_base_path=agent1_kb_path, remote_urls=agent1_remote_urls)
+    agent2 = Agent2(knowledge_base_path=agent2_kb_path, output_path=output_path, remote_urls=agent2_remote_urls)
     
     # Process through Agent 1
     print("🔍 Agent 1: Processing natural language rule...")
