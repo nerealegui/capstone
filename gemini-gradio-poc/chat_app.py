@@ -19,9 +19,10 @@ except ImportError:
         sys.path.insert(0, current_dir)
         import rag
 
-# Global variables for document dataframes
+# Global variables for document dataframes and current rule
 agent1_df = pd.DataFrame()
 agent2_df = pd.DataFrame()
+current_rule_json = None
 
 # Default prompts
 AGENT1_PROMPT = """You are an expert in translating restaurant business rules into structured logic. 
@@ -146,33 +147,29 @@ def agent2_process(rule_json: Dict[str, Any]) -> str:
     return clean_result
 
 def chat_function(user_input, history):
-    """Process user input and get response from Gemini API with RAG."""
+    """Process user input with Agent 1 only for rule extraction and wait for user validation."""
     try:
         # Ensure embeddings are initialized
         if agent1_df.empty or agent2_df.empty:
             initialize_embeddings()
         
-        # Process the input with Agent 1
+        # Process the input with Agent 1 only
         rule_json = agent1_process(user_input)
         
-        # Process the result with Agent 2
-        drl_rule = agent2_process(rule_json)
+        # Store the extracted rule JSON for later use by Agent 2
+        global current_rule_json
+        current_rule_json = rule_json
         
-        # Return a formatted response
+        # Return a formatted response for user validation
         response = f"""
-I've analyzed your business rule and created the following:
+I've analyzed your business rule and extracted the following logic:
 
 **Extracted Logic:**
 ```json
 {json.dumps(rule_json, indent=2)}
 ```
 
-**Generated Drools Rule:**
-```
-{drl_rule}
-```
-
-The rule has been saved to the knowledge base and can now be applied.
+Please validate if this extraction is correct. If it looks good, click the "Preview & Apply" button to generate the Drools rule.
 """
         return response
     except Exception as e:
@@ -180,9 +177,27 @@ The rule has been saved to the knowledge base and can now be applied.
         return f"Error: {str(e)}\n\n{traceback.format_exc()}"
 
 def preview_apply_rule():
-    """Preview and apply the generated rule."""
-    # TODO: Implement actual rule application logic
-    return "Rule applied successfully!"
+    """Generate and apply the Drools rule once the user has validated the extracted logic."""
+    try:
+        global current_rule_json
+        
+        # Check if we have a rule to process
+        if not current_rule_json:
+            return "Error: No rule has been extracted yet. Please describe a business rule in the chat first."
+        
+        # Process the result with Agent 2
+        drl_rule = agent2_process(current_rule_json)
+        
+        # Return the generated rule
+        return f"""Rule generated successfully:
+```
+{drl_rule}
+```
+
+The rule has been saved to the knowledge base and can now be applied."""
+    except Exception as e:
+        import traceback
+        return f"Error: {str(e)}\n\n{traceback.format_exc()}"
 
 def create_gradio_interface():
     """Create and return the Gradio interface for the Gemini Chat Application."""
@@ -233,17 +248,14 @@ def create_gradio_interface():
                 
                 # Rule Content - Using Group instead of deprecated Box
                 with gr.Group(elem_classes=["rules-section"]):
-                    gr.Markdown("## Part-Time Employee Hours")
-                    
-                    gr.Markdown("### Before")
-                    gr.Markdown("Maximum hours per week: 30")
-                    
-                    gr.Markdown("### After")
-                    gr.Markdown("Maximum hours per week: 25")
+                    rule_summary = gr.Markdown("No rule extracted yet. Please describe a business rule in the chat.")
                 
                 preview_button = gr.Button("Preview & Apply", variant="primary")
         
         # Define interactions
-        preview_button.click(preview_apply_rule)
+        preview_button.click(
+            fn=preview_apply_rule,
+            outputs=rule_summary
+        )
     
     return demo

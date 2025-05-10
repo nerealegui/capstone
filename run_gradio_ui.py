@@ -69,24 +69,15 @@ def run_gradio_app():
     # Import after dependencies are installed
     sys.path.insert(0, str(Path(__file__).parent))
     
-    # First try direct import
+    # Try to import the module
     try:
-        from gemini_gradio_poc.chat_app import create_gradio_interface
-    except ImportError:
-        # If that fails, try with different module name (directory might have dash instead of underscore)
-        try:
-            from gemini_gradio_poc.chat_app import create_gradio_interface
-        except ImportError:
-            # Last resort, try to modify sys.path and import directly
-            sys.path.insert(0, str(Path(__file__).parent / 'gemini-gradio-poc'))
-            from chat_app import create_gradio_interface
+        sys.path.insert(0, str(Path(__file__).parent / 'gemini-gradio-poc'))
+        from chat_app import create_gradio_interface
+    except ImportError as e:
+        print(f"Error importing chat_app module: {e}")
+        return
     
     demo = create_gradio_interface()
-
-    print("Starting Gradio UI...")
-    print("Once the server starts, the UI will be available at http://127.0.0.1:7860")
-    print("Press Ctrl+C to stop the server when you're done")
-    
     demo.launch()
 
 if __name__ == "__main__":
