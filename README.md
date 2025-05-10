@@ -40,6 +40,7 @@ Enable a new generation of intelligent, user-friendly decision systems that allo
 - **Robust Architecture**: Built using modern development practices for maintainability and performance.
 - **Rule Management**: Enables non-technical users to create and modify business rules through natural language
 - **Agent-Based Architecture**: Uses AI agents to interpret user requests and translate them into rule changes
+- **Retrieval-Augmented Generation (RAG)**: Enhances AI responses with context from business documents and existing rules
 - **Validation System**: Detects conflicts between rules and validates changes before implementation
 - **Business Logic Abstraction**: Provides an abstraction layer over complex rule systems
 - **Future Capabilities**:
@@ -83,7 +84,7 @@ Enable a new generation of intelligent, user-friendly decision systems that allo
 
 1. Clone the repository:
     ```bash
-    git clone https://github.com/username/capstone.git
+    git clone https://github.com/nerealegui/capstone.git
     ```
 2. Navigate to the project directory:
     ```bash
@@ -91,17 +92,41 @@ Enable a new generation of intelligent, user-friendly decision systems that allo
     ```
 3. Install dependencies:
     ```bash
-    [Command to install dependencies, e.g., npm install or pip install -r requirements.txt]
+    pip install -r gemini-gradio-poc/requirements.txt
     ```
-4. Run the application:
+4. Set up environment variables:
+   - Create a `.env` file in the root directory
+   - Add your Google API key:
+     ```
+     GOOGLE_API_KEY=your_api_key_here
+     ```
+5. Run the application:
     ```bash
-    [Command to start the application, e.g., npm start or python manage.py runserver]
+    python run_gradio_ui.py
     ```
 
 ## Usage
 
-- [Instructions on how to use the application]
-- [Examples of key features]
+### Adding Business Documents for RAG
+
+1. Place business documents in the `documents/agent1/` folder for Agent 1 (supported formats: .docx, .pdf)
+2. Place example DRL files in the `documents/agent2/` folder for Agent 2
+
+### Using the Chat Interface
+
+1. Describe a business rule in natural language
+2. The system will:
+   - Extract structured conditions and actions (Agent 1, enhanced with RAG)
+   - Generate a Drools Rule Language (DRL) rule (Agent 2, enhanced with RAG)
+   - Save the rule to the knowledge base
+
+### Example Inputs
+
+- "Create a rule that assigns 5 employees to medium-sized restaurants when sales are between 100 and 200"
+- "Update the large restaurant base staffing rule to require 12 employees instead of 10"
+- "For small restaurants, increase minimum staff by 1 person on weekends"
+
+For more detailed information about the RAG implementation, see the [RAG documentation](documents/README.md).
 
 ## Contributing
 
