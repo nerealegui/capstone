@@ -67,8 +67,19 @@ def check_api_key():
 def run_gradio_app():
     """Create and run a simple Gradio chat app."""
     # Import after dependencies are installed
-    sys.path.append(str(Path(__file__).parent))
-    from gemini_gradio_poc.chat_app import create_gradio_interface
+    sys.path.insert(0, str(Path(__file__).parent))
+    
+    # First try direct import
+    try:
+        from gemini_gradio_poc.chat_app import create_gradio_interface
+    except ImportError:
+        # If that fails, try with different module name (directory might have dash instead of underscore)
+        try:
+            from gemini_gradio_poc.chat_app import create_gradio_interface
+        except ImportError:
+            # Last resort, try to modify sys.path and import directly
+            sys.path.insert(0, str(Path(__file__).parent / 'gemini-gradio-poc'))
+            from chat_app import create_gradio_interface
     
     demo = create_gradio_interface()
 

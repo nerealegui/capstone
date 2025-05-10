@@ -3,8 +3,21 @@ import gradio as gr
 import json
 import pandas as pd
 from typing import Dict, Any
-from . import rag
+import sys
 from pathlib import Path
+
+# Try to import the rag module
+try:
+    from . import rag
+except ImportError:
+    # If that fails, try a direct import
+    try:
+        import rag
+    except ImportError:
+        # If all else fails, add the current directory to the path and try again
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        sys.path.insert(0, current_dir)
+        import rag
 
 # Global variables for document dataframes
 agent1_df = pd.DataFrame()
