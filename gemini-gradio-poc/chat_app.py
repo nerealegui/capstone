@@ -1,90 +1,109 @@
 import os
 import gradio as gr
+from google import genai
 from google.genai import types
-
-# MOVE THIS TO A CONFIG FILE
-# Default prompts
-AGENT1_PROMPT = """
-You are an expert in translating restaurant business rules into structured logic.
-Your task is to extract the key logic (conditions and actions) from the user's sentence.
-
-Respond strictly in JSON format with two keys:
-- "logic": containing "conditions" and "actions".
-- "summary": a brief natural language summary of the rule.
-"""
-
-AGENT2_PROMPT = """You are an expert in translating business rules into Drools syntax.
-Your task is to convert the structured JSON representation of a rule into proper Drools rule language (DRL) format."""
-
+from agent_config import AGENT1_PROMPT, AGENT2_PROMPT, DEFAULT_MODEL, GENERATION_CONFIG
+import json
 
 
 def initialize_gemini():
-    """Initialize the Gemini API with the API key from environment variables."""
-    import google.genai as genai
-    from google.genai import types
-
     api_key = os.environ.get('GOOGLE_API_KEY')
     if not api_key:
         raise ValueError("Google API key not found in environment variables. Please check your .env file.")
 
     client = genai.Client(
-        api_key=api_key,
-        http_options=types.HttpOptions(api_version="v1alpha")
+        api_key=api_key
     )
     return client
 
-import json
-
 def chat_function(user_input, history):
+    global rule_response
     try:
         client = initialize_gemini()
-        contents = [
+
+        contents = []
+        # Build contents from history
+        contents = []
+        if history:
+            for user_msg, model_response in history:
+                # Append user's previous message
+                contents.append(
+                    types.Content(
+                        role="user",
+                        parts=[types.Part.from_text(text=user_msg)]
+                    )
+                )
+                # Append model's previous response
+                contents.append(
+                    types.Content(
+                        role="model",
+                        parts=[types.Part.from_text(text=model_response)]
+                    )
+                )
+
+        # Append the current user input with prompt
+        contents.append(
             types.Content(
                 role="user",
-                parts=[types.Part.from_text(text=AGENT1_PROMPT + user_input)],
+                parts=[types.Part.from_text(text=AGENT1_PROMPT + user_input)]
             )
-        ]
-        generate_content_config = types.GenerateContentConfig(response_mime_type="application/json")
+        )
+
+        generate_content_config = types.GenerateContentConfig(
+            response_mime_type=GENERATION_CONFIG["response_mime_type"]
+        )
 
         response = client.models.generate_content(
-            model="gemini-2.0-flash-001",
+            model=DEFAULT_MODEL,
             contents=contents,
             config=generate_content_config,
         )
 
-        response_json = json.loads(response.text)
+        print("Response received from Gemini API.")
 
-        logic = response_json.get("logic", {})
-        summary = response_json.get("summary", "")
+        # Parse the response
+        parsed_response = json.loads(response.text)
 
-        conditions = logic.get("conditions", "No conditions provided.")
-        actions = logic.get("actions", "No actions provided.")
+        # Validate the response type
+        if isinstance(parsed_response, dict):
+            rule_response = parsed_response
+        else:
+            rule_response = {
+                "name": "Unexpected response format",
+                "summary": "The API returned an unexpected format.",
+                "logic": {"message": "No logic available."}
+            }
 
-        logic_markdown = f"### Conditions\n{conditions}\n\n### Actions\n{actions}"
-
-        return summary, logic_markdown
+        summary = rule_response.get("summary", "No summary available.")
+        return summary
 
     except Exception as e:
         error_message = f"Error: {str(e)}"
-        return error_message, ""
+        rule_response = {
+            "name": "General Error",
+            "summary": error_message,
+            "logic": {"message": "No logic available."}
+        }
+        return error_message
 
 def preview_apply_rule():
     # Placeholder for preview & apply functionality
     return "Rule applied successfully!"
 
 # Placeholder function for chat interaction
-# This function should be replaced with the actual chat logic
 def echo(message, history):
     return message
 
 def create_gradio_interface():
     """Create and return the Gradio interface for the Gemini Chat Application."""
 
-    logic_display = gr.Markdown("## Logic will appear here after input.")
-    summary_display = gr.Markdown("## Summary will appear here after input.")
-
-    
-    # Create the interface with the base theme
+    # Create components to be shared between panels
+    name_display = gr.Textbox(value="Name will appear here after input.", label="Name")
+    summary_display = gr.Textbox(value="Summary will appear here after input.", label="Summary")
+    logic_display = gr.JSON(value={
+        "message": "Logic will appear here after input."
+    }, label="Logic")
+   
     with gr.Blocks(theme=gr.themes.Base(), css="""
         /* Hide footer and labels */
         footer {visibility: hidden}
@@ -92,43 +111,47 @@ def create_gradio_interface():
     """) as demo:
         with gr.Row():
             # Left panel
-            
             with gr.Column(scale=1):
                 gr.Markdown("# Rule Management Bot")
+                
+                # Modified chat function that returns a tuple containing the response
+                # and the values for additional_outputs
+                def chat_and_update(user_input, history):
+                    global rule_response  # Access the global variable
+                    
+                    # Process the user input
+                    response = chat_function(user_input, history)
+                    
+                    # Get values from rule_response for the additional outputs
+                    name = rule_response.get('name', 'Name will appear here after input.')
+                    summary = rule_response.get('summary', 'Summary will appear here after input.')
+                    logic = rule_response.get('logic', {"message": "No logic available."})
+                    
+                    # Return response and values for additional_outputs
+                    return response, name, summary, logic
+                
+                # Create the ChatInterface with additional_outputs
                 chat_interface = gr.ChatInterface(
-                    fn=chat_function,
+                    fn=chat_and_update,
                     chatbot=gr.Chatbot(),
                     textbox=gr.Textbox(
                         placeholder="Message...",
                         scale=7
                     ),
-                    undo_btn=None,
-                    clear_btn=None,
-                    retry_btn=None
-                )
+                    additional_outputs=[name_display, summary_display, logic_display],
 
-                """ # Manually connect outputs
-                chat_interface.chatbot.change(
-                    fn=chat_function,
-                    inputs=[chat_interface.textbox],
-                    #outputs=[logic_display, summary_display]
-                    outputs=[summary_display]
-                ) """
+                )
                 
             # Right panel
             with gr.Column(scale=1):
-                gr.Markdown("# Existing Rules")
-                with gr.Group(elem_classes=["rules-section"]):
-                    gr.Markdown("Rule 1")
-                    gr.Markdown("Rule 2")
-                    gr.Markdown("Rule 3")
-
                 gr.Markdown("# Rule Summary")
                 
-                
-                preview_button = gr.Button("Preview & Apply", variant="primary")
+                name_display.render()
+                summary_display.render()
+                logic_display.render()
 
-        preview_button.click(preview_apply_rule)
+                preview_button = gr.Button("Preview & Apply", variant="primary")
+                preview_button.click(preview_apply_rule)
     
     return demo
 
