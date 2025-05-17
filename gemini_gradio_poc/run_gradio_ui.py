@@ -82,7 +82,7 @@ def run_gradio_app():
     """Create and run a simple Gradio chat app."""
     # Import these modules only after dependencies have been checked and installed
     import gradio as gr
-    from chat_app import create_gradio_interface
+    from .chat_app import create_gradio_interface
     
     demo = create_gradio_interface()
 
