@@ -1,0 +1,17 @@
+```csv
+RuleSet,Name,Format,Content
+RuleTable,EmployeeAssignmentRule,DRL,
+package com.example
+
+import java.util.List;
+
+rule "EmployeeAssignmentRule"
+    salience 10
+    when
+        $restaurantSize : String( this == "medium" ) from $restaurant.size
+        $sales : Number( this >= 100 && this <= 200 ) from $restaurant.sales
+    then
+        $restaurant.setEmployees(10);
+        update($restaurant); // Or insert the updated restaurant, depending on your use case
+end
+```

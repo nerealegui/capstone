@@ -9,6 +9,10 @@ from pathlib import Path
 
 def ensure_virtualenv():
     """Ensure the script is running inside a virtual environment."""
+    # Check for VIRTUAL_ENV environment variable (set by venv activation)
+    if os.environ.get('VIRTUAL_ENV'):
+        return
+    # Fallback to sys.prefix check for older venvs
     if sys.prefix == sys.base_prefix:
         venv_path = Path(__file__).parent / 'venv'
         if not venv_path.exists():
@@ -23,14 +27,18 @@ def ensure_virtualenv():
 def check_dependencies():
     """Check if required dependencies are installed, install if missing."""
     dependencies = [
-        "gradio==5.29.0", 
-        "google-genai",  
+        "gradio==5.29.0",
+        "google-genai",
         "python-dotenv"
     ]
-    
+    pip_args = [sys.executable, "-m", "pip", "install"]
+    # If not in venv, add --break-system-packages for Homebrew Python/PEP 668
+    if not os.environ.get('VIRTUAL_ENV'):
+        pip_args.append("--break-system-packages")
+        print("\n⚠️  Warning: Not running inside a virtual environment. Using --break-system-packages for pip.\n")
     for dep in dependencies:
         try:
-            subprocess.check_call([sys.executable, "-m", "pip", "install", dep])
+            subprocess.check_call(pip_args + [dep])
             print(f"Successfully installed or upgraded {dep}")
         except subprocess.CalledProcessError as e:
             print(f"Failed to install {dep}. Error: {e}")
@@ -70,8 +78,17 @@ def run_gradio_app():
     print("Starting Gradio UI...")
     demo.launch()
 
+def print_python_env_info():
+    """Print information about the Python environment."""
+    print("\nPython executable:", sys.executable)
+    print("Python version:", sys.version)
+    print("VIRTUAL_ENV:", os.environ.get('VIRTUAL_ENV'))
+    print("sys.prefix:", sys.prefix)
+    print("sys.base_prefix:", sys.base_prefix)
+
 if __name__ == "__main__":
     print("Setting up Gradio UI for Gemini Chat Application...")
+    print_python_env_info()
     ensure_virtualenv()
     check_dependencies()
     check_api_key()
