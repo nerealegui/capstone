@@ -12,8 +12,8 @@ The JSON display block has been removed from the UI to provide a cleaner interfa
 4. Removed the `logic_display.render()` line in the right panel
 
 ### Files Modified
-- `/Users/nerealegui/Documents/GitHub/Repos/capstone/gemini-gradio-poc/chat_app.py`
-- `/Users/nerealegui/Documents/GitHub/Repos/capstone/gemini-gradio-poc/docs/CHANGELOG.md` (moved from root directory)
+- `gemini-gradio-poc/chat_app.py`
+- `gemini-gradio-poc/docs/CHANGELOG.md` (moved from root directory)
 
 ### Impact
 The UI now displays only the rule name and summary, making it more focused and less cluttered. The underlying functionality remains intact - the backend still processes the full rule logic, but only the essential information is displayed to the user.
