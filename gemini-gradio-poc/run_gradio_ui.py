@@ -5,27 +5,83 @@
 import os
 import sys
 import subprocess
+import platform
 from pathlib import Path
 
+def get_os():
+    """Detect the operating system."""
+    if sys.platform.startswith('win'):
+        return 'Windows'
+    elif sys.platform == 'darwin':
+        return 'macOS'
+    else: # Covers linux, bsd, etc.
+        return 'Linux'
+
 def ensure_virtualenv():
-    """Ensure the script is running inside a virtual environment."""
+    """
+    Ensure the script is running inside a virtual environment.
+    If not, create one (if it doesn't exist) and instruct the user to activate it.
+    """
+    current_os = get_os()
+    venv_path = Path(__file__).parent / 'venv'
+
     if sys.prefix == sys.base_prefix:
-        venv_path = Path(__file__).parent / 'venv'
+        # Not in a virtual environment, check if one exists or create it
+        print("Script is not running inside a virtual environment.")
         if not venv_path.exists():
-            print("Creating virtual environment...")
-            subprocess.check_call([sys.executable, "-m", "venv", str(venv_path)])
-            print(f"✅ Virtual environment created at {venv_path}")
-        activation_command = f"source {venv_path}/bin/activate"
-        print("\n⚠️  Please activate the virtual environment before running this script again:")
-        print(f"\n\t{activation_command}\n")
-        sys.exit(1)
+            try:
+                # Use inherit=True to show subprocess output during creation
+                # Set cwd to the script's directory parent to ensure venv is created there
+                subprocess.check_call([sys.executable, "-m", "venv", str(venv_path)],
+                                       stdout=sys.stdout, stderr=sys.stderr,
+                                       cwd=Path(__file__).parent)
+                print(f"✅ Virtual environment created at {venv_path}")
+            except subprocess.CalledProcessError as e:
+                print(f"❌ Failed to create virtual environment. Error: {e}")
+                print("Please try creating it manually: python -m venv venv")
+                sys.exit(1)
+            except Exception as e:
+                 print(f"❌ An unexpected error occurred during venv creation: {e}")
+                 sys.exit(1)
+        else:
+            print("Virtual environment found, but not active.")
+        print(f"\n⚠️  Please activate the virtual environment before running this script again.")
+        print(f"The command depends on your operating system and shell:\n")
+
+        if current_os == 'Windows':
+            # Provide instructions for common Windows shells
+            print(f"  If using Command Prompt (cmd.exe):")
+            print(f"    cd {Path(__file__).parent}") # Go to script directory first
+            print(f"    .\\venv\\Scripts\\activate.bat")
+            print(f"\n  If using PowerShell:")
+            print(f"    cd {Path(__file__).parent}") # Go to script directory first
+            print(f"    .\\venv\\Scripts\\Activate.ps1")
+            print(f"\n  If using Git Bash or WSL Bash:")
+            print(f"    cd {Path(__file__).parent}") # Go to script directory first
+            print(f"    source ./venv/Scripts/activate")
+        else: # macOS and Linux
+            print(f"  If using Bash, Zsh, or other standard Unix shells:")
+            print(f"    cd {Path(__file__).parent}") # Go to script directory first
+            print(f"    source ./venv/bin/activate") # Note: bin/activate for Unix-like
+
+        print(f"\nAfter activating the environment, run the script again from that same directory:\n")
+        print(f"    python {Path(__file__).name}\n")
+
+        sys.exit(1) # Exit as the user needs to activate manually
+
+    print(f"✅ Running inside virtual environment: {sys.prefix}")
 
 def check_dependencies():
     """Check if required dependencies are installed, install if missing."""
     dependencies = [
-        "gradio==5.29.0", 
-        "google-genai",  
-        "python-dotenv"
+        "gradio==5.29.0",
+        "google-genai",
+        "python-dotenv",
+        "pandas",
+        "numpy",
+        "scikit-learn", 
+        "python-docx",  
+        "PyPDF2"        
     ]
     
     for dep in dependencies:
