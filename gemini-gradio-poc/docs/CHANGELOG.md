@@ -148,6 +148,52 @@ No change to usage. Launch the UI and interact with the chatbot as before.
   - Clear separation of UI, logic, config, and tests
   - Easier debugging, testing, and future development
 
+## [2025-05-23] - Bugfix: Gradio ChatInterface State KeyError
+
+### Fixed
+- **KeyError: 0 in Gradio ChatInterface**: Fixed a bug where the Gradio UI would crash with a KeyError due to improper state registration in the ChatInterface.
+- **Technical Details**: The `state` parameter is now passed directly to the `gr.ChatInterface` constructor instead of being set after creation. This ensures Gradio correctly registers the state block and prevents KeyError on UI interaction.
+
+### How to Use
+- Launch the UI as before. The chat, knowledge base, and rule summary panels will work without backend KeyErrors.
+
+### Dependencies
+- `gradio` (see [Gradio documentation](https://www.gradio.app/docs/gradio/interface))
+- `google-genai` (see [Google GenAI SDK](https://googleapis.github.io/python-genai/index.html))
+
+### Example
+No change to usage. Launch the UI and interact with the chatbot as before.
+
+## [2025-05-23] - Bugfix: Gradio ChatInterface State Argument Error
+
+### Fixed
+- **TypeError: ChatInterface.__init__() got an unexpected keyword argument 'state'**: Updated the code to remove the unsupported `state` argument from the `gr.ChatInterface` constructor. State is now set after creation using `chat_interface.state = state_rag_df`, as per Gradio 5.29.0 documentation.
+
+### How to Use
+- Launch the UI as before. The chat, knowledge base, and rule summary panels will work without backend errors.
+
+### Dependencies
+- `gradio` (see [Gradio documentation](https://www.gradio.app/docs/gradio/interface))
+- `google-genai` (see [Google GenAI SDK](https://googleapis.github.io/python-genai/index.html))
+
+### Example
+No change to usage. Launch the UI and interact with the chatbot as before.
+
+## [2025-05-23] - Gradio State Management Bugfix
+
+### Fixed
+- **KeyError in ChatInterface with State**: Updated the Gradio ChatInterface to use the correct state management pattern. State is now passed as an `additional_input` and `additional_output` to the ChatInterface, and not set via `.state` after creation. This prevents the KeyError and ensures state is properly registered and updated.
+
+### How to Use
+- Launch the UI as before. The chat, knowledge base, and rule summary panels will work without backend KeyErrors.
+
+### Dependencies
+- `gradio` (see [Gradio documentation](https://www.gradio.app/docs/gradio/interface))
+- `google-genai` (see [Google GenAI SDK](https://googleapis.github.io/python-genai/index.html))
+
+### Example
+No change to usage. Launch the UI and interact with the chatbot as before.
+
 ---
 
 *This changelog will be updated with all major changes and features in the Capstone repository going forward.*

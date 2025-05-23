@@ -122,8 +122,8 @@ def chat_with_rag(user_input: str, history: list, rag_state_df: pd.DataFrame) ->
 
     updated_history = history + [(user_input, chatbot_response_string)]
     # Return outputs in the order expected by Gradio ChatInterface:
-    # (response, history, *additional_outputs)
-    return chatbot_response_string, updated_history, name_val, summary_val, logic_val
+    # (response, history, name, summary, logic, state)
+    return chatbot_response_string, updated_history, name_val, summary_val, logic_val, rag_state_df
 
 def preview_apply_rule():
     global rule_response
@@ -169,6 +169,7 @@ def create_gradio_interface():
     """) as demo:
         gr.Markdown("# Rule Management Bot with RAG")
 
+        # --- Define outputs for ChatInterface (move these above ChatInterface creation) ---
         with gr.Row():
             # Column 1: Chat Interface
             with gr.Column(scale=1, elem_classes="left-column"):
@@ -180,7 +181,9 @@ def create_gradio_interface():
                         placeholder="Enter your rule description or question here...",
                         scale=7
                     ),
-                    type="messages"
+                    type="messages",
+                    additional_inputs=[state_rag_df],
+                    # We'll reference name, summary, logic after they're created below
                 )
 
             # Column 2: Knowledge Base Setup
@@ -212,9 +215,8 @@ def create_gradio_interface():
                 drl_file = gr.File(label="Download DRL")
                 gdst_file = gr.File(label="Download GDST")
 
-        # Connect outputs to the chat interface (no additional_inputs, use state)
-        chat_interface.additional_outputs = [name, summary, logic]
-        chat_interface.state = state_rag_df
+        # Now that name, summary, logic are defined, set them as additional_outputs
+        chat_interface.additional_outputs = [name, summary, logic, state_rag_df]
 
         # --- Event Actions ---
         build_kb_button.click(
