@@ -22,42 +22,38 @@ from rag_utils import read_documents_from_paths, chunk_text, embed_texts, retrie
 #     return client
 
 # New function to build_knowledge_base_process, which calls functions in rag_utils.
-def build_knowledge_base_process(
-    rag_state_df: pd.DataFrame,
-    uploaded_files: list,
-    chunk_size: int | None,
-    chunk_overlap: int | None
-) -> tuple:
+def build_knowledge_base_process(uploaded_files, chunk_size, chunk_overlap, rag_state_df):
     """
     Processes uploaded documents, creates chunks, embeds them,
     and yields status updates before returning the final state and status message.
     """
-    yield rag_state_df, "Processing..."
+    status_message = "Processing..."
+    yield status_message, rag_state_df
 
     if not uploaded_files:
-        yield pd.DataFrame(), "Please upload documents first."
+        yield "Please upload documents first.", pd.DataFrame()
         return
 
     if chunk_size is None or chunk_size <= 0 or chunk_overlap is None or chunk_overlap < 0 or chunk_overlap >= chunk_size:
-        yield rag_state_df, "Invalid chunk size or overlap. Chunk size > 0, overlap >= 0, overlap < chunk size."
+        yield "Invalid chunk size or overlap. Chunk size > 0, overlap >= 0, overlap < chunk size.", rag_state_df
         return
 
     print(f"Building knowledge base with chunk_size={chunk_size}, chunk_overlap={chunk_overlap}...")
-    yield rag_state_df, "Reading documents..."
+    yield "Reading documents...", rag_state_df
 
     file_paths = [f.name for f in uploaded_files if f and hasattr(f, 'name') and f.name]
 
     if not file_paths:
-         yield pd.DataFrame(), "No valid file paths from upload."
+         yield "No valid file paths from upload.", pd.DataFrame()
          return
 
     raw_docs = read_documents_from_paths(file_paths)
 
     if not raw_docs:
-         yield pd.DataFrame(), "No readable documents found."
+         yield "No readable documents found.", pd.DataFrame()
          return
 
-    yield rag_state_df, "Chunking text..."
+    yield "Chunking text...", rag_state_df
     all_chunks = []
     all_filenames = []
     for doc in raw_docs:
@@ -66,88 +62,69 @@ def build_knowledge_base_process(
         all_filenames.extend([doc['filename']] * len(chunks))
 
     if not all_chunks:
-         yield pd.DataFrame(), "No text chunks created from documents."
+         yield "No text chunks created from documents.", pd.DataFrame()
          return
 
-
-    yield rag_state_df, f"Embedding {len(all_chunks)} chunks..."
+    yield f"Embedding {len(all_chunks)} chunks...", rag_state_df
     print(f"Attempting to embed {len(all_chunks)} chunks...")
     try:
-        # embed_texts returns a list of (chunk, embedding or None) tuples
         chunk_embedding_pairs = embed_texts(all_chunks, task_type="RETRIEVAL_DOCUMENT")
-
-        # Filter out chunks that failed to embed
         successful_pairs = [(chunk, emb) for chunk, emb in chunk_embedding_pairs if emb is not None]
-
         if not successful_pairs:
-            yield pd.DataFrame(), "Embedding failed for all chunks."
+            yield "Embedding failed for all chunks.", pd.DataFrame()
             return
-
         successful_chunks = [pair[0] for pair in successful_pairs]
         successful_embeddings = [pair[1] for pair in successful_pairs]
-
-        # Align filenames with successful chunks
         original_chunk_data = list(zip(all_filenames, all_chunks))
         filtered_filenames = []
         filtered_chunks_aligned = []
-        chunk_original_indices = {id(chunk): idx for idx, chunk in enumerate(all_chunks)} # Use id for uniqueness
+        chunk_original_indices = {id(chunk): idx for idx, chunk in enumerate(all_chunks)}
         for chunk, emb in chunk_embedding_pairs:
             if emb is not None:
-                # Find the original index based on the object's identity if possible,
-                # or fall back to value if identities might not match (e.g., after some processing)
                 original_idx = chunk_original_indices.get(id(chunk))
                 if original_idx is None:
-                    # Fallback to value search if identity didn't work
                      try:
                          original_idx = all_chunks.index(chunk)
                      except ValueError:
-                          original_idx = None # Still not found
-
-
+                          original_idx = None
                 if original_idx is not None and original_idx < len(all_filenames):
                     filtered_filenames.append(all_filenames[original_idx])
-                    filtered_chunks_aligned.append(chunk) # Use the chunk text from pair
+                    filtered_chunks_aligned.append(chunk)
                 else:
                     print(f"Warning: Could not find original filename for chunk. Appending 'Unknown File'. Chunk start: {chunk[:50]}...")
                     filtered_filenames.append("Unknown File")
                     filtered_chunks_aligned.append(chunk)
-
-
         if len(filtered_chunks_aligned) != len(successful_embeddings):
              print("Error: Mismatch between aligned chunks and successful embeddings count after filtering!")
-             yield pd.DataFrame(), "Internal error aligning chunks/embeddings."
+             yield "Internal error aligning chunks/embeddings.", pd.DataFrame()
              return
-
-
     except Exception as e:
         status_message = f"An error occurred during embedding: {e}"
         print(status_message)
-        yield pd.DataFrame(), status_message
+        yield status_message, pd.DataFrame()
         return
-
-
     status_message = "Creating knowledge base index..."
-    yield rag_state_df, status_message
-
+    yield status_message, rag_state_df
     try:
         rag_index_df_new = pd.DataFrame({
             'filename': filtered_filenames,
             'chunk': filtered_chunks_aligned,
             'embedding': successful_embeddings
         })
-
         status_message = f"✅ Knowledge base built successfully with {len(rag_index_df_new)} chunks."
         print(status_message)
-        yield rag_index_df_new, status_message
-
+        yield status_message, rag_index_df_new
     except Exception as e:
         status_message = f"An error occurred creating the index: {e}"
         print(status_message)
-        yield pd.DataFrame(), s
+        yield status_message, pd.DataFrame()
 
 
 def chat_with_rag(user_input: str, history: list, rag_state_df: pd.DataFrame) -> tuple:
     global rule_response
+    # Defensive: ensure rag_state_df is always a DataFrame
+    if rag_state_df is None:
+        rag_state_df = pd.DataFrame()
     try:
         client = initialize_gemini_client()
     except ValueError as e:
@@ -298,8 +275,103 @@ def chat_with_rag(user_input: str, history: list, rag_state_df: pd.DataFrame) ->
     #     return error_message
 
 def preview_apply_rule():
-    # Placeholder for preview & apply functionality
-    return "Rule applied successfully!"
+    global rule_response
+    try:
+        drl, gdst = json_to_drl_gdst(rule_response)
+        verified = verify_drools_execution(drl, gdst)
+        if verified:
+            # Save files for download
+            drl_path = "generated_rule.drl"
+            gdst_path = "generated_table.gdst"
+            with open(drl_path, "w") as f:
+                f.write(drl)
+            with open(gdst_path, "w") as f:
+                f.write(gdst)
+            return (
+                "Rule applied successfully! Download your files below.",
+                drl_path,
+                gdst_path
+            )
+        else:
+            return ("Verification failed.", None, None)
+    except Exception as e:
+        return (f"Error: {str(e)}", None, None)
+
+def json_to_drl_gdst(json_data):
+    """
+    Uses Google Gen AI to translate JSON to DRL and GDST file contents.
+    Returns (drl_content, gdst_content)
+    """
+    client = initialize_gemini_client()  # Use the function from rag_utils
+    
+    # Simplified prompt for testing
+    prompt = (
+        "Given the following JSON, generate equivalent Drools DRL and GDST file contents. "
+        "Return DRL first, then GDST, separated by a delimiter '---GDST---'.\n\n"
+        f"JSON:\n{json.dumps(json_data, indent=2)}"
+    )
+    
+    contents = [
+        types.Content(
+            role="user",
+            parts=[types.Part.from_text(text=prompt)]
+        )
+    ]
+    
+    # Configure response type to be text
+    generate_content_config = types.GenerateContentConfig(
+        response_mime_type="text/plain"
+    )
+    
+    try:
+        response = client.models.generate_content(
+            model=DEFAULT_MODEL,
+            contents=contents,
+            config=generate_content_config,
+        )
+        
+        print("Response received, attempting to extract DRL and GDST...")
+        
+        # Check for different response formats
+        if hasattr(response, "text"):
+            response_text = response.text
+        elif hasattr(response, "parts") and len(response.parts) > 0:
+            response_text = response.parts[0].text
+        elif hasattr(response, "candidates") and len(response.candidates) > 0:
+            response_text = response.candidates[0].content.parts[0].text
+        else:
+            print("Unexpected response structure:", response)
+            # Fallback: Try accessing as dictionary
+            response_dict = vars(response)
+            print("Response dict keys:", response_dict.keys())
+            raise ValueError("Could not extract text from response")
+        
+        print("Response text excerpt:", response_text[:100] + "...")
+        
+        # Check if the response has our delimiter
+        if "---GDST---" in response_text:
+            drl, gdst = response_text.split("---GDST---", 1)
+            return drl.strip(), gdst.strip()
+        else:
+            print("Delimiter not found, attempting to split response logically...")
+            # If no delimiter, try to split the response in half
+            lines = response_text.split("\n")
+            midpoint = len(lines) // 2
+            drl = "\n".join(lines[:midpoint])
+            gdst = "\n".join(lines[midpoint:])
+            return drl.strip(), gdst.strip()
+            
+    except Exception as e:
+        print(f"Error processing GenAI response: {e}")
+        raise ValueError(f"Error in GenAI response processing: {str(e)}")
+
+def verify_drools_execution(drl_content, gdst_content):
+    """
+    Placeholder for Drools execution verification.
+    Returns True if verification passes, False otherwise.
+    """
+    # TODO: Integrate with actual Drools engine if available.
+    return True
 
 # Placeholder function for chat interaction
 def echo(message, history):
@@ -307,20 +379,8 @@ def echo(message, history):
 
 def create_gradio_interface():
     """Create and return the Gradio interface for the Gemini Chat Application."""
-    # Define the Gradio State variable for the RAG index DataFrame
-    # This will persist across user interactions within a session
-    # Initialize with an empty DataFrame
     state_rag_df = gr.State(pd.DataFrame())
 
-    # Create components to be shared between panels
-    name_display = gr.Textbox(value="Name will appear here after input.", label="Name")
-    summary_display = gr.Textbox(value="Summary will appear here after input.", label="Summary")
-    logic_display = gr.JSON(value={
-        "message": "Logic will appear here after input."
-    }, label="Logic")
-    #title_display = gr.Textbox(value="Title will appear here after input.", label="Title")
-    rag_status_display = gr.Textbox(label="Knowledge Base Status", value="Knowledge base not built yet.", interactive=False)
-   
     with gr.Blocks(theme=gr.themes.Base(), css="""
         footer { visibility: hidden; }
         .gradio-container { max-width: 1400px; margin: auto; }
@@ -328,91 +388,70 @@ def create_gradio_interface():
         .rag-config { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 5px; }
         .summary-panel { border: 1px solid #ccc; padding: 15px; border-radius: 5px; height: 100%; display: flex; flex-direction: column;}
         .summary-panel > :last-child { margin-top: auto; }
-        div[data-testid="file"] > div { width: 100% !important; }
-        div[data-testid="json"] textarea { height: 200px !important; }
+        .left-column { width: 33%; }
+        .middle-column { width: 33%; }
+        .right-column { width: 33%; }
     """) as demo:
         gr.Markdown("# Rule Management Bot with RAG")
 
         with gr.Row():
-            with gr.Column(scale=2): # Give chat column more space
+            # Column 1: Chat Interface
+            with gr.Column(scale=1, elem_classes="left-column"):
                 gr.Markdown("### Chat Interface")
-
-                chatbot = gr.Chatbot(height=500, show_copy_button=True) # Adjust height, add copy button
-
-                textbox = gr.Textbox(
-                        placeholder="Enter your rule description or question here...",
-                        scale=7,
-                        container=False # Prevent extra div wrapper
-                    )
-
-                # Create the ChatInterface wrapper
-                # Link to our chat_with_rag function
                 chat_interface = gr.ChatInterface(
-                    fn=chat_with_rag, # This function processes input, uses RAG, and updates outputs
-                    chatbot=chatbot,
-                    textbox=textbox,
-                    # additional_inputs pass components to the fn
-                    # Pass the RAG state to the chat function
-                    additional_inputs=[state_rag_df],
-                    # additional_outputs receive return values from fn
-                    # fn signature: (msg, history, state) -> (response, history, state, add_out1, add_out2, ...)
-                    # Map returns to outputs: (response_string, history_list, updated_state_df, name_val, summary_val, logic_val)
-                    # Map outputs to components: (chatbot_output, chatbot_history_update, state_rag_df, name_display, summary_display, logic_display)
-                    additional_outputs=[name_display, summary_display, logic_display],
-                    # Customize buttons if needed
-                    # submit_btn="Send",
-                    # clear_btn="Clear Chat",
-                    # retry_btn="Retry",
-                    # undo_btn="Undo Last"
+                    fn=chat_with_rag,
+                    chatbot=gr.Chatbot(height=500, show_copy_button=True, type="messages"),
+                    textbox=gr.Textbox(
+                        placeholder="Enter your rule description or question here...",
+                        scale=7
+                    ),
+                    type="messages"
                 )
-                # chat_interface.render() # No need to render if it's within a block
 
-
-            with gr.Column(scale=1, elem_classes="summary-panel"): # Give summary panel a class for styling
+            # Column 2: Knowledge Base Setup
+            with gr.Column(scale=1, elem_classes="middle-column"):
                 gr.Markdown("### Knowledge Base Setup")
-
                 with gr.Accordion("Upload Documents & Configure RAG", open=True, elem_classes="rag-config"):
                     document_upload = gr.File(
                         label="Upload Documents (.docx, .pdf)",
-                        file_count="multiple", # Allow multiple files
-                        file_types=[".docx", ".pdf"] # Specify allowed types
+                        file_count="multiple",
+                        file_types=[".docx", ".pdf"]
                     )
                     chunk_size_input = gr.Number(label="Chunk Size", value=500, precision=0, interactive=True)
                     chunk_overlap_input = gr.Number(label="Chunk Overlap", value=50, precision=0, interactive=True)
                     build_kb_button = gr.Button("Build Knowledge Base", variant="primary")
-                    rag_status_display.render()
+                    rag_status_display = gr.Textbox(
+                        label="Knowledge Base Status", 
+                        value="Knowledge base not built yet.", 
+                        interactive=False
+                    )
 
-
+            # Column 3: Rule Summary
+            with gr.Column(scale=1, elem_classes="right-column summary-panel"):
                 gr.Markdown("### Rule Summary")
-                name_display.render()
-                summary_display.render()
-                logic_display.render()
+                name = gr.Textbox(value="Name will appear here after input.", label="Name")
+                summary = gr.Textbox(value="Summary will appear here after input.", label="Summary")
+                logic = gr.Textbox(value="Logic will appear here after input.", label="Logic")
+                preview_button = gr.Button("Preview & Apply Rule", variant="primary")
+                status_box = gr.Textbox(label="Status")
+                drl_file = gr.File(label="Download DRL")
+                gdst_file = gr.File(label="Download GDST")
 
-                # gr.Spring() # Add a spring to push the button down if needed
-                preview_button = gr.Button("Preview & Apply Rule", variant="secondary")
-
+        # Connect outputs to the chat interface (no additional_inputs, use state)
+        chat_interface.additional_outputs = [name, summary, logic]
+        chat_interface.state = state_rag_df
 
         # --- Event Actions ---
-
-        # Link the "Build Knowledge Base" button to the processing function
-        # It takes inputs, updates the state, and updates the status display
         build_kb_button.click(
-            # Use the generator function for streaming updates
             build_knowledge_base_process,
-            inputs=[state_rag_df, document_upload, chunk_size_input, chunk_overlap_input],
-            # The generator yields (state, status) tuples
-            # The final return should match the outputs as well
-            outputs=[state_rag_df, rag_status_display],
-            show_progress="full" # Show progress during the potentially long RAG build
+            inputs=[document_upload, chunk_size_input, chunk_overlap_input, state_rag_df],
+            outputs=[rag_status_display, state_rag_df]
         )
 
-        # Link the "Preview & Apply" button
         preview_button.click(
             preview_apply_rule,
-            inputs=[],
-            outputs=[]
+            outputs=[status_box, drl_file, gdst_file]
         )
-
 
     return demo
 
