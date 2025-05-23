@@ -1,1 +1,1 @@
-Create a rule that assigns 5 employees to medium-sized restaurants when sales are between 100 and 200
+Create a rule that assigns 10 employees to medium-sized restaurants when sales are between 100 and 200

@@ -264,21 +264,48 @@ def rag_generate(query: str, df: pd.DataFrame, agent_prompt: str, model_name: st
     # 1. Add previous conversation history
     if history:
         print(f"Including {len(history)} turns of chat history.")
-        for user_msg, model_response in history:
-            # Append user's previous message
-            contents.append(
-                types.Content(
-                    role="user",
-                    parts=[types.Part.from_text(text=user_msg)]
+        print(f"History structure: {type(history)} with items of type: {[type(item) for item in history[:2]]}")
+        
+        for i, item in enumerate(history):
+            try:
+                # Handle different possible history formats
+                if isinstance(item, (list, tuple)) and len(item) >= 2:
+                    # Extract first two elements as user_msg and model_response
+                    user_msg, model_response = item[0], item[1]
+                elif isinstance(item, dict):
+                    # If it's a dictionary, look for common keys
+                    user_msg = item.get('user', item.get('input', ''))
+                    model_response = item.get('assistant', item.get('output', item.get('response', '')))
+                else:
+                    print(f"Warning: Unexpected history item format at index {i}: {type(item)} - {item}")
+                    continue
+                
+                # Validate that we have non-empty content before adding to contents
+                if not user_msg or not str(user_msg).strip():
+                    print(f"Warning: Empty user message in history item {i}, skipping")
+                    continue
+                
+                if not model_response or not str(model_response).strip():
+                    print(f"Warning: Empty model response in history item {i}, skipping")
+                    continue
+                
+                # Append user's previous message
+                contents.append(
+                    types.Content(
+                        role="user",
+                        parts=[types.Part.from_text(text=str(user_msg))]
+                    )
                 )
-            )
-            # Append model's previous response
-            contents.append(
-                types.Content(
-                    role="model",
-                    parts=[types.Part.from_text(text=model_response)]
+                # Append model's previous response
+                contents.append(
+                    types.Content(
+                        role="model",
+                        parts=[types.Part.from_text(text=str(model_response))]
+                    )
                 )
-            )
+            except Exception as e:
+                print(f"Error processing history item {i}: {e}. Item: {item}")
+                continue
 
     # 2. Retrieve relevant chunks based on the current user query
     retrieved_docs_df = retrieve(query, df, top_k)
@@ -299,6 +326,35 @@ def rag_generate(query: str, df: pd.DataFrame, agent_prompt: str, model_name: st
     # Place the prompt and context *before* the user's query in the final turn's text part
     current_user_turn_text = f"{agent_prompt}\n\n{context_text}User Query: {query}"
 
+    # Validate inputs before creating the API call
+    if not query or not query.strip():
+        print("ERROR: User query is empty or None")
+        return json.dumps({
+            "name": "Input Validation Error",
+            "summary": "User query cannot be empty",
+            "logic": {"message": "Please provide a valid query."}
+        })
+    
+    if not agent_prompt or not agent_prompt.strip():
+        print("ERROR: Agent prompt is empty or None")
+        return json.dumps({
+            "name": "Configuration Error",
+            "summary": "Agent prompt is not configured properly",
+            "logic": {"message": "System configuration error."}
+        })
+    
+    if not current_user_turn_text or not current_user_turn_text.strip():
+        print("ERROR: Final user turn text is empty")
+        print(f"Debug - query: '{query}', agent_prompt length: {len(agent_prompt) if agent_prompt else 0}, context_text length: {len(context_text) if context_text else 0}")
+        return json.dumps({
+            "name": "Text Construction Error",
+            "summary": "Failed to construct valid input text",
+            "logic": {"message": "Internal error in text construction."}
+        })
+
+    print(f"Debug - Final user turn text length: {len(current_user_turn_text)}")
+    print(f"Debug - First 100 chars: {current_user_turn_text[:100]}...")
+
     # 4. Append the current user turn to the contents list
     contents.append(
         types.Content(
@@ -310,6 +366,39 @@ def rag_generate(query: str, df: pd.DataFrame, agent_prompt: str, model_name: st
     # --- Call the LLM with the constructed 'contents' list ---
     try:
         print(f"Calling LLM ({model_name}) with 'contents' list (history + RAG + prompt) via google.genai...")
+        
+        # Additional validation before API call
+        if not contents:
+            print("ERROR: Contents list is empty")
+            return json.dumps({
+                "name": "API Input Error",
+                "summary": "No content to send to AI model",
+                "logic": {"message": "Contents list is empty."}
+            })
+        
+        # Validate each content item
+        for idx, content in enumerate(contents):
+            if not content.parts or not content.parts[0] or not content.parts[0].text:
+                print(f"ERROR: Content at index {idx} has empty text part")
+                print(f"Content role: {content.role}, parts: {content.parts}")
+                return json.dumps({
+                    "name": "Content Validation Error",
+                    "summary": f"Content item {idx} has empty text",
+                    "logic": {"message": "Invalid content structure."}
+                })
+            if not content.parts[0].text.strip():
+                print(f"ERROR: Content at index {idx} has whitespace-only text")
+                print(f"Content text: '{content.parts[0].text}'")
+                return json.dumps({
+                    "name": "Content Validation Error",
+                    "summary": f"Content item {idx} contains only whitespace",
+                    "logic": {"message": "Content must contain non-whitespace text."}
+                })
+        
+        print(f"Debug - About to call API with {len(contents)} content items")
+        print(f"Debug - Model: {model_name}")
+        print(f"Debug - Generation config: {generation_config}")
+        
         # Use client.models.generate_content for the older library
         response = gemini_client_instance.models.generate_content(
             model=model_name,

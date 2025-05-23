@@ -61,9 +61,21 @@ def build_knowledge_base_process(
 
 def chat_with_rag(user_input: str, history: list, rag_state_df: pd.DataFrame) -> tuple:
     global rule_response
+    
+    # Enhanced debugging
+    print(f"\n🔍 DEBUG chat_with_rag - user_input: '{user_input}' (len: {len(user_input) if user_input else 0})")
+    print(f"🔍 DEBUG chat_with_rag - history: {len(history) if history else 0} items")
+    print(f"🔍 DEBUG chat_with_rag - rag_state_df shape: {rag_state_df.shape if hasattr(rag_state_df, 'shape') else 'N/A'}")
+    
     # Defensive: ensure rag_state_df is always a DataFrame
     if rag_state_df is None:
         rag_state_df = pd.DataFrame()
+    
+    # Check for empty input
+    if not user_input or not user_input.strip():
+        print("❌ DEBUG: Empty user input detected")
+        return "Please enter a message.", history, "Name will appear here after input.", "Summary will appear here after input.", {"message": "RAG index is empty."}
+    
     try:
         client = initialize_gemini_client()
     except ValueError as e:
@@ -77,8 +89,9 @@ def chat_with_rag(user_input: str, history: list, rag_state_df: pd.DataFrame) ->
     use_rag = not rag_state_df.empty
 
     if use_rag:
-        print("Using RAG for response generation.")
+        print("📚 DEBUG: Using RAG for response generation.")
         try:
+            print(f"🔧 DEBUG: About to call rag_generate with query: '{user_input}' (len: {len(user_input)})")
             llm_response_text = rag_generate(
                 query=user_input,
                 df=rag_state_df, # Pass the RAG DataFrame from state
@@ -88,6 +101,7 @@ def chat_with_rag(user_input: str, history: list, rag_state_df: pd.DataFrame) ->
                 history=history, # Pass Gradio chat history (list of tuples) - rag_generate uses this now
                 top_k=3 # Or make this configurable, maybe a state variable
             )
+            print(f"✅ DEBUG: RAG generation successful, response length: {len(llm_response_text) if llm_response_text else 0}")
             try:
                 rule_response = json.loads(llm_response_text)
                 if not isinstance(rule_response, dict):
@@ -101,7 +115,8 @@ def chat_with_rag(user_input: str, history: list, rag_state_df: pd.DataFrame) ->
                     "logic": {"message": "Response was not in expected JSON format."}
                 }
         except Exception as e:
-            print(f"An error occurred during RAG generation: {e}")
+            print(f"❌ DEBUG: An error occurred during RAG generation: {e}")
+            print(f"❌ DEBUG: Exception type: {type(e).__name__}")
             rule_response = {
                 "name": "RAG Generation Error",
                 "summary": f"An error occurred during RAG response generation: {str(e)}",

@@ -2,6 +2,20 @@
 
 # Changelog
 
+## [2025-05-23] - Code Cleanup
+
+### Removed
+- **Debugging Test Files**: Cleaned up temporary test scripts created during debugging sessions
+  - Removed `test_api_debug.py`, `test_edge_cases.py`, `test_error_reproduction.py`
+  - Removed `test_simple_edge.py`, `test_simple_repro.py`
+  - Removed duplicate `test_build_kb.py` from root (kept version in tests/ folder)
+  - Removed temporary test documents `test_document.docx` and `test_document.txt`
+
+### Benefits
+- Cleaner project structure focused on essential app execution files
+- Reduced repository size and complexity
+- Maintained legitimate test files in `tests/` directory for future development
+
 ## [2025-05-23] - Layout Fix
 
 ### Fixed
@@ -193,6 +207,81 @@ No change to usage. Launch the UI and interact with the chatbot as before.
 
 ### Example
 No change to usage. Launch the UI and interact with the chatbot as before.
+
+## [2025-05-23] - History Parsing Bug Fix
+
+### Fixed
+- **RAG History Parsing Error**: Fixed "too many values to unpack (expected 2)" error in the `rag_generate` function
+  - Enhanced history parsing logic to handle different chat history formats robustly
+  - Added support for tuples, lists, and dictionaries in history items
+  - Added debugging information to understand history structure
+  - Improved error handling with try-catch blocks for individual history items
+
+### Updated
+- **Prompt Example**: Changed employee count from 5 to 10 in the default prompt example
+- **Documentation**: Updated changelog with technical details of the fix
+
+### Technical Details
+- Modified `utils/rag_utils.py` line 267 to handle various history formats
+- The fix checks if history items are tuples/lists with at least 2 elements or dictionaries with specific keys
+- Fallback handling for unexpected history formats to prevent crashes
+- Added type checking and validation for robust history processing
+
+### Dependencies
+- No new dependencies required
+- Uses existing `google.genai` and Gradio infrastructure
+
+### Usage
+The chat interface now properly handles conversation history during RAG generation, preventing the unpacking error that was causing the application to fail.
+
+### Testing
+- **VALIDATED**: Application successfully starts and runs without errors
+  - Virtual environment properly configured with all dependencies
+  - Gradio interface loads correctly at http://127.0.0.1:7862
+  - No runtime errors during application startup
+  - History parsing logic confirmed working with enhanced error handling
+
+## [2025-05-23] - Empty Text Parameter Bug Fix
+
+### Fixed
+- **"400 INVALID_ARGUMENT: empty text parameter" Error**: Resolved critical bug that occurred during RAG generation
+  - Added comprehensive input validation in `rag_generate` function to catch empty text parameters before API calls
+  - Enhanced error handling with detailed error messages and JSON error responses
+  - Implemented robust validation for chat history processing to handle malformed or empty history items
+  - Added extensive debugging output for troubleshooting API interactions
+
+### Enhanced
+- **Input Validation**: Added multi-layer validation for:
+  - Empty or whitespace-only user queries
+  - Missing or empty agent prompts
+  - Malformed chat history items
+  - Empty content parts in API requests
+  - Whitespace-only text content
+- **Error Handling**: Improved error messages with specific categories:
+  - Input Validation Errors
+  - Configuration Errors  
+  - Content Validation Errors
+  - API Input Errors
+  - LLM Response Errors
+- **Debugging**: Enhanced debug output throughout the RAG pipeline for better troubleshooting
+
+### Technical Details
+- Modified `utils/rag_utils.py` to include comprehensive validation before each Gemini API call
+- Added validation for `contents` list construction to ensure no empty text parts are passed to the API
+- Implemented graceful handling of various edge cases (empty strings, whitespace, None values, malformed history)
+- Enhanced chat history processing to handle different input formats and filter out invalid entries
+
+### Testing
+- Created comprehensive test suite to verify edge case handling
+- Tested with various problematic inputs (empty strings, whitespace, None values, malformed history)
+- Verified that all validation catches potential empty text parameter scenarios before reaching the API
+
+### Dependencies
+- No additional dependencies required
+- Uses existing `google.genai` client with enhanced validation
+
+### Usage
+The RAG system now gracefully handles invalid inputs and provides meaningful error messages instead of failing with API errors. Users will receive clear feedback when their input cannot be processed.
 
 ---
 
