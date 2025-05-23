@@ -1,7 +1,7 @@
 import json
 from google.genai import types
-from agent_config import DEFAULT_MODEL, GENERATION_CONFIG
-from rag_utils import initialize_gemini_client
+from config.agent_config import DEFAULT_MODEL, GENERATION_CONFIG
+from utils.rag_utils import initialize_gemini_client
 
 def json_to_drl_gdst(json_data):
     """

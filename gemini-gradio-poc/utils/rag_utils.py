@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 import time
-from config.agent_config import AGENT1_PROMPT, AGENT2_PROMPT, DEFAULT_MODEL, GENERATION_CONFIG, EMBEDDING_MODEL
+from config.agent_config import *
 from google import genai
 from google.genai import types
 import json

@@ -2,16 +2,15 @@ import os
 import gradio as gr
 from google import genai
 from google.genai import types
-from agent_config import AGENT1_PROMPT, AGENT2_PROMPT, DEFAULT_MODEL, GENERATION_CONFIG
+from config.agent_config import AGENT1_PROMPT, AGENT2_PROMPT, DEFAULT_MODEL, GENERATION_CONFIG
+from utils.rag_utils import read_documents_from_paths, embed_texts, retrieve, rag_generate, initialize_gemini_client
+from utils.kb_utils import core_build_knowledge_base
+from utils.rule_utils import json_to_drl_gdst, verify_drools_execution
 import json
 import pandas as pd
 import numpy as np
 
 #initialize initialize_gemini function from rag_utils 
-from rag_utils import read_documents_from_paths, embed_texts, retrieve, rag_generate, initialize_gemini_client
-from kb_utils import core_build_knowledge_base
-from rule_utils import json_to_drl_gdst, verify_drools_execution
-
 # Commented out initialize_gemini function because it will live in rag_utils.py
 # def initialize_gemini():
 #     api_key = os.environ.get('GOOGLE_API_KEY')
@@ -148,10 +147,6 @@ def preview_apply_rule():
     except Exception as e:
         return (f"Error: {str(e)}", None, None)
 
-# Placeholder function for chat interaction
-def echo(message, history):
-    return message
-
 def create_gradio_interface():
     """Create and return the Gradio interface for the Gemini Chat Application."""
     state_rag_df = gr.State(pd.DataFrame())
@@ -229,29 +224,3 @@ def create_gradio_interface():
         )
 
     return demo
-
-# This file is imported by run_gradio_ui.py
-
-
-# def agent1_process(user_input: str) -> dict:
-#     """
-#     Agent 1: Extract conditions and actions from natural language.
-#     Uses RAG to provide context from business documents.
-    
-#     Args:
-#         user_input: Natural language description of the business rule.
-        
-#     Returns:
-#         JSON representation of the rule.
-#     """
-#     # Implement the logic to extract conditions and actions from user_input
-#     # This is a placeholder for the actual implementation
-    
-
-#     conditions = extract_conditions(user_input)
-#     actions = extract_actions(user_input)
-#     return {
-#         "conditions": conditions,
-#         "actions": actions
-#     }
-

@@ -1,5 +1,5 @@
 import pandas as pd
-from rag_utils import read_documents_from_paths, chunk_text, embed_texts
+from utils.rag_utils import read_documents_from_paths, chunk_text, embed_texts
 from typing import List, Tuple
 
 def core_build_knowledge_base(file_paths: List[str], chunk_size: int, chunk_overlap: int) -> Tuple[str, pd.DataFrame]:
