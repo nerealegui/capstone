@@ -80,6 +80,74 @@ The interface now properly displays two distinct columns from initial load, impr
 ### Fixed
 - Corrected a bug in `build_knowledge_base_process` where an undefined variable `s` was used in the exception handler. Now returns the correct status message on error.
 
+## 2025-05-23
+
+### Fixed Gradio ChatInterface Output Bug
+- **Issue:** The `chat_with_rag` function returned too many output values, causing a Gradio error: "A function (_submit_fn) returned too many output values (needed: 2, returned: 5). Ignoring extra values."
+- **Fix:** Updated `chat_with_rag` to return outputs in the order and number expected by Gradio's `ChatInterface` with `additional_outputs`:
+  - (chatbot response string, updated chat history, name, summary, logic)
+- **Impact:** The chat interface now works as intended, with all side panel outputs updating correctly and no Gradio warnings.
+
+### How to Use
+- Use the Gradio UI as before. The chat, name, summary, and logic fields will update as expected after each chat turn.
+
+### Dependencies
+- [Gradio](https://www.gradio.app/docs/gradio/interface)
+- [Google GenAI SDK](https://googleapis.github.io/python-genai/index.html)
+- pandas, numpy, etc. (see requirements.txt)
+
+### Example
+No change to usage. Launch the UI and interact with the chatbot as before.
+
+## 2025-05-23
+
+### Refactored build_knowledge_base_process for Testability
+- **Refactor:** Separated the core logic of `build_knowledge_base_process` into a pure function (`_core_build_knowledge_base`) for easier unit testing and clarity.
+- **Enhancements:**
+  - Added type hints and improved docstrings for maintainability.
+  - The generator function now only handles Gradio status updates and delegates all logic to the core function.
+  - The core function can be directly tested with file paths, chunk size, and overlap, and returns a status message and DataFrame.
+- **How to Test:**
+  - You can now write unit tests for `_core_build_knowledge_base` by mocking file reading and embedding dependencies.
+
+## 2025-05-23
+
+### Modularized chat_app.py and Extracted Utility Logic
+- **Refactor:** Extracted the core knowledge base building logic to a new file `kb_utils.py` as `core_build_knowledge_base`.
+- **chat_app.py:** Now only contains Gradio interface, event wiring, and high-level event handler functions. All core logic is delegated to `kb_utils.py`.
+- **Benefits:**
+  - Easier to debug and maintain the Gradio interface.
+  - Utility logic is now easily unit-testable and reusable.
+  - Clearer separation of concerns between UI and backend logic.
+
+## 2025-05-23
+
+### Modularized Rule Summary/Generation Logic
+- **Refactor:** Extracted `json_to_drl_gdst` and `verify_drools_execution` to a new file `rule_utils.py`.
+- **chat_app.py:** Now imports these functions from `rule_utils.py` and only contains Gradio interface/event logic.
+- **Benefits:**
+  - Rule summary and Drools generation logic is now easily unit-testable and reusable.
+  - Further separation of concerns between UI and backend logic.
+
+## 2025-05-23
+
+### Major Project Restructure for Modularity
+- **Folders created:**
+  - `interface/` for Gradio UI and event logic
+  - `utils/` for all backend logic and helpers (RAG, KB, rule generation, etc)
+  - `config/` for prompt templates and model configs
+  - `tests/` for unit and integration tests
+- **Files moved:**
+  - `chat_app.py` → `interface/`
+  - `kb_utils.py`, `rag_utils.py`, `rule_utils.py` → `utils/`
+  - `agent_config.py` → `config/`
+  - `test_agent2.py`, `test_build_kb.py` → `tests/`
+- **All imports updated** to use the new folder structure.
+- **Documentation:** Added `docs/STRUCTURE.md` describing the new structure and usage.
+- **Benefits:**
+  - Clear separation of UI, logic, config, and tests
+  - Easier debugging, testing, and future development
+
 ---
 
 *This changelog will be updated with all major changes and features in the Capstone repository going forward.*

@@ -123,7 +123,7 @@ def check_api_key():
 
 def run_gradio_app():
     """Create and run the Gradio chat app."""
-    from chat_app import create_gradio_interface
+    from interface.chat_app import create_gradio_interface
     
     demo = create_gradio_interface()
 
