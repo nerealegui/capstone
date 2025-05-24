@@ -2,6 +2,40 @@
 
 # Changelog
 
+## [2025-05-24] - Function Refactoring and Optimization
+
+### Optimized
+- **chat_with_rag Function**: Refactored the main chat function to remove unused variables and improve code clarity
+  - **Removed unused `client` variable**: The `initialize_gemini_client()` call now only validates the API key without storing the unused client object
+  - **Eliminated redundant variable assignments**: Removed duplicate `chatbot_response_string` and `summary_val` variables that held the same value
+  - **Simplified return structure**: Using `response_summary` variable directly for both chat response and summary display
+  - **Improved variable naming**: Renamed `chatbot_response_string` to `response_summary` for better clarity
+  - **Cleaned up comments**: Removed redundant inline comments and improved code documentation
+
+### Technical Benefits
+- Reduced memory usage by eliminating unused variables
+- Improved code readability and maintainability
+- Simplified variable flow and reduced redundancy
+- Maintained all existing functionality while improving performance
+
+### Files Modified
+- `interface/chat_app.py` - `chat_with_rag()` function refactored
+
+## [2025-05-24] - Warning Behavior Documentation
+
+### Clarified
+- **Warning Messages in RAG Processing**: Documented that warning messages like "Warning: Empty user message in history item X, skipping" and "Warning: Empty model response in history item X, skipping" are **expected behavior** and indicate the robust error handling system is working correctly
+- **Normal Operation**: These warnings appear when the system encounters empty or malformed chat history items and gracefully filters them out instead of crashing
+- **Benefits**: The warning system provides transparency, prevents crashes, and aids in debugging while maintaining full application functionality
+
+### Technical Details
+- Warnings originate from enhanced error handling in `utils/rag_utils.py` (lines 307-315)
+- System continues normal operation after displaying warnings
+- No action required unless the application actually crashes or fails
+
+### Usage
+Users can safely ignore these warning messages as they indicate the system is working properly to handle edge cases in chat history data.
+
 ## [2025-05-23] - Code Cleanup
 
 ### Removed

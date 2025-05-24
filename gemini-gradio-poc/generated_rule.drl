@@ -1,15 +1,18 @@
 ```drl
-package com.example
+package rules;
 
-import java.util.List;
+import com.example.Restaurant;
+import com.example.Forecast;
+import com.example.Staffing;
 
-rule "EmployeeAssignmentRule"
-    salience 10
+rule "MediumRestaurantSalesStaffing"
+    salience 100
     when
-        $restaurantSize : String( this == "medium" ) from $restaurant.size
-        $sales : Number( this >= 100 && this <= 200 ) from $restaurant.sales
+        $restaurant : Restaurant( size == "Medium" )
+        $forecast : Forecast( total_sales >= 100, total_sales <= 200 )
+        $staffing : Staffing()
     then
-        $restaurant.setEmployees(10);
-        update($restaurant); // Or insert the updated restaurant, depending on your use case
+        $staffing.setBase_employees(5);
+        update($staffing);
+        System.out.println("Rule MediumRestaurantSalesStaffing fired for restaurant: " + $restaurant.getName() + " with sales: " + $forecast.getTotal_sales());
 end
-```

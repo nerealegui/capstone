@@ -59,13 +59,8 @@ def build_knowledge_base_process(
     yield status_message, result_df
 
 
-def chat_with_rag(user_input: str, history: list, rag_state_df: pd.DataFrame) -> tuple:
+def chat_with_rag(user_input: str, history: list, rag_state_df: pd.DataFrame):
     global rule_response
-    
-    # Enhanced debugging
-    print(f"\n🔍 DEBUG chat_with_rag - user_input: '{user_input}' (len: {len(user_input) if user_input else 0})")
-    print(f"🔍 DEBUG chat_with_rag - history: {len(history) if history else 0} items")
-    print(f"🔍 DEBUG chat_with_rag - rag_state_df shape: {rag_state_df.shape if hasattr(rag_state_df, 'shape') else 'N/A'}")
     
     # Defensive: ensure rag_state_df is always a DataFrame
     if rag_state_df is None:
@@ -73,40 +68,33 @@ def chat_with_rag(user_input: str, history: list, rag_state_df: pd.DataFrame) ->
     
     # Check for empty input
     if not user_input or not user_input.strip():
-        print("❌ DEBUG: Empty user input detected")
-        return "Please enter a message.", history, "Name will appear here after input.", "Summary will appear here after input.", {"message": "RAG index is empty."}
+        empty_response = "Please enter a message."
+        return empty_response, history, "Name will appear here after input.", "Summary will appear here after input.", {"message": "RAG index is empty."}
     
+    # Validate API key without storing unused client variable
     try:
-        client = initialize_gemini_client()
+        initialize_gemini_client()
     except ValueError as e:
          error_message = f"API Key Error: {e}"
          print(error_message)
-         # Return error for chatbot and empty values for displays, return original state
-         # ChatInterface fn returns (response, history, state, additional_outputs...)
          return error_message, history, "Name will appear here after input.", "Summary will appear here after input.", {"message": "RAG index is empty."}
     
-    # Determine if RAG should be used (if rag_index_df from state is not empty)
+    # Determine if RAG should be used (if rag_state_df is not empty)
     use_rag = not rag_state_df.empty
 
     if use_rag:
-        print("📚 DEBUG: Using RAG for response generation.")
         try:
-            print(f"🔧 DEBUG: About to call rag_generate with query: '{user_input}' (len: {len(user_input)})")
             llm_response_text = rag_generate(
                 query=user_input,
-                df=rag_state_df, # Pass the RAG DataFrame from state
-                agent_prompt=AGENT1_PROMPT, # Use the Agent 1 prompt for RAG
+                df=rag_state_df,
+                agent_prompt=AGENT1_PROMPT,
                 model_name=DEFAULT_MODEL,
                 generation_config=GENERATION_CONFIG,
-                history=history, # Pass Gradio chat history (list of tuples) - rag_generate uses this now
-                top_k=3 # Or make this configurable, maybe a state variable
+                history=history,
+                top_k=3
             )
-            print(f"✅ DEBUG: RAG generation successful, response length: {len(llm_response_text) if llm_response_text else 0}")
-            # DEBUG: After parsing llm_response_text
-            print("LLM raw response:", llm_response_text)
             try:
                 rule_response = json.loads(llm_response_text)
-                # DEBUG: After parsing rule_response
                 print("Parsed rule_response:", rule_response)
                 if not isinstance(rule_response, dict):
                      raise json.JSONDecodeError("Response is not a JSON object.", llm_response_text, 0)
@@ -119,8 +107,6 @@ def chat_with_rag(user_input: str, history: list, rag_state_df: pd.DataFrame) ->
                     "logic": {"message": "Response was not in expected JSON format."}
                 }
         except Exception as e:
-            print(f"❌ DEBUG: An error occurred during RAG generation: {e}")
-            print(f"❌ DEBUG: Exception type: {type(e).__name__}")
             rule_response = {
                 "name": "RAG Generation Error",
                 "summary": f"An error occurred during RAG response generation: {str(e)}",
@@ -134,21 +120,22 @@ def chat_with_rag(user_input: str, history: list, rag_state_df: pd.DataFrame) ->
             "logic": {"message": "RAG index is empty."}
         }
 
-    chatbot_response_string = rule_response.get('summary', 'No summary available.')
+    # Extract values directly for return (avoiding redundant variables)
+    response_summary = rule_response.get('summary', 'No summary available.')
     name_val = rule_response.get('name', 'Name will appear here after input.')
-    summary_val = rule_response.get('summary', 'Summary will appear here after input.')
     logic_val = rule_response.get('logic', {"message": "Logic will appear here..."})
 
-    updated_history = history + [(user_input, chatbot_response_string)]
+    updated_history = history + [(user_input, response_summary)]
 
-    # Debug; Before returning
+    # Debug output
     print("Returning to Gradio:")
     print("  name_val:", name_val)
-    print("  summary_val:", summary_val)
+    print("  summary_val:", response_summary)
     print("  logic_val:", logic_val)
+    
     # Return outputs in the order expected by Gradio ChatInterface:
     # (response, history, name, summary, logic, state)
-    return chatbot_response_string, updated_history, name_val, summary_val, logic_val, rag_state_df
+    return response_summary, updated_history, name_val, logic_val, rag_state_df
 
 def preview_apply_rule():
     global rule_response
@@ -173,10 +160,6 @@ def preview_apply_rule():
     except Exception as e:
         return (f"Error: {str(e)}", None, None)
 
-# Placeholder function for chat interaction
-def echo(message, history):
-    return message
-
 def create_gradio_interface():
     """Create and return the Gradio interface for the Gemini Chat Application."""
     state_rag_df = gr.State(pd.DataFrame())
@@ -200,9 +183,6 @@ def create_gradio_interface():
             # Column 1: Chat Interface
             with gr.Column(scale=1, elem_classes="left-column"):
                 gr.Markdown("### Chat Interface")
-                name_placeholder = gr.Textbox(visible=False)
-                summary_placeholder = gr.Textbox(visible=False)
-                logic_placeholder = gr.Textbox(visible=False)
                 chat_interface = gr.ChatInterface(
                     fn=chat_with_rag,
                     chatbot=gr.Chatbot(height=500, show_copy_button=True, type="messages"),
@@ -262,29 +242,4 @@ def create_gradio_interface():
         )
 
     return demo
-
-# This file is imported by run_gradio_ui.py
-
-
-# def agent1_process(user_input: str) -> dict:
-#     """
-#     Agent 1: Extract conditions and actions from natural language.
-#     Uses RAG to provide context from business documents.
-    
-#     Args:
-#         user_input: Natural language description of the business rule.
-        
-#     Returns:
-#         JSON representation of the rule.
-#     """
-#     # Implement the logic to extract conditions and actions from user_input
-#     # This is a placeholder for the actual implementation
-    
-
-#     conditions = extract_conditions(user_input)
-#     actions = extract_actions(user_input)
-#     return {
-#         "conditions": conditions,
-#         "actions": actions
-#     }
 
