@@ -135,8 +135,7 @@ def update_rule_summary():
         if 'rule_response' in globals() and rule_response:
             name_val = rule_response.get('name', 'Name will appear here after input.')
             summary_val = rule_response.get('summary', 'Summary will appear here after input.')
-            logic_val = str(rule_response.get('logic', {"message": "Logic will appear here..."}))
-            return name_val, summary_val, logic_val
+            return name_val, summary_val
         else:
             return "Name will appear here after input.", "Summary will appear here after input."
     except Exception as e:
