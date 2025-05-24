@@ -262,6 +262,23 @@ def rag_generate(query: str, df: pd.DataFrame, agent_prompt: str, model_name: st
     contents = []
 
     # 1. Add previous conversation history
+    # if history:
+    #     print(f"Including {len(history)} turns of chat history.")
+    #     for user_msg, model_response in history:
+    #         # Append user's previous message
+    #         contents.append(
+    #             types.Content(
+    #                 role="user",
+    #                 parts=[types.Part.from_text(text=user_msg)]
+    #             )
+    #         )
+    #         # Append model's previous response
+    #         contents.append(
+    #             types.Content(
+    #                 role="model",
+    #                 parts=[types.Part.from_text(text=model_response)]
+    #             )
+    #         )
     if history:
         print(f"Including {len(history)} turns of chat history.")
         print(f"History structure: {type(history)} with items of type: {[type(item) for item in history[:2]]}")
@@ -274,8 +291,19 @@ def rag_generate(query: str, df: pd.DataFrame, agent_prompt: str, model_name: st
                     user_msg, model_response = item[0], item[1]
                 elif isinstance(item, dict):
                     # If it's a dictionary, look for common keys
-                    user_msg = item.get('user', item.get('input', ''))
-                    model_response = item.get('assistant', item.get('output', item.get('response', '')))
+                    if 'role' in item and 'content' in item:
+                        # Handle dict format with role/content
+                        contents.append(
+                            types.Content(
+                                role=item['role'],
+                                parts=[types.Part.from_text(text=item['content'])]
+                            )
+                        )
+                        continue
+                    else:
+                        # Handle other dict formats
+                        user_msg = item.get('user', item.get('input', ''))
+                        model_response = item.get('assistant', item.get('output', item.get('response', '')))
                 else:
                     print(f"Warning: Unexpected history item format at index {i}: {type(item)} - {item}")
                     continue
@@ -306,7 +334,6 @@ def rag_generate(query: str, df: pd.DataFrame, agent_prompt: str, model_name: st
             except Exception as e:
                 print(f"Error processing history item {i}: {e}. Item: {item}")
                 continue
-
     # 2. Retrieve relevant chunks based on the current user query
     retrieved_docs_df = retrieve(query, df, top_k)
 
