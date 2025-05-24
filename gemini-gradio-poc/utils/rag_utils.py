@@ -262,24 +262,51 @@ def rag_generate(query: str, df: pd.DataFrame, agent_prompt: str, model_name: st
     contents = []
 
     # 1. Add previous conversation history
+    # if history:
+    #     print(f"Including {len(history)} turns of chat history.")
+    #     for user_msg, model_response in history:
+    #         # Append user's previous message
+    #         contents.append(
+    #             types.Content(
+    #                 role="user",
+    #                 parts=[types.Part.from_text(text=user_msg)]
+    #             )
+    #         )
+    #         # Append model's previous response
+    #         contents.append(
+    #             types.Content(
+    #                 role="model",
+    #                 parts=[types.Part.from_text(text=model_response)]
+    #             )
+    #         )
     if history:
         print(f"Including {len(history)} turns of chat history.")
-        for user_msg, model_response in history:
-            # Append user's previous message
-            contents.append(
-                types.Content(
-                    role="user",
-                    parts=[types.Part.from_text(text=user_msg)]
+        for turn in history:
+            # Accept both tuple and dict formats
+            if isinstance(turn, tuple) and len(turn) == 2:
+                user_msg, model_response = turn
+                contents.append(
+                    types.Content(
+                        role="user",
+                        parts=[types.Part.from_text(text=user_msg)]
+                    )
                 )
-            )
-            # Append model's previous response
-            contents.append(
-                types.Content(
-                    role="model",
-                    parts=[types.Part.from_text(text=model_response)]
+                contents.append(
+                    types.Content(
+                        role="model",
+                        parts=[types.Part.from_text(text=model_response)]
+                    )
                 )
-            )
-
+            elif isinstance(turn, dict) and 'role' in turn and 'content' in turn:
+                # Optionally handle dict format if needed
+                contents.append(
+                    types.Content(
+                        role=turn['role'],
+                        parts=[types.Part.from_text(text=turn['content'])]
+                    )
+                )
+            else:
+                print(f"Warning: Unexpected history format: {turn}")
     # 2. Retrieve relevant chunks based on the current user query
     retrieved_docs_df = retrieve(query, df, top_k)
 

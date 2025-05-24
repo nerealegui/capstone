@@ -72,7 +72,7 @@ def chat_with_rag(user_input: str, history: list, rag_state_df: pd.DataFrame) ->
          # Return error for chatbot and empty values for displays, return original state
          # ChatInterface fn returns (response, history, state, additional_outputs...)
          return error_message, history, "Name will appear here after input.", "Summary will appear here after input.", {"message": "RAG index is empty."}
-
+    
     # Determine if RAG should be used (if rag_index_df from state is not empty)
     use_rag = not rag_state_df.empty
 
@@ -88,8 +88,12 @@ def chat_with_rag(user_input: str, history: list, rag_state_df: pd.DataFrame) ->
                 history=history, # Pass Gradio chat history (list of tuples) - rag_generate uses this now
                 top_k=3 # Or make this configurable, maybe a state variable
             )
+            # DEBUG: After parsing llm_response_text
+            print("LLM raw response:", llm_response_text)
             try:
                 rule_response = json.loads(llm_response_text)
+                # DEBUG: After parsing rule_response
+                print("Parsed rule_response:", rule_response)
                 if not isinstance(rule_response, dict):
                      raise json.JSONDecodeError("Response is not a JSON object.", llm_response_text, 0)
             except (json.JSONDecodeError, Exception) as e:
@@ -121,6 +125,12 @@ def chat_with_rag(user_input: str, history: list, rag_state_df: pd.DataFrame) ->
     logic_val = rule_response.get('logic', {"message": "Logic will appear here..."})
 
     updated_history = history + [(user_input, chatbot_response_string)]
+
+    # Debug; Before returning
+    print("Returning to Gradio:")
+    print("  name_val:", name_val)
+    print("  summary_val:", summary_val)
+    print("  logic_val:", logic_val)
     # Return outputs in the order expected by Gradio ChatInterface:
     # (response, history, name, summary, logic, state)
     return chatbot_response_string, updated_history, name_val, summary_val, logic_val, rag_state_df
@@ -171,9 +181,13 @@ def create_gradio_interface():
 
         # --- Define outputs for ChatInterface (move these above ChatInterface creation) ---
         with gr.Row():
+
             # Column 1: Chat Interface
             with gr.Column(scale=1, elem_classes="left-column"):
                 gr.Markdown("### Chat Interface")
+                name_placeholder = gr.Textbox(visible=False)
+                summary_placeholder = gr.Textbox(visible=False)
+                logic_placeholder = gr.Textbox(visible=False)
                 chat_interface = gr.ChatInterface(
                     fn=chat_with_rag,
                     chatbot=gr.Chatbot(height=500, show_copy_button=True, type="messages"),
@@ -183,7 +197,7 @@ def create_gradio_interface():
                     ),
                     type="messages",
                     additional_inputs=[state_rag_df],
-                    # We'll reference name, summary, logic after they're created below
+                    
                 )
 
             # Column 2: Knowledge Base Setup
@@ -217,7 +231,9 @@ def create_gradio_interface():
 
         # Now that name, summary, logic are defined, set them as additional_outputs
         chat_interface.additional_outputs = [name, summary, logic, state_rag_df]
-
+        
+        #DEBUG
+        print("Gradio additional_outputs mapping:", chat_interface.additional_outputs)
         # --- Event Actions ---
         build_kb_button.click(
             build_knowledge_base_process,
