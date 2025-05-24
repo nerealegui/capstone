@@ -138,10 +138,10 @@ def update_rule_summary():
             logic_val = str(rule_response.get('logic', {"message": "Logic will appear here..."}))
             return name_val, summary_val, logic_val
         else:
-            return "Name will appear here after input.", "Summary will appear here after input.", "Logic will appear here after input."
+            return "Name will appear here after input.", "Summary will appear here after input."
     except Exception as e:
         print(f"Error in update_rule_summary: {e}")
-        return "Error loading rule data", "Error loading rule data", "Error loading rule data"
+        return "Error loading rule data", "Error loading rule data"
 
 def preview_apply_rule():
     global rule_response
@@ -198,7 +198,6 @@ def create_gradio_interface():
                     ),
                     type="messages",
                     additional_inputs=[state_rag_df],
-                    
                 )
 
             # Column 2: Knowledge Base Setup
@@ -224,7 +223,6 @@ def create_gradio_interface():
                 gr.Markdown("### Rule Summary")
                 name = gr.Textbox(value="Name will appear here after input.", label="Name")
                 summary = gr.Textbox(value="Summary will appear here after input.", label="Summary")
-                logic = gr.Textbox(value="Logic will appear here after input.", label="Logic")    
                 preview_button = gr.Button("Preview & Apply Rule", variant="primary")
                 status_box = gr.Textbox(label="Status")
                 drl_file = gr.File(label="Download DRL")
@@ -246,7 +244,7 @@ def create_gradio_interface():
         # You can trigger this by connecting it to the chat interface submit event
         chat_interface.chatbot.change(
             update_rule_summary,
-            outputs=[name, summary, logic]
+            outputs=[name, summary]
         )
     return demo
 
