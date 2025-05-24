@@ -120,22 +120,28 @@ def chat_with_rag(user_input: str, history: list, rag_state_df: pd.DataFrame):
             "logic": {"message": "RAG index is empty."}
         }
 
-    # Extract values directly for return (avoiding redundant variables)
+    # Extract values for the response
     response_summary = rule_response.get('summary', 'No summary available.')
-    name_val = rule_response.get('name', 'Name will appear here after input.')
-    logic_val = rule_response.get('logic', {"message": "Logic will appear here..."})
-
-    updated_history = history + [(user_input, response_summary)]
-
-    # Debug output
-    print("Returning to Gradio:")
-    print("  name_val:", name_val)
-    print("  summary_val:", response_summary)
-    print("  logic_val:", logic_val)
     
-    # Return outputs in the order expected by Gradio ChatInterface:
-    # (response, history, name, summary, logic, state)
-    return response_summary, updated_history, name_val, logic_val, rag_state_df
+    return response_summary
+
+
+# New separate function to update the rule summary components
+def update_rule_summary():
+    """Extract rule information from the global rule_response and return for UI update."""
+    global rule_response
+    
+    try:
+        if 'rule_response' in globals() and rule_response:
+            name_val = rule_response.get('name', 'Name will appear here after input.')
+            summary_val = rule_response.get('summary', 'Summary will appear here after input.')
+            logic_val = str(rule_response.get('logic', {"message": "Logic will appear here..."}))
+            return name_val, summary_val, logic_val
+        else:
+            return "Name will appear here after input.", "Summary will appear here after input.", "Logic will appear here after input."
+    except Exception as e:
+        print(f"Error in update_rule_summary: {e}")
+        return "Error loading rule data", "Error loading rule data", "Error loading rule data"
 
 def preview_apply_rule():
     global rule_response
@@ -218,28 +224,29 @@ def create_gradio_interface():
                 gr.Markdown("### Rule Summary")
                 name = gr.Textbox(value="Name will appear here after input.", label="Name")
                 summary = gr.Textbox(value="Summary will appear here after input.", label="Summary")
-                logic = gr.Textbox(value="Logic will appear here after input.", label="Logic")
+                logic = gr.Textbox(value="Logic will appear here after input.", label="Logic")    
                 preview_button = gr.Button("Preview & Apply Rule", variant="primary")
                 status_box = gr.Textbox(label="Status")
                 drl_file = gr.File(label="Download DRL")
                 gdst_file = gr.File(label="Download GDST")
-
-        # Now that name, summary, logic are defined, set them as additional_outputs
-        chat_interface.additional_outputs = [name, summary, logic, state_rag_df]
-        
-        #DEBUG
-        print("Gradio additional_outputs mapping:", chat_interface.additional_outputs)
+       
         # --- Event Actions ---
         build_kb_button.click(
             build_knowledge_base_process,
             inputs=[document_upload, chunk_size_input, chunk_overlap_input, state_rag_df],
             outputs=[rag_status_display, state_rag_df]
         )
-
+        
         preview_button.click(
             preview_apply_rule,
-            outputs=[status_box, drl_file, gdst_file]
+            outputs=[status_box,drl_file, gdst_file]
         )
 
+        # Auto-refresh rule summary after each chat message
+        # You can trigger this by connecting it to the chat interface submit event
+        chat_interface.chatbot.change(
+            update_rule_summary,
+            outputs=[name, summary, logic]
+        )
     return demo
 
