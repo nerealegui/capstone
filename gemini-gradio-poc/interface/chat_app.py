@@ -171,42 +171,44 @@ def create_gradio_interface():
 
     with gr.Blocks(theme=gr.themes.Base(), css="""
         footer { visibility: hidden; }
-        .gradio-container { max-width: 1400px; margin: auto; }
-        .gradio-column { flex: 1; min-width: 300px; }
-        .rag-config { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 5px; }
-        .summary-panel { border: 1px solid #ccc; padding: 15px; border-radius: 5px; height: 100%; display: flex; flex-direction: column;}
-        .summary-panel > :last-child { margin-top: auto; }
-        .left-column { width: 33%; }
-        .middle-column { width: 33%; }
-        .right-column { width: 33%; }
+        .gradio-container { 
+            max-width: 1800px; 
+            margin: auto; 
+        }
+        /* Force columns to be equal width and display in a row */
+        .equal-row {
+            display: flex !important;
+            flex-direction: row !important;
+            width: 100%;
+            gap: 20px;
+        }
+        .equal-col {
+            flex: 1 !important;
+            min-width: 300px !important;
+            box-sizing: border-box !important;
+        }
+        /* Column styling */
+        .column-box {
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            height: 100%;
+            padding: 15px;
+        }
     """) as demo:
         gr.Markdown("# Rule Management Bot with RAG")
-
-        # --- Define outputs for ChatInterface (move these above ChatInterface creation) ---
-        with gr.Row():
-
-            # Column 1: Chat Interface
-            with gr.Column(scale=1, elem_classes="left-column"):
-                gr.Markdown("### Chat Interface")
-                chat_interface = gr.ChatInterface(
-                    fn=chat_with_rag,
-                    chatbot=gr.Chatbot(height=500, show_copy_button=True, type="messages"),
-                    textbox=gr.Textbox(
-                        placeholder="Enter your rule description or question here...",
-                        scale=7
-                    ),
-                    type="messages",
-                    additional_inputs=[state_rag_df],
-                )
-
-            # Column 2: Knowledge Base Setup
-            with gr.Column(scale=1, elem_classes="middle-column"):
+        
+        
+        # Create a single row with three equal columns
+        with gr.Row(elem_classes=["equal-row"], equal_height=True):
+            # Knowledge Base Setup Column
+            with gr.Column(elem_classes=["equal-col", "column-box"], scale=1, min_width=300):
                 gr.Markdown("### Knowledge Base Setup")
-                with gr.Accordion("Upload Documents & Configure RAG", open=True, elem_classes="rag-config"):
+                with gr.Accordion("Upload Documents & Configure RAG", open=True):
                     document_upload = gr.File(
                         label="Upload Documents (.docx, .pdf)",
                         file_count="multiple",
-                        file_types=[".docx", ".pdf"]
+                        file_types=[".docx", ".pdf"],
+                        height=150
                     )
                     chunk_size_input = gr.Number(label="Chunk Size", value=500, precision=0, interactive=True)
                     chunk_overlap_input = gr.Number(label="Chunk Overlap", value=50, precision=0, interactive=True)
@@ -217,16 +219,33 @@ def create_gradio_interface():
                         interactive=False
                     )
 
-            # Column 3: Rule Summary
-            with gr.Column(scale=1, elem_classes="right-column summary-panel"):
+            # Chat Interface Column
+            with gr.Column(elem_classes=["equal-col", "column-box"], scale=1, min_width=300):
+                gr.Markdown("### Chat Interface")
+                chat_interface = gr.ChatInterface(
+                    fn=chat_with_rag,
+                    #chatbot=gr.Chatbot(type="messages"),
+                    #textbox=gr.Textbox(
+                    #    placeholder="Enter your rule description or question here...",
+                    #    container=False,
+                    #    lines=2
+                    #),
+                    type="messages",
+                    additional_inputs=[state_rag_df],
+                )
+            
+            
+            
+            # Rule Summary Column
+            with gr.Column(elem_classes=["equal-col", "column-box"], scale=1, min_width=300):
                 gr.Markdown("### Rule Summary")
                 name = gr.Textbox(value="Name will appear here after input.", label="Name")
-                summary = gr.Textbox(value="Summary will appear here after input.", label="Summary")
+                summary = gr.Textbox(value="Summary will appear here after input.", label="Summary", lines=3)
                 preview_button = gr.Button("Preview & Apply Rule", variant="primary")
                 status_box = gr.Textbox(label="Status")
-                drl_file = gr.File(label="Download DRL")
-                gdst_file = gr.File(label="Download GDST")
-       
+                drl_file = gr.File(label="Download DRL", visible=True, height="auto")
+                gdst_file = gr.File(label="Download GDST", visible=True, height="auto")
+        
         # --- Event Actions ---
         build_kb_button.click(
             build_knowledge_base_process,
@@ -236,11 +255,10 @@ def create_gradio_interface():
         
         preview_button.click(
             preview_apply_rule,
-            outputs=[status_box,drl_file, gdst_file]
+            outputs=[status_box, drl_file, gdst_file]
         )
 
         # Auto-refresh rule summary after each chat message
-        # You can trigger this by connecting it to the chat interface submit event
         chat_interface.chatbot.change(
             update_rule_summary,
             outputs=[name, summary]

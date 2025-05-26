@@ -317,6 +317,22 @@ The chat interface now properly handles conversation history during RAG generati
 ### Usage
 The RAG system now gracefully handles invalid inputs and provides meaningful error messages instead of failing with API errors. Users will receive clear feedback when their input cannot be processed.
 
+## [Unreleased]
+
+### Fixed
+- Removed custom CSS that overrode Gradio's default row/column layout in `chat_app.py`. The interface now correctly displays three columns side by side using only Gradio's built-in layout system.
+
+### How to Use
+- Run the Gradio UI as before (e.g., with `python run_gradio_ui.py`).
+- The interface will now display three columns side by side on initial load.
+
+### Dependencies
+- Requires Gradio (see https://www.gradio.app/docs/gradio/interface for usage).
+- Uses Google Gen AI SDK (`google.genai`).
+
+### Example
+- Launch the app and verify that the layout is three columns wide from the beginning.
+
 ---
 
 *This changelog will be updated with all major changes and features in the Capstone repository going forward.*
