@@ -10,16 +10,16 @@ The Capstone project is an intelligent business rule management platform that em
 architecture-beta
     group frontend(cloud)[Frontend]
     group backend(server)[Backend]
-    group ai(cloud)[AI/Agents]
+    group ai(cloud)[AIAgents]
     group storage(database)[Storage]
 
     service gradio(server)[Gradio UI] in frontend
-    service api(server)[FastAPI (planned)] in backend
-    service agent1(cloud)[Agent 1: NL → JSON Rule] in ai
-    service agent2(cloud)[Agent 2: JSON → DRL/GDST] in ai
-    service gemini(cloud)[Google Gemini API] in ai
-    service kb(database)[Knowledge Base] in storage
-    service rules(database)[Rule Files] in storage
+    service api(server)[FastAPI planned] in backend
+    service agent1(cloud)[Agent1 NL2JSON] in ai
+    service agent2(cloud)[Agent2 JSON2DRLGDST] in ai
+    service gemini(cloud)[GoogleGeminiAPI] in ai
+    service kb(database)[KnowledgeBase] in storage
+    service rules(database)[RuleFiles] in storage
 
     gradio:R -- L:api
     api:R -- L:agent1
