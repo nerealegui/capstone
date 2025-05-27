@@ -254,6 +254,31 @@ def rag_generate(query: str, df: pd.DataFrame, agent_prompt: str, model_name: st
     Returns a JSON string representing the rule or an error.
     """
     print(f"Performing RAG generation for query: '{query}'")
+    
+    # Debug: Show history at entry point
+    print(f"\n=== DEBUG: History Analysis ===")
+    print(f"History type: {type(history)}")
+    print(f"History length: {len(history) if history else 0}")
+    if history:
+        print(f"First history item type: {type(history[0]) if len(history) > 0 else 'N/A'}")
+        print(f"First history item content: {history[0] if len(history) > 0 else 'N/A'}")
+        # Show structure of first few items
+        for i, item in enumerate(history[:3]):  # Show first 3 items
+            print(f"\nHistory item {i}:")
+            print(f"  Type: {type(item)}")
+            if isinstance(item, (list, tuple)):
+                print(f"  Length: {len(item)}")
+                if len(item) > 0:
+                    print(f"  Item[0] type: {type(item[0])}, preview: {str(item[0])[:100]}...")
+                if len(item) > 1:
+                    print(f"  Item[1] type: {type(item[1])}, preview: {str(item[1])[:100]}...")
+            elif isinstance(item, dict):
+                print(f"  Keys: {list(item.keys())}")
+                for key in list(item.keys())[:3]:  # Show first 3 keys
+                    print(f"  {key}: {str(item[key])[:100]}...")
+            else:
+                print(f"  Content preview: {str(item)[:100]}...")
+    print(f"=== END DEBUG: History Analysis ===\n")
 
     # Ensure client is initialized
     gemini_client_instance = initialize_gemini_client() # Get the initialized Client instance
@@ -262,37 +287,26 @@ def rag_generate(query: str, df: pd.DataFrame, agent_prompt: str, model_name: st
     contents = []
 
     # 1. Add previous conversation history
-    # if history:
-    #     print(f"Including {len(history)} turns of chat history.")
-    #     for user_msg, model_response in history:
-    #         # Append user's previous message
-    #         contents.append(
-    #             types.Content(
-    #                 role="user",
-    #                 parts=[types.Part.from_text(text=user_msg)]
-    #             )
-    #         )
-    #         # Append model's previous response
-    #         contents.append(
-    #             types.Content(
-    #                 role="model",
-    #                 parts=[types.Part.from_text(text=model_response)]
-    #             )
-    #         )
     if history:
         print(f"Including {len(history)} turns of chat history.")
         print(f"History structure: {type(history)} with items of type: {[type(item) for item in history[:2]]}")
         
         for i, item in enumerate(history):
             try:
+                print(f"\n--- Processing history item {i} ---")
+                print(f"Item type: {type(item)}")
+                print(f"Item content: {item}")
+                
                 # Handle different possible history formats
                 if isinstance(item, (list, tuple)) and len(item) >= 2:
                     # Extract first two elements as user_msg and model_response
                     user_msg, model_response = item[0], item[1]
+                    print(f"Extracted from list/tuple - User: '{str(user_msg)[:50]}...', Model: '{str(model_response)[:50]}...'")
                 elif isinstance(item, dict):
                     # If it's a dictionary, look for common keys
                     if 'role' in item and 'content' in item:
                         # Handle dict format with role/content
+                        print(f"Dict with role/content - Role: {item['role']}, Content: '{item['content'][:50]}...'")
                         contents.append(
                             types.Content(
                                 role=item['role'],
@@ -304,6 +318,7 @@ def rag_generate(query: str, df: pd.DataFrame, agent_prompt: str, model_name: st
                         # Handle other dict formats
                         user_msg = item.get('user', item.get('input', ''))
                         model_response = item.get('assistant', item.get('output', item.get('response', '')))
+                        print(f"Dict with user/assistant keys - User: '{str(user_msg)[:50]}...', Model: '{str(model_response)[:50]}...'")
                 else:
                     print(f"Warning: Unexpected history item format at index {i}: {type(item)} - {item}")
                     continue
@@ -318,6 +333,7 @@ def rag_generate(query: str, df: pd.DataFrame, agent_prompt: str, model_name: st
                     continue
                 
                 # Append user's previous message
+                print(f"Adding user message to contents: '{str(user_msg)[:50]}...'")
                 contents.append(
                     types.Content(
                         role="user",
@@ -325,15 +341,18 @@ def rag_generate(query: str, df: pd.DataFrame, agent_prompt: str, model_name: st
                     )
                 )
                 # Append model's previous response
+                print(f"Adding model response to contents: '{str(model_response)[:50]}...'")
                 contents.append(
                     types.Content(
                         role="model",
                         parts=[types.Part.from_text(text=str(model_response))]
                     )
                 )
+                print(f"--- Successfully processed history item {i} ---")
             except Exception as e:
                 print(f"Error processing history item {i}: {e}. Item: {item}")
                 continue
+    
     # 2. Retrieve relevant chunks based on the current user query
     retrieved_docs_df = retrieve(query, df, top_k)
 
@@ -389,6 +408,18 @@ def rag_generate(query: str, df: pd.DataFrame, agent_prompt: str, model_name: st
             parts=[types.Part.from_text(text=current_user_turn_text)]
         )
     )
+
+    # Debug: Show final contents structure before API call
+    print(f"\n=== DEBUG: Final Contents Structure ===")
+    print(f"Total content items: {len(contents)}")
+    for idx, content in enumerate(contents):
+        print(f"\nContent {idx}:")
+        print(f"  Role: {content.role}")
+        if content.parts and content.parts[0]:
+            text_preview = content.parts[0].text[:100] if hasattr(content.parts[0], 'text') else 'N/A'
+            print(f"  Text preview: {text_preview}...")
+            print(f"  Text length: {len(content.parts[0].text) if hasattr(content.parts[0], 'text') else 0}")
+    print(f"=== END DEBUG: Final Contents Structure ===\n")
 
     # --- Call the LLM with the constructed 'contents' list ---
     try:

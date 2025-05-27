@@ -2,6 +2,57 @@
 
 # Changelog
 
+## [2025-01-10] - Debug Enhancements for RAG History Processing
+
+### Added
+- Comprehensive debug logging in `rag_generate` function to track history processing
+- Detailed history analysis at function entry point showing:
+  - History type and length
+  - Structure of first few history items
+  - Content preview of history items
+- Step-by-step processing logs for each history item showing:
+  - Item type and format detection
+  - Extracted user and model messages
+  - Validation results
+- Final contents structure debug output before API call showing:
+  - Total number of content items
+  - Role and text preview for each content item
+  - Text length for each content part
+
+### Purpose
+These debug enhancements help diagnose issues with:
+- Different history formats (list/tuple vs dict)
+- Empty or malformed history items
+- Content validation failures
+- API input structure problems
+
+### Usage
+The debug output is automatically printed to console when `rag_generate` is called. Look for sections marked with:
+- `=== DEBUG: History Analysis ===` - Shows incoming history structure
+- `--- Processing history item X ---` - Shows individual item processing
+- `=== DEBUG: Final Contents Structure ===` - Shows final API input
+
+### Dependencies
+No new dependencies required. Uses existing:
+- `google.genai` for API interactions
+- Standard Python types for content structure
+
+### Example Output
+```
+=== DEBUG: History Analysis ===
+History type: <class 'list'>
+History length: 2
+First history item type: <class 'tuple'>
+First history item content: ('What is ML?', 'Machine learning is...')
+
+History item 0:
+  Type: <class 'tuple'>
+  Length: 2
+  Item[0] type: <class 'str'>, preview: What is ML?...
+  Item[1] type: <class 'str'>, preview: Machine learning is...
+=== END DEBUG: History Analysis ===
+```
+
 ## [2025-05-24] - Function Refactoring and Optimization
 
 ### Optimized
