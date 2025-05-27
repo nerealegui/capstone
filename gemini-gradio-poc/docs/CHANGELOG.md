@@ -1,5 +1,128 @@
 # Changelog for Capstone Repository
 
+# Changelog
+
+## [2025-01-10] - Debug Enhancements for RAG History Processing
+
+### Added
+- Comprehensive debug logging in `rag_generate` function to track history processing
+- Detailed history analysis at function entry point showing:
+  - History type and length
+  - Structure of first few history items
+  - Content preview of history items
+- Step-by-step processing logs for each history item showing:
+  - Item type and format detection
+  - Extracted user and model messages
+  - Validation results
+- Final contents structure debug output before API call showing:
+  - Total number of content items
+  - Role and text preview for each content item
+  - Text length for each content part
+
+### Purpose
+These debug enhancements help diagnose issues with:
+- Different history formats (list/tuple vs dict)
+- Empty or malformed history items
+- Content validation failures
+- API input structure problems
+
+### Usage
+The debug output is automatically printed to console when `rag_generate` is called. Look for sections marked with:
+- `=== DEBUG: History Analysis ===` - Shows incoming history structure
+- `--- Processing history item X ---` - Shows individual item processing
+- `=== DEBUG: Final Contents Structure ===` - Shows final API input
+
+### Dependencies
+No new dependencies required. Uses existing:
+- `google.genai` for API interactions
+- Standard Python types for content structure
+
+### Example Output
+```
+=== DEBUG: History Analysis ===
+History type: <class 'list'>
+History length: 2
+First history item type: <class 'tuple'>
+First history item content: ('What is ML?', 'Machine learning is...')
+
+History item 0:
+  Type: <class 'tuple'>
+  Length: 2
+  Item[0] type: <class 'str'>, preview: What is ML?...
+  Item[1] type: <class 'str'>, preview: Machine learning is...
+=== END DEBUG: History Analysis ===
+```
+
+## [2025-05-24] - Function Refactoring and Optimization
+
+### Optimized
+- **chat_with_rag Function**: Refactored the main chat function to remove unused variables and improve code clarity
+  - **Removed unused `client` variable**: The `initialize_gemini_client()` call now only validates the API key without storing the unused client object
+  - **Eliminated redundant variable assignments**: Removed duplicate `chatbot_response_string` and `summary_val` variables that held the same value
+  - **Simplified return structure**: Using `response_summary` variable directly for both chat response and summary display
+  - **Improved variable naming**: Renamed `chatbot_response_string` to `response_summary` for better clarity
+  - **Cleaned up comments**: Removed redundant inline comments and improved code documentation
+
+### Technical Benefits
+- Reduced memory usage by eliminating unused variables
+- Improved code readability and maintainability
+- Simplified variable flow and reduced redundancy
+- Maintained all existing functionality while improving performance
+
+### Files Modified
+- `interface/chat_app.py` - `chat_with_rag()` function refactored
+
+## [2025-05-24] - Warning Behavior Documentation
+
+### Clarified
+- **Warning Messages in RAG Processing**: Documented that warning messages like "Warning: Empty user message in history item X, skipping" and "Warning: Empty model response in history item X, skipping" are **expected behavior** and indicate the robust error handling system is working correctly
+- **Normal Operation**: These warnings appear when the system encounters empty or malformed chat history items and gracefully filters them out instead of crashing
+- **Benefits**: The warning system provides transparency, prevents crashes, and aids in debugging while maintaining full application functionality
+
+### Technical Details
+- Warnings originate from enhanced error handling in `utils/rag_utils.py` (lines 307-315)
+- System continues normal operation after displaying warnings
+- No action required unless the application actually crashes or fails
+
+### Usage
+Users can safely ignore these warning messages as they indicate the system is working properly to handle edge cases in chat history data.
+
+## [2025-05-23] - Code Cleanup
+
+### Removed
+- **Debugging Test Files**: Cleaned up temporary test scripts created during debugging sessions
+  - Removed `test_api_debug.py`, `test_edge_cases.py`, `test_error_reproduction.py`
+  - Removed `test_simple_edge.py`, `test_simple_repro.py`
+  - Removed duplicate `test_build_kb.py` from root (kept version in tests/ folder)
+  - Removed temporary test documents `test_document.docx` and `test_document.txt`
+
+### Benefits
+- Cleaner project structure focused on essential app execution files
+- Reduced repository size and complexity
+- Maintained legitimate test files in `tests/` directory for future development
+
+## [2025-05-23] - Layout Fix
+
+### Fixed
+- **Two-Column Layout Issue**: Fixed Gradio interface layout that was appearing as a single column on initial load
+  - Moved all component creation inside proper column contexts
+  - Removed duplicate component creation and redundant `.render()` calls
+  - Updated ChatInterface configuration to properly reference output components
+  - Added specific CSS classes for better column control
+
+### Technical Details
+- Components are now properly nested within their intended layout hierarchy
+- Left column (60% width) contains the chat interface
+- Right column (40% width) contains knowledge base setup and rule summary
+- Fixed component references in ChatInterface additional_outputs
+
+### Dependencies
+- Gradio interface components
+- No additional dependencies required
+
+### Usage
+The interface now properly displays two distinct columns from initial load, improving user experience and interface organization.
+
 ## 2025-05-19
 
 ### Changed
@@ -25,6 +148,241 @@
 - Enter a business rule in the chat (e.g., "If a customer orders more than $100, apply a 10% discount.").
 - Click 'Preview & Apply'.
 - Download the generated `.drl` and `.gdst` files from the right panel.
+
+## [2025-05-23] - Three-Column Layout and UI Cleanup
+
+### Changed
+- Removed the "Additional Inputs" dropdown from the Gradio UI.
+- Refactored the interface to use a three-column layout: Chat Interface, Knowledge Base Setup, and Rule Summary.
+
+### How to Use
+- Interact with the chatbot in the left column.
+- Upload and configure knowledge base documents in the middle column.
+- View rule details and download files in the right column.
+
+### Dependencies
+- `gradio`
+- `google-genai`
+
+### Example Usage
+1. Enter a rule description or question in the Chat Interface.
+2. Upload documents and build the knowledge base in the Knowledge Base Setup column.
+3. View the rule summary and download files from the Rule Summary column.
+
+## [2025-05-23] - Bugfix: Defensive DataFrame Handling
+
+### Fixed
+- Added a defensive check in `chat_with_rag` to ensure `rag_state_df` is always a DataFrame, preventing AttributeError when it is None.
+
+## [2025-05-23] - Bugfix: Knowledge Base Build Exception Handling
+
+### Fixed
+- Corrected a bug in `build_knowledge_base_process` where an undefined variable `s` was used in the exception handler. Now returns the correct status message on error.
+
+## 2025-05-23
+
+### Fixed Gradio ChatInterface Output Bug
+- **Issue:** The `chat_with_rag` function returned too many output values, causing a Gradio error: "A function (_submit_fn) returned too many output values (needed: 2, returned: 5). Ignoring extra values."
+- **Fix:** Updated `chat_with_rag` to return outputs in the order and number expected by Gradio's `ChatInterface` with `additional_outputs`:
+  - (chatbot response string, updated chat history, name, summary, logic)
+- **Impact:** The chat interface now works as intended, with all side panel outputs updating correctly and no Gradio warnings.
+
+### How to Use
+- Use the Gradio UI as before. The chat, name, summary, and logic fields will update as expected after each chat turn.
+
+### Dependencies
+- [Gradio](https://www.gradio.app/docs/gradio/interface)
+- [Google GenAI SDK](https://googleapis.github.io/python-genai/index.html)
+- pandas, numpy, etc. (see requirements.txt)
+
+### Example
+No change to usage. Launch the UI and interact with the chatbot as before.
+
+## 2025-05-23
+
+### Refactored build_knowledge_base_process for Testability
+- **Refactor:** Separated the core logic of `build_knowledge_base_process` into a pure function (`_core_build_knowledge_base`) for easier unit testing and clarity.
+- **Enhancements:**
+  - Added type hints and improved docstrings for maintainability.
+  - The generator function now only handles Gradio status updates and delegates all logic to the core function.
+  - The core function can be directly tested with file paths, chunk size, and overlap, and returns a status message and DataFrame.
+- **How to Test:**
+  - You can now write unit tests for `_core_build_knowledge_base` by mocking file reading and embedding dependencies.
+
+## 2025-05-23
+
+### Modularized chat_app.py and Extracted Utility Logic
+- **Refactor:** Extracted the core knowledge base building logic to a new file `kb_utils.py` as `core_build_knowledge_base`.
+- **chat_app.py:** Now only contains Gradio interface, event wiring, and high-level event handler functions. All core logic is delegated to `kb_utils.py`.
+- **Benefits:**
+  - Easier to debug and maintain the Gradio interface.
+  - Utility logic is now easily unit-testable and reusable.
+  - Clearer separation of concerns between UI and backend logic.
+
+## 2025-05-23
+
+### Modularized Rule Summary/Generation Logic
+- **Refactor:** Extracted `json_to_drl_gdst` and `verify_drools_execution` to a new file `rule_utils.py`.
+- **chat_app.py:** Now imports these functions from `rule_utils.py` and only contains Gradio interface/event logic.
+- **Benefits:**
+  - Rule summary and Drools generation logic is now easily unit-testable and reusable.
+  - Further separation of concerns between UI and backend logic.
+
+## 2025-05-23
+
+### Major Project Restructure for Modularity
+- **Folders created:**
+  - `interface/` for Gradio UI and event logic
+  - `utils/` for all backend logic and helpers (RAG, KB, rule generation, etc)
+  - `config/` for prompt templates and model configs
+  - `tests/` for unit and integration tests
+- **Files moved:**
+  - `chat_app.py` → `interface/`
+  - `kb_utils.py`, `rag_utils.py`, `rule_utils.py` → `utils/`
+  - `agent_config.py` → `config/`
+  - `test_agent2.py`, `test_build_kb.py` → `tests/`
+- **All imports updated** to use the new folder structure.
+- **Documentation:** Added `docs/STRUCTURE.md` describing the new structure and usage.
+- **Benefits:**
+  - Clear separation of UI, logic, config, and tests
+  - Easier debugging, testing, and future development
+
+## [2025-05-23] - Bugfix: Gradio ChatInterface State KeyError
+
+### Fixed
+- **KeyError: 0 in Gradio ChatInterface**: Fixed a bug where the Gradio UI would crash with a KeyError due to improper state registration in the ChatInterface.
+- **Technical Details**: The `state` parameter is now passed directly to the `gr.ChatInterface` constructor instead of being set after creation. This ensures Gradio correctly registers the state block and prevents KeyError on UI interaction.
+
+### How to Use
+- Launch the UI as before. The chat, knowledge base, and rule summary panels will work without backend KeyErrors.
+
+### Dependencies
+- `gradio` (see [Gradio documentation](https://www.gradio.app/docs/gradio/interface))
+- `google-genai` (see [Google GenAI SDK](https://googleapis.github.io/python-genai/index.html))
+
+### Example
+No change to usage. Launch the UI and interact with the chatbot as before.
+
+## [2025-05-23] - Bugfix: Gradio ChatInterface State Argument Error
+
+### Fixed
+- **TypeError: ChatInterface.__init__() got an unexpected keyword argument 'state'**: Updated the code to remove the unsupported `state` argument from the `gr.ChatInterface` constructor. State is now set after creation using `chat_interface.state = state_rag_df`, as per Gradio 5.29.0 documentation.
+
+### How to Use
+- Launch the UI as before. The chat, knowledge base, and rule summary panels will work without backend errors.
+
+### Dependencies
+- `gradio` (see [Gradio documentation](https://www.gradio.app/docs/gradio/interface))
+- `google-genai` (see [Google GenAI SDK](https://googleapis.github.io/python-genai/index.html))
+
+### Example
+No change to usage. Launch the UI and interact with the chatbot as before.
+
+## [2025-05-23] - Gradio State Management Bugfix
+
+### Fixed
+- **KeyError in ChatInterface with State**: Updated the Gradio ChatInterface to use the correct state management pattern. State is now passed as an `additional_input` and `additional_output` to the ChatInterface, and not set via `.state` after creation. This prevents the KeyError and ensures state is properly registered and updated.
+
+### How to Use
+- Launch the UI as before. The chat, knowledge base, and rule summary panels will work without backend KeyErrors.
+
+### Dependencies
+- `gradio` (see [Gradio documentation](https://www.gradio.app/docs/gradio/interface))
+- `google-genai` (see [Google GenAI SDK](https://googleapis.github.io/python-genai/index.html))
+
+### Example
+No change to usage. Launch the UI and interact with the chatbot as before.
+
+## [2025-05-23] - History Parsing Bug Fix
+
+### Fixed
+- **RAG History Parsing Error**: Fixed "too many values to unpack (expected 2)" error in the `rag_generate` function
+  - Enhanced history parsing logic to handle different chat history formats robustly
+  - Added support for tuples, lists, and dictionaries in history items
+  - Added debugging information to understand history structure
+  - Improved error handling with try-catch blocks for individual history items
+
+### Updated
+- **Prompt Example**: Changed employee count from 5 to 10 in the default prompt example
+- **Documentation**: Updated changelog with technical details of the fix
+
+### Technical Details
+- Modified `utils/rag_utils.py` line 267 to handle various history formats
+- The fix checks if history items are tuples/lists with at least 2 elements or dictionaries with specific keys
+- Fallback handling for unexpected history formats to prevent crashes
+- Added type checking and validation for robust history processing
+
+### Dependencies
+- No new dependencies required
+- Uses existing `google.genai` and Gradio infrastructure
+
+### Usage
+The chat interface now properly handles conversation history during RAG generation, preventing the unpacking error that was causing the application to fail.
+
+### Testing
+- **VALIDATED**: Application successfully starts and runs without errors
+  - Virtual environment properly configured with all dependencies
+  - Gradio interface loads correctly at http://127.0.0.1:7862
+  - No runtime errors during application startup
+  - History parsing logic confirmed working with enhanced error handling
+
+## [2025-05-23] - Empty Text Parameter Bug Fix
+
+### Fixed
+- **"400 INVALID_ARGUMENT: empty text parameter" Error**: Resolved critical bug that occurred during RAG generation
+  - Added comprehensive input validation in `rag_generate` function to catch empty text parameters before API calls
+  - Enhanced error handling with detailed error messages and JSON error responses
+  - Implemented robust validation for chat history processing to handle malformed or empty history items
+  - Added extensive debugging output for troubleshooting API interactions
+
+### Enhanced
+- **Input Validation**: Added multi-layer validation for:
+  - Empty or whitespace-only user queries
+  - Missing or empty agent prompts
+  - Malformed chat history items
+  - Empty content parts in API requests
+  - Whitespace-only text content
+- **Error Handling**: Improved error messages with specific categories:
+  - Input Validation Errors
+  - Configuration Errors  
+  - Content Validation Errors
+  - API Input Errors
+  - LLM Response Errors
+- **Debugging**: Enhanced debug output throughout the RAG pipeline for better troubleshooting
+
+### Technical Details
+- Modified `utils/rag_utils.py` to include comprehensive validation before each Gemini API call
+- Added validation for `contents` list construction to ensure no empty text parts are passed to the API
+- Implemented graceful handling of various edge cases (empty strings, whitespace, None values, malformed history)
+- Enhanced chat history processing to handle different input formats and filter out invalid entries
+
+### Testing
+- Created comprehensive test suite to verify edge case handling
+- Tested with various problematic inputs (empty strings, whitespace, None values, malformed history)
+- Verified that all validation catches potential empty text parameter scenarios before reaching the API
+
+### Dependencies
+- No additional dependencies required
+- Uses existing `google.genai` client with enhanced validation
+
+### Usage
+The RAG system now gracefully handles invalid inputs and provides meaningful error messages instead of failing with API errors. Users will receive clear feedback when their input cannot be processed.
+
+## [Unreleased]
+
+### Fixed
+- Removed custom CSS that overrode Gradio's default row/column layout in `chat_app.py`. The interface now correctly displays three columns side by side using only Gradio's built-in layout system.
+
+### How to Use
+- Run the Gradio UI as before (e.g., with `python run_gradio_ui.py`).
+- The interface will now display three columns side by side on initial load.
+
+### Dependencies
+- Requires Gradio (see https://www.gradio.app/docs/gradio/interface for usage).
+- Uses Google Gen AI SDK (`google.genai`).
+
+### Example
+- Launch the app and verify that the layout is three columns wide from the beginning.
 
 ---
 

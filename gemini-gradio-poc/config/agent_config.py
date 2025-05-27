@@ -19,6 +19,8 @@ Your task is to convert the structured JSON representation of a rule into proper
 # Model configuration
 DEFAULT_MODEL = "gemini-2.0-flash-001"
 
+EMBEDDING_MODEL = "models/text-embedding-004"
+
 # Configure Gemini API parameters
 GENERATION_CONFIG = {
     #"temperature": 0.2,
