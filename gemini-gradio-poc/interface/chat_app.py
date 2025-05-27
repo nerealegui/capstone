@@ -166,102 +166,113 @@ def preview_apply_rule():
         return (f"Error: {str(e)}", None, None)
 
 def create_gradio_interface():
-    """Create and return the Gradio interface for the Gemini Chat Application."""
+    """Create and return the Gradio interface for the Gemini Chat Application with two tabs: Configuration and Chat/Rule Summary."""
+
+    # Shared components
+    name_display = gr.Textbox(value="Name will appear here after input.", label="Name")
+    summary_display = gr.Textbox(value="Summary will appear here after input.", label="Summary")
+    drl_file = gr.File(label="Download DRL")
+    gdst_file = gr.File(label="Download GDST")
+    status_box = gr.Textbox(label="Status")
+
+    # --- State for RAG DataFrame (must be defined before use) ---
     state_rag_df = gr.State(pd.DataFrame())
 
     with gr.Blocks(theme=gr.themes.Base(), css="""
-        footer { visibility: hidden; }
-        .gradio-container { 
-            max-width: 1800px; 
-            margin: auto; 
-        }
-        /* Force columns to be equal width and display in a row */
-        .equal-row {
-            display: flex !important;
-            flex-direction: row !important;
-            width: 100%;
-            gap: 20px;
-        }
-        .equal-col {
-            flex: 1 !important;
-            min-width: 300px !important;
-            box-sizing: border-box !important;
-        }
-        /* Column styling */
-        .column-box {
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            height: 100%;
-            padding: 15px;
-        }
+        /* Hide footer and labels */
+        footer {visibility: hidden}
+        label[data-testid='block-label'] {visibility: hidden}
     """) as demo:
-        gr.Markdown("# Rule Management Bot with RAG")
-        
-        
-        # Create a single row with three equal columns
-        with gr.Row(elem_classes=["equal-row"], equal_height=True):
-            # Knowledge Base Setup Column
-            with gr.Column(elem_classes=["equal-col", "column-box"], scale=1, min_width=300):
-                gr.Markdown("### Knowledge Base Setup")
-                with gr.Accordion("Upload Documents & Configure RAG", open=True):
-                    document_upload = gr.File(
-                        label="Upload Documents (.docx, .pdf)",
-                        file_count="multiple",
-                        file_types=[".docx", ".pdf"],
-                        height=150
-                    )
-                    chunk_size_input = gr.Number(label="Chunk Size", value=500, precision=0, interactive=True)
-                    chunk_overlap_input = gr.Number(label="Chunk Overlap", value=50, precision=0, interactive=True)
-                    build_kb_button = gr.Button("Build Knowledge Base", variant="primary")
-                    rag_status_display = gr.Textbox(
-                        label="Knowledge Base Status", 
-                        value="Knowledge base not built yet.", 
-                        interactive=False
-                    )
+        # --- UI Definition ---
+        with gr.Tabs():
+            # Tab 1: Configuration
+            with gr.Tab("Configuration"):
+                with gr.Row():
+                    # Knowledge Base Setup Column
+                    with gr.Column(elem_classes=["equal-col", "column-box"], scale=1, min_width=300):
+                        gr.Markdown("### Knowledge Base Setup")
+                        with gr.Accordion("Upload Documents & Configure RAG", open=True):
+                            document_upload = gr.File(
+                                label="Upload Documents (.docx, .pdf)",
+                                file_count="multiple",
+                                file_types=['.docx', '.pdf'],
+                                height=150
+                            )
+                            chunk_size_input = gr.Number(label="Chunk Size", value=500, precision=0, interactive=True)
+                            chunk_overlap_input = gr.Number(label="Chunk Overlap", value=50, precision=0, interactive=True)
+                            build_kb_button = gr.Button("Build Knowledge Base", variant="primary")
+                            rag_status_display = gr.Textbox(
+                                label="Knowledge Base Status",
+                                value="Knowledge base not built yet.",
+                                interactive=False
+                            )
+                        # You can add more KB setup UI here if needed
+                    # Agent Config Variables Column
+                    with gr.Column(scale=1):
+                        gr.Markdown("# Agent Configuration")
+                        agent1_prompt_box = gr.Textbox(value=AGENT1_PROMPT, label="Agent 1 Prompt", lines=8)
+                        agent2_prompt_box = gr.Textbox(value=AGENT2_PROMPT, label="Agent 2 Prompt", lines=4)
+                        default_model_box = gr.Textbox(value=DEFAULT_MODEL, label="Default Model")
+                        generation_config_box = gr.Textbox(value=json.dumps(GENERATION_CONFIG, indent=2), label="Generation Config (JSON)", lines=6)
+                        # Optionally, add a save/apply button here to update config at runtime
+                        # gr.Button("Save Config", variant="primary")
 
-            # Chat Interface Column
-            with gr.Column(elem_classes=["equal-col", "column-box"], scale=1, min_width=300):
-                gr.Markdown("### Chat Interface")
-                chat_interface = gr.ChatInterface(
-                    fn=chat_with_rag,
-                    #chatbot=gr.Chatbot(type="messages"),
-                    #textbox=gr.Textbox(
-                    #    placeholder="Enter your rule description or question here...",
-                    #    container=False,
-                    #    lines=2
-                    #),
-                    type="messages",
-                    additional_inputs=[state_rag_df],
-                )
-            
-            
-            
-            # Rule Summary Column
-            with gr.Column(elem_classes=["equal-col", "column-box"], scale=1, min_width=300):
-                gr.Markdown("### Rule Summary")
-                name = gr.Textbox(value="Name will appear here after input.", label="Name")
-                summary = gr.Textbox(value="Summary will appear here after input.", label="Summary", lines=3)
-                preview_button = gr.Button("Preview & Apply Rule", variant="primary")
-                status_box = gr.Textbox(label="Status")
-                drl_file = gr.File(label="Download DRL", visible=True, height="auto")
-                gdst_file = gr.File(label="Download GDST", visible=True, height="auto")
-        
-        # --- Event Actions ---
+            # Tab 2: Chat & Rule Summary
+            with gr.Tab("Chat & Rule Summary"):
+                with gr.Row():
+                    # Left panel: Chat
+                    with gr.Column(scale=1):
+                        gr.Markdown("# Rule Management Bot")
+                        def chat_and_update(user_input, history, rag_state_df):
+                            global rule_response
+                            response = chat_with_rag(user_input, history, rag_state_df)
+                            name = rule_response.get('name', 'Name will appear here after input.')
+                            summary = rule_response.get('summary', 'Summary will appear here after input.')
+                            return response, name, summary, rag_state_df
+                        chat_interface = gr.ChatInterface(
+                            fn=chat_and_update,
+                            chatbot=gr.Chatbot(),
+                            textbox=gr.Textbox(placeholder="Message...", scale=7),
+                            additional_outputs=[name_display, summary_display, state_rag_df],
+                            additional_inputs=[state_rag_df],
+                        )
+                    # Right panel: Rule Summary
+                    with gr.Column(scale=1):
+                        gr.Markdown("# Rule Summary")
+                        name_display.render()
+                        summary_display.render()
+                        preview_button = gr.Button("Preview & Apply", variant="primary")
+                        preview_button.click(preview_apply_rule, outputs=[status_box, drl_file, gdst_file])
+                        status_box.render()
+                        drl_file.render()
+                        gdst_file.render()
+
+        # --- Event Actions (must be inside Blocks context) ---
         build_kb_button.click(
             build_knowledge_base_process,
             inputs=[document_upload, chunk_size_input, chunk_overlap_input, state_rag_df],
             outputs=[rag_status_display, state_rag_df]
         )
-        
+
+        # Ensure chat_interface uses state_rag_df as input and output, so it always gets the latest KB
+        def chat_and_update(user_input, history, rag_state_df):
+            global rule_response
+            response = chat_with_rag(user_input, history, rag_state_df)
+            name = rule_response.get('name', 'Name will appear here after input.')
+            summary = rule_response.get('summary', 'Summary will appear here after input.')
+            return response, name, summary, rag_state_df
+        chat_interface.fn = chat_and_update
+        chat_interface.additional_inputs = [state_rag_df]
+        chat_interface.additional_outputs = [name_display, summary_display, state_rag_df]
+
         preview_button.click(
             preview_apply_rule,
             outputs=[status_box, drl_file, gdst_file]
         )
 
-        # Auto-refresh rule summary after each chat message
         chat_interface.chatbot.change(
             update_rule_summary,
-            outputs=[name, summary]
+            outputs=[name_display, summary_display]
         )
     return demo
 

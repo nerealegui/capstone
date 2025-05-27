@@ -384,6 +384,14 @@ The RAG system now gracefully handles invalid inputs and provides meaningful err
 ### Example
 - Launch the app and verify that the layout is three columns wide from the beginning.
 
+## 2025-05-27
+
+### Added
+- Added a new column in the 'Configuration' tab for editing agent configuration variables (AGENT1_PROMPT, AGENT2_PROMPT, DEFAULT_MODEL, GENERATION_CONFIG) directly from the UI. These fields are initialized with the default values from `agent_config.py`.
+
+### How to Use (Updated)
+- In the 'Configuration' tab, use the right column to view or edit the agent prompts, model, and generation config. Changes here can be used to update the runtime configuration (future: add Save/Apply functionality).
+
 ---
 
 *This changelog will be updated with all major changes and features in the Capstone repository going forward.*
