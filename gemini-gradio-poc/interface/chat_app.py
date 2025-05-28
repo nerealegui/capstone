@@ -6,9 +6,10 @@ from config.agent_config import AGENT1_PROMPT, AGENT2_PROMPT, DEFAULT_MODEL, GEN
 import json
 import pandas as pd
 import numpy as np
+from utils.rule_extractor import extract_rules
 
 #initialize initialize_gemini function from rag_utils 
-from utils.rag_utils import read_documents_from_paths, embed_texts, retrieve, rag_generate, initialize_gemini_client
+from utils.rag_utils import add_extracted_rules_to_rag, read_documents_from_paths, embed_texts, retrieve, rag_generate, initialize_gemini_client
 from utils.kb_utils import core_build_knowledge_base
 from utils.rule_utils import json_to_drl_gdst, verify_drools_execution
 
@@ -28,7 +29,8 @@ def build_knowledge_base_process(
     uploaded_files: list, 
     chunk_size: int, 
     chunk_overlap: int, 
-    rag_state_df: pd.DataFrame
+    rag_state_df: pd.DataFrame,
+    extracted_rules: list 
 ):
     """
     Gradio generator for building the knowledge base. Handles UI status updates and delegates core logic to kb_utils.core_build_knowledge_base.
@@ -56,7 +58,15 @@ def build_knowledge_base_process(
     yield "Chunking text...", rag_state_df
     yield f"Embedding chunks...", rag_state_df
     status_message, result_df = core_build_knowledge_base(file_paths, chunk_size, chunk_overlap)
-    yield status_message, result_df
+    #yield status_message, result_df
+    # Integrate extracted rules into the RAG knowledge base
+    if extracted_rules:
+        yield "Integrating extracted rules into the knowledge base...", rag_state_df
+        updated_rag_state_df = add_extracted_rules_to_rag(extracted_rules, result_df)
+    else:
+        updated_rag_state_df = result_df
+
+    yield status_message, updated_rag_state_df
 
 
 def chat_with_rag(user_input: str, history: list, rag_state_df: pd.DataFrame):
@@ -165,6 +175,60 @@ def preview_apply_rule():
     except Exception as e:
         return (f"Error: {str(e)}", None, None)
 
+def extract_rules_handler(file):
+    """
+    Handles rule extraction for the uploaded file.
+    Args:
+        file: The uploaded file object (file-like object from Gradio).
+    Returns:
+        Tuple[str, list]: Status message and extracted rules.
+    """
+    if file is None:
+        return "No file uploaded.", []
+    
+    # Handle different types of file objects from Gradio
+    try:
+        # Check if file is a string (file path) or has a 'name' attribute
+        if isinstance(file, str):
+            # File is a path string
+            file_path = file
+            file_type = f".{file_path.split('.')[-1].lower()}"
+        elif hasattr(file, 'name'):
+            # File object with name attribute (could be NamedString or file-like object)
+            file_path = str(file)  # Convert to string path
+            # Get file extension from the name attribute if available, otherwise from the path
+            if hasattr(file, 'name') and '.' in file.name:
+                file_type = f".{file.name.split('.')[-1].lower()}"
+            else:
+                file_type = f".{file_path.split('.')[-1].lower()}"
+        else:
+            # Fallback: try to treat as file path
+            file_path = str(file)
+            file_type = f".{file_path.split('.')[-1].lower()}"
+        
+        # Read file content based on file type
+        if file_type in ['.pdf', '.docx', '.xlsx', '.xls']:
+            # For binary files, read as binary and let extract_rules handle the conversion
+            with open(file_path, 'rb') as f:
+                file_content_bytes = f.read()
+            # You might need to handle binary files differently in your extract_rules function
+            # For now, we'll pass the file path instead of content for binary files
+            file_content = file_path  # Pass file path for binary files
+        else:
+            # For text files (CSV, TXT, etc.), read as text
+            with open(file_path, 'r', encoding='utf-8') as f:
+                file_content = f.read()
+            
+    except Exception as e:
+        return f"Error reading file: {e}", []
+
+    # Call the extract_rules function
+    result = extract_rules(file_content, file_type)
+    if result["success"]:
+        return "Rules extracted successfully.", result["rules"]
+    else:
+        return f"Error: {result['error']}", []
+
 def create_gradio_interface():
     """Create and return the Gradio interface for the Gemini Chat Application with two tabs: Configuration and Chat/Rule Summary."""
 
@@ -177,7 +241,11 @@ def create_gradio_interface():
 
     # --- State for RAG DataFrame (must be defined before use) ---
     state_rag_df = gr.State(pd.DataFrame())
+    extracted_rules = gr.State([])  # State to store extracted rules
 
+    # # Initialize RuleExtractorAgent
+    # rule_extractor_agent = extract_rules()
+    
     with gr.Blocks(theme=gr.themes.Base(), css="""
         /* Hide footer and labels */
         footer {visibility: hidden}
@@ -185,7 +253,23 @@ def create_gradio_interface():
     """) as demo:
         # --- UI Definition ---
         with gr.Tabs():
-            # Tab 1: Configuration
+            # Tab 1: Rule Extraction
+            with gr.Tab("Rule Extraction"):
+                with gr.Row():
+                    with gr.Column(scale=1):
+                        gr.Markdown("### Upload Document for Rule Extraction")
+                        document_upload = gr.File(label="Upload Document", file_types=[".pdf", ".csv", ".txt"])
+                        extract_button = gr.Button("Extract Rules")
+                        extraction_status = gr.Textbox(label="Extraction Status", interactive=False)
+                        extracted_rules_display = gr.JSON(label="Extracted Rules")
+
+                        extract_button.click(
+                            extract_rules_handler,
+                            inputs=[document_upload],
+                            outputs=[extraction_status, extracted_rules_display]
+                        )
+
+            # Tab 2: Configuration
             with gr.Tab("Configuration"):
                 with gr.Row():
                     # Knowledge Base Setup Column
@@ -206,18 +290,34 @@ def create_gradio_interface():
                                 value="Knowledge base not built yet.",
                                 interactive=False
                             )
-                        # You can add more KB setup UI here if needed
-                    # Agent Config Variables Column
-                    with gr.Column(scale=1):
-                        gr.Markdown("# Agent Configuration")
-                        agent1_prompt_box = gr.Textbox(value=AGENT1_PROMPT, label="Agent 1 Prompt", lines=8)
-                        agent2_prompt_box = gr.Textbox(value=AGENT2_PROMPT, label="Agent 2 Prompt", lines=4)
-                        default_model_box = gr.Textbox(value=DEFAULT_MODEL, label="Default Model")
-                        generation_config_box = gr.Textbox(value=json.dumps(GENERATION_CONFIG, indent=2), label="Generation Config (JSON)", lines=6)
-                        # Optionally, add a save/apply button here to update config at runtime
-                        # gr.Button("Save Config", variant="primary")
 
-            # Tab 2: Chat & Rule Summary
+                        def build_knowledge_base_process(uploaded_files, chunk_size, chunk_overlap, rag_state_df, extracted_rules):
+                            """Builds the knowledge base and includes extracted rules."""
+                            yield "Processing...", rag_state_df
+                            if not uploaded_files:
+                                yield "Please upload documents first.", pd.DataFrame()
+                                return
+                            if chunk_size is None or chunk_size <= 0 or chunk_overlap is None or chunk_overlap < 0 or chunk_overlap >= chunk_size:
+                                yield "Invalid chunk size or overlap. Chunk size > 0, overlap >= 0, overlap < chunk size.", rag_state_df
+                                return
+                            file_paths = [f.name for f in uploaded_files if f and hasattr(f, 'name') and f.name]
+                            if not file_paths:
+                                yield "No valid file paths from upload.", pd.DataFrame()
+                                return
+                            yield "Reading documents...", rag_state_df
+                            yield "Chunking text...", rag_state_df
+                            yield f"Embedding chunks...", rag_state_df
+                            status_message, result_df = core_build_knowledge_base(file_paths, chunk_size, chunk_overlap)
+                            updated_rag_state_df = add_extracted_rules_to_rag(extracted_rules, result_df)
+                            yield status_message, updated_rag_state_df
+
+                        build_kb_button.click(
+                            build_knowledge_base_process,
+                            inputs=[document_upload, chunk_size_input, chunk_overlap_input, state_rag_df, extracted_rules],
+                            outputs=[rag_status_display, state_rag_df]
+                        )
+
+            # Tab 3: Chat & Rule Summary
             with gr.Tab("Chat & Rule Summary"):
                 with gr.Row():
                     # Left panel: Chat
@@ -246,7 +346,6 @@ def create_gradio_interface():
                         status_box.render()
                         drl_file.render()
                         gdst_file.render()
-
         # --- Event Actions (must be inside Blocks context) ---
         build_kb_button.click(
             build_knowledge_base_process,

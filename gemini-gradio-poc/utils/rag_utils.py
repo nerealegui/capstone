@@ -495,3 +495,10 @@ def rag_generate(query: str, df: pd.DataFrame, agent_prompt: str, model_name: st
             "summary": f"An error occurred during AI response generation: {str(e)}",
             "logic": {"message": "LLM generation failed."}
         })
+
+def add_extracted_rules_to_rag(rules: list, rag_state_df: pd.DataFrame) -> pd.DataFrame:
+    """Adds extracted rules to the RAG knowledge base."""
+    if not rules:
+        return rag_state_df
+    rules_df = pd.DataFrame(rules)
+    return pd.concat([rag_state_df, rules_df], ignore_index=True)
