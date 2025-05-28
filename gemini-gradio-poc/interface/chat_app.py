@@ -6,12 +6,12 @@ from config.agent_config import AGENT1_PROMPT, AGENT2_PROMPT, DEFAULT_MODEL, GEN
 import json
 import pandas as pd
 import numpy as np
-from utils.rule_extractor import extract_rules
 
 #initialize initialize_gemini function from rag_utils 
-from utils.rag_utils import add_extracted_rules_to_rag, read_documents_from_paths, embed_texts, retrieve, rag_generate, initialize_gemini_client
+from utils.rag_utils import add_extracted_rules_to_rag, read_documents_from_paths, embed_texts, retrieve, rag_generate, initialize_gemini_client, load_saved_rules
 from utils.kb_utils import core_build_knowledge_base
 from utils.rule_utils import json_to_drl_gdst, verify_drools_execution
+from utils.rule_extractor import extract_rules
 
 # Commented out initialize_gemini function because it will live in rag_utils.py
 # def initialize_gemini():

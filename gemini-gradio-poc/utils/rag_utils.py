@@ -10,6 +10,7 @@ from google import genai
 from google.genai import types
 import json
 
+
 # Initialize Gemini client globally (will be properly initialized on first use with API key)
 # Initialize to None; it will be set when initialize_gemini_client is called.
 client = None
@@ -37,6 +38,25 @@ def initialize_gemini_client():
 
     # Return the initialized client instance
     return client
+
+# Function to load the json saved files
+def load_saved_rules() -> list:
+    """Loads all saved JSON rules from the output directory."""
+    rules_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "extracted_rules_json")
+    if not os.path.exists(rules_dir):
+        return []
+        
+    rules = []
+    for filename in os.listdir(rules_dir):
+        if filename.endswith('.json'):
+            try:
+                with open(os.path.join(rules_dir, filename), 'r', encoding='utf-8') as f:
+                    rule_data = json.load(f)
+                    rules.append(rule_data)
+            except Exception as e:
+                logging.error(f"Error loading rule file {filename}: {e}")
+    
+    return rules
 
 # Function to read docx files
 def read_docx(file_path):
@@ -366,7 +386,6 @@ def rag_generate(query: str, df: pd.DataFrame, agent_prompt: str, model_name: st
     else:
         print("No relevant documents retrieved for the query.")
         context_text = "Context from Knowledge Base (relevant documents/chunks):\nNo relevant context found.\n\n------------------------\n\n"
-
 
     # 3. Combine Agent Prompt, RAG Context, and Current User Query for the final user turn
     # Place the prompt and context *before* the user's query in the final turn's text part

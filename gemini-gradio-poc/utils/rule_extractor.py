@@ -4,7 +4,55 @@ from google.genai import types
 from utils.rag_utils import initialize_gemini_client
 import pandas as pd
 from io import StringIO
+from pathlib import Path
+import os
 
+# Configuration for saving extracted rules
+EXTRACTED_RULES_DIR = "extracted_rules_json"  # Directory to save JSON files
+ENABLE_AUTO_SAVE = True  # Set to False to disable auto-saving
+
+def ensure_rules_directory():
+    """Create the extracted_rules directory if it doesn't exist."""
+    Path(EXTRACTED_RULES_DIR).mkdir(exist_ok=True)
+
+def generate_filename(file_type: str) -> str:
+    """Generate a unique filename for the extracted rules."""
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")[:-3]  # Include milliseconds
+    return f"rules_{file_type.replace('.', '')}_{timestamp}.json"
+
+def save_extracted_rules(rules_data: dict, filename: str) -> str:
+    """
+    Save extracted rules to a JSON file.
+    
+    Args:
+        rules_data (dict): The extracted rules data
+        filename (str): The filename to save to
+    
+    Returns:
+        str: The full path where the file was saved
+    """
+    try:
+        ensure_rules_directory()
+        file_path = os.path.join(EXTRACTED_RULES_DIR, filename)
+        
+        # Add save metadata to the rules data
+        rules_data_with_metadata = {
+            **rules_data,
+            "save_metadata": {
+                "saved_at": datetime.now().isoformat(),
+                "filename": filename,
+                "file_path": file_path
+            }
+        }
+        
+        with open(file_path, 'w', encoding='utf-8') as f:
+            json.dump(rules_data_with_metadata, f, indent=2, ensure_ascii=False)
+        
+        return file_path
+    except Exception as e:
+        print(f"Warning: Failed to save extracted rules to {filename}: {e}")
+        return None
+    
 def extract_rules(document_content: str, file_type: str) -> dict:
     """
     Extracts business rules from the given document content.
@@ -38,12 +86,26 @@ def extract_rules(document_content: str, file_type: str) -> dict:
             response_text = response_text.replace('```', '').strip()
 
         rules_data = json.loads(response_text)
-        return {
+        # Prepare the result
+        result = {
             "success": True,
             "rules": rules_data.get("rules", []),
             "metadata": rules_data.get("configuration_metadata", {}),
             "extraction_timestamp": datetime.now().isoformat()
         }
+        
+        # Auto-save the extracted rules if enabled
+        if ENABLE_AUTO_SAVE:
+            filename = generate_filename(file_type)
+            saved_path = save_extracted_rules(rules_data, filename)
+            if saved_path:
+                result["saved_to"] = saved_path
+                result["filename"] = filename
+                print(f"✅ Extracted rules saved to: {saved_path}")
+            else:
+                print("⚠️ Failed to save extracted rules")
+        
+        return result
     except json.JSONDecodeError as e:
         return {
             "success": False,
