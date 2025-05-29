@@ -11,6 +11,7 @@ import numpy as np
 from utils.rag_utils import read_documents_from_paths, embed_texts, retrieve, rag_generate, initialize_gemini_client
 from utils.kb_utils import core_build_knowledge_base
 from utils.rule_utils import json_to_drl_gdst, verify_drools_execution
+from utils.rule_extractor import extract_rules_from_csv, validate_rule_conflicts, save_extracted_rules
 
 # Commented out initialize_gemini function because it will live in rag_utils.py
 # def initialize_gemini():
@@ -142,7 +143,130 @@ def update_rule_summary():
         print(f"Error in update_rule_summary: {e}")
         return "Error loading rule data", "Error loading rule data"
 
-def preview_apply_rule():
+def extract_rules_from_uploaded_csv(csv_file):
+    """
+    Process uploaded CSV file to extract business rules.
+    
+    Args:
+        csv_file: Gradio file upload object
+        
+    Returns:
+        Tuple[str, str]: Status message and extracted rules JSON as string
+    """
+    if not csv_file:
+        return "Please upload a CSV file first.", ""
+    
+    try:
+        # Extract rules from CSV
+        rules = extract_rules_from_csv(csv_file.name)
+        
+        if not rules:
+            return "No rules found in the CSV file.", ""
+        
+        # Save extracted rules
+        output_path = "extracted_rules.json"
+        success = save_extracted_rules(rules, output_path)
+        
+        if success:
+            rules_json = json.dumps(rules, indent=2)
+            return f"Successfully extracted {len(rules)} rules from CSV.", rules_json
+        else:
+            return "Error saving extracted rules.", ""
+            
+    except Exception as e:
+        return f"Error processing CSV file: {str(e)}", ""
+
+def validate_new_rule(rule_json_str: str):
+    """
+    Validate a new rule against existing rules.
+    
+    Args:
+        rule_json_str (str): JSON string of the new rule
+        
+    Returns:
+        str: Validation results
+    """
+    if not rule_json_str.strip():
+        return "Please provide a rule in JSON format."
+    
+    try:
+        new_rule = json.loads(rule_json_str)
+        
+        # Load existing rules (from sample data for now)
+        existing_rules = []
+        try:
+            with open("data/sample_rules.json", 'r') as f:
+                existing_rules = json.load(f)
+        except FileNotFoundError:
+            pass
+        
+        # Check for conflicts
+        conflicts = validate_rule_conflicts(new_rule, existing_rules)
+        
+        if conflicts:
+            conflict_messages = []
+            for conflict in conflicts:
+                conflict_messages.append(f"⚠️ {conflict['type']}: {conflict['message']}")
+            return "Validation Issues Found:\n" + "\n".join(conflict_messages)
+        else:
+            return "✅ Rule validation passed. No conflicts detected."
+            
+    except json.JSONDecodeError as e:
+        return f"❌ Invalid JSON format: {str(e)}"
+    except Exception as e:
+        return f"❌ Validation error: {str(e)}"
+
+def add_rules_to_knowledge_base(rules_json_str: str, rag_state_df: pd.DataFrame):
+    """
+    Add extracted rules to the RAG knowledge base.
+    
+    Args:
+        rules_json_str (str): JSON string of extracted rules
+        rag_state_df (pd.DataFrame): Current RAG state
+        
+    Returns:
+        Tuple[str, pd.DataFrame]: Status message and updated RAG DataFrame
+    """
+    if not rules_json_str.strip():
+        return "No rules to add to knowledge base.", rag_state_df
+    
+    try:
+        rules = json.loads(rules_json_str)
+        
+        # Convert rules to text for RAG indexing
+        rule_texts = []
+        for rule in rules:
+            rule_text = f"""
+Rule: {rule.get('name', 'Unknown')}
+Category: {rule.get('category', 'Unknown')}
+Description: {rule.get('description', 'No description')}
+Summary: {rule.get('summary', 'No summary')}
+Priority: {rule.get('priority', 'Medium')}
+Active: {rule.get('active', True)}
+"""
+            rule_texts.append(rule_text)
+        
+        # Add rules to knowledge base using existing infrastructure
+        # For now, we'll save them as a temporary document and process through KB
+        temp_file = "temp_rules.txt"
+        with open(temp_file, 'w') as f:
+            f.write("\n".join(rule_texts))
+        
+        # Use existing KB building infrastructure
+        status_message, result_df = core_build_knowledge_base([temp_file], 300, 50)
+        
+        # Clean up temp file
+        try:
+            os.remove(temp_file)
+        except:
+            pass
+        
+        return f"Successfully added {len(rules)} rules to knowledge base. {status_message}", result_df
+        
+    except json.JSONDecodeError as e:
+        return f"Invalid JSON format: {str(e)}", rag_state_df
+    except Exception as e:
+        return f"Error adding rules to knowledge base: {str(e)}", rag_state_df
     global rule_response
     try:
         drl, gdst = json_to_drl_gdst(rule_response)
@@ -217,7 +341,53 @@ def create_gradio_interface():
                         # Optionally, add a save/apply button here to update config at runtime
                         # gr.Button("Save Config", variant="primary")
 
-            # Tab 2: Chat & Rule Summary
+            # Tab 2: Business Rules Management
+            with gr.Tab("Business Rules"):
+                with gr.Row():
+                    # Left panel: Rule Upload & Extraction
+                    with gr.Column(scale=1):
+                        gr.Markdown("### Rule Extraction")
+                        csv_upload = gr.File(
+                            label="Upload Business Rules CSV",
+                            file_types=['.csv'],
+                            height=100
+                        )
+                        extract_button = gr.Button("Extract Rules from CSV", variant="primary")
+                        extraction_status = gr.Textbox(
+                            label="Extraction Status",
+                            value="Upload a CSV file and click 'Extract Rules' to begin.",
+                            interactive=False
+                        )
+                        
+                        gr.Markdown("### Rule Validation")
+                        rule_input = gr.Textbox(
+                            label="New Rule (JSON Format)",
+                            placeholder="Paste rule JSON here for validation...",
+                            lines=8
+                        )
+                        validate_button = gr.Button("Validate Rule", variant="secondary")
+                        validation_result = gr.Textbox(
+                            label="Validation Result",
+                            interactive=False
+                        )
+                    
+                    # Right panel: Extracted Rules & RAG Integration
+                    with gr.Column(scale=1):
+                        gr.Markdown("### Extracted Rules")
+                        extracted_rules_display = gr.Textbox(
+                            label="Extracted Rules (JSON)",
+                            value="Extracted rules will appear here...",
+                            lines=15,
+                            interactive=False
+                        )
+                        
+                        add_to_kb_button = gr.Button("Add Rules to Knowledge Base", variant="primary")
+                        kb_integration_status = gr.Textbox(
+                            label="Knowledge Base Integration Status",
+                            interactive=False
+                        )
+
+            # Tab 3: Chat & Rule Summary
             with gr.Tab("Chat & Rule Summary"):
                 with gr.Row():
                     # Left panel: Chat
@@ -252,6 +422,25 @@ def create_gradio_interface():
             build_knowledge_base_process,
             inputs=[document_upload, chunk_size_input, chunk_overlap_input, state_rag_df],
             outputs=[rag_status_display, state_rag_df]
+        )
+
+        # Business Rules tab event handlers
+        extract_button.click(
+            extract_rules_from_uploaded_csv,
+            inputs=[csv_upload],
+            outputs=[extraction_status, extracted_rules_display]
+        )
+        
+        validate_button.click(
+            validate_new_rule,
+            inputs=[rule_input],
+            outputs=[validation_result]
+        )
+        
+        add_to_kb_button.click(
+            add_rules_to_knowledge_base,
+            inputs=[extracted_rules_display, state_rag_df],
+            outputs=[kb_integration_status, state_rag_df]
         )
 
         # Ensure chat_interface uses state_rag_df as input and output, so it always gets the latest KB
