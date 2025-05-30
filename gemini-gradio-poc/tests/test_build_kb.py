@@ -1,6 +1,9 @@
 import pytest
 import pandas as pd
 from unittest.mock import patch, MagicMock
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'interface'))
 from chat_app import build_knowledge_base_process
 
 def make_file_mock(name):

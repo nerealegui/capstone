@@ -1,0 +1,250 @@
+[
+  [
+    {
+      "rule_id": "BR001",
+      "name": "VIP Customer Discount",
+      "category": "Discount",
+      "description": "Apply 15% discount for VIP customers",
+      "summary": "Applies a 15% discount to VIP customers with order values over 100.",
+      "conditions": [
+        {
+          "field": "Customer status",
+          "operator": "equals",
+          "value": "VIP"
+        },
+        {
+          "field": "order value",
+          "operator": "greater_than",
+          "value": "100"
+        }
+      ],
+      "actions": [
+        {
+          "type": "Apply discount",
+          "details": "15%"
+        }
+      ],
+      "priority": "High",
+      "active": "true"
+    }
+  ],
+  {
+    "rule_id": "BR002",
+    "name": "Bulk Order Discount",
+    "category": "Discount",
+    "description": "Apply 10% discount for orders over $500",
+    "summary": "Applies a 10% discount to orders exceeding $500.",
+    "conditions": [
+      {
+        "field": "Order value",
+        "operator": "greater_than",
+        "value": "500"
+      }
+    ],
+    "actions": [
+      {
+        "type": "Apply discount",
+        "details": "10% discount"
+      }
+    ],
+    "priority": "Medium",
+    "active": true
+  },
+  {
+    "rule_id": "BR003",
+    "name": "Employee Discount",
+    "category": "Discount",
+    "description": "Apply 20% discount for employees",
+    "summary": "Applies a 20% discount to employees.",
+    "conditions": [
+      {
+        "field": "Customer type",
+        "operator": "equals",
+        "value": "Employee"
+      }
+    ],
+    "actions": [
+      {
+        "type": "discount",
+        "details": "Apply 20% discount"
+      }
+    ],
+    "priority": "High",
+    "active": "true"
+  },
+  [
+    {
+      "rule_id": "BR004",
+      "name": "First Time Customer",
+      "category": "Promotion",
+      "description": "Welcome discount for new customers",
+      "summary": "Applies a 5% discount to first-time customers with order values over 50.",
+      "conditions": [
+        {
+          "field": "Customer.first_order",
+          "operator": "equals",
+          "value": "True"
+        },
+        {
+          "field": "order_value",
+          "operator": "greater_than",
+          "value": "50"
+        }
+      ],
+      "actions": [
+        {
+          "type": "discount",
+          "details": "Apply 5% discount"
+        }
+      ],
+      "priority": "Low",
+      "active": "true"
+    }
+  ],
+  [
+    {
+      "rule_id": "BR005",
+      "name": "Weekend Surcharge",
+      "category": "Pricing",
+      "description": "Apply 5% surcharge on weekends",
+      "summary": "Applies a 5% surcharge on weekends (Saturday and Sunday).",
+      "conditions": [
+        {
+          "field": "Day of week",
+          "operator": "equals",
+          "value": "Saturday"
+        },
+        {
+          "field": "Day of week",
+          "operator": "equals",
+          "value": "Sunday"
+        }
+      ],
+      "actions": [
+        {
+          "type": "Add surcharge",
+          "details": "Add 5% surcharge"
+        }
+      ],
+      "priority": "Medium",
+      "active": "true"
+    }
+  ],
+  [
+    {
+      "rule_id": "BR006",
+      "name": "Express Delivery",
+      "category": "Shipping",
+      "description": "Free express delivery for premium customers",
+      "summary": "Provides free express delivery to premium customers who spend over 200.",
+      "conditions": [
+        {
+          "field": "Customer.tier",
+          "operator": "equals",
+          "value": "Premium"
+        },
+        {
+          "field": "order_value",
+          "operator": "greater_than",
+          "value": "200"
+        }
+      ],
+      "actions": [
+        {
+          "type": "Set shipping",
+          "details": "to free express"
+        }
+      ],
+      "priority": "High",
+      "active": "true"
+    }
+  ],
+  {
+    "rule_id": "BR007",
+    "name": "Minimum Order",
+    "category": "Validation",
+    "description": "Minimum order value requirement",
+    "summary": "This rule validates if the order value meets the minimum requirement.",
+    "conditions": [
+      {
+        "field": "Order value",
+        "operator": "less_than",
+        "value": "25"
+      }
+    ],
+    "actions": [
+      {
+        "type": "Reject order",
+        "details": "with message"
+      }
+    ],
+    "priority": "High",
+    "active": true
+  },
+  {
+    "rule_id": "BR008",
+    "name": "Late Night Order",
+    "category": "Restriction",
+    "description": "No orders after 11 PM",
+    "summary": "Rejects orders placed after 11 PM.",
+    "conditions": [
+      {
+        "field": "Current time",
+        "operator": "greater_than",
+        "value": "23:00"
+      }
+    ],
+    "actions": [
+      {
+        "type": "Reject order",
+        "details": "Reject order with message"
+      }
+    ],
+    "priority": "Medium",
+    "active": "true"
+  },
+  {
+    "rule_id": "BR009",
+    "name": "Holiday Bonus",
+    "category": "Promotion",
+    "description": "Double loyalty points on holidays",
+    "summary": "This rule doubles loyalty points earned on holidays to promote customer engagement.",
+    "conditions": [
+      {
+        "field": "Date",
+        "operator": "is",
+        "value": "holiday"
+      }
+    ],
+    "actions": [
+      {
+        "type": "Multiply",
+        "details": "Multiply loyalty points by 2"
+      }
+    ],
+    "priority": "Low",
+    "active": "true"
+  },
+  {
+    "rule_id": "BR010",
+    "name": "Student Discount",
+    "category": "Discount",
+    "description": "Student discount with valid ID",
+    "summary": "Applies a discount to verified students.",
+    "conditions": [
+      {
+        "field": "Customer.student_verified",
+        "operator": "equals",
+        "value": "True"
+      }
+    ],
+    "actions": [
+      {
+        "type": "Apply discount",
+        "details": "Apply 12% discount"
+      }
+    ],
+    "priority": "Medium",
+    "active": true
+  }
+]

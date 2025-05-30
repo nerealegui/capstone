@@ -1,0 +1,11 @@
+rule_id,rule_name,category,description,condition,action,priority,active
+BR001,VIP Customer Discount,Discount,Apply 15% discount for VIP customers,Customer status equals VIP AND order value > 100,Apply 15% discount,High,True
+BR002,Bulk Order Discount,Discount,Apply 10% discount for orders over $500,Order value > 500,Apply 10% discount,Medium,True
+BR003,Employee Discount,Discount,Apply 20% discount for employees,Customer type equals Employee,Apply 20% discount,High,True
+BR004,First Time Customer,Promotion,Welcome discount for new customers,Customer.first_order equals True AND order_value > 50,Apply 5% discount,Low,True
+BR005,Weekend Surcharge,Pricing,Apply 5% surcharge on weekends,Day of week equals Saturday OR Day of week equals Sunday,Add 5% surcharge,Medium,True
+BR006,Express Delivery,Shipping,Free express delivery for premium customers,Customer.tier equals Premium AND order_value > 200,Set shipping to free express,High,True
+BR007,Minimum Order,Validation,Minimum order value requirement,Order value < 25,Reject order with message,High,True
+BR008,Late Night Order,Restriction,No orders after 11 PM,Current time > 23:00,Reject order with message,Medium,True
+BR009,Holiday Bonus,Promotion,Double loyalty points on holidays,Date is holiday,Multiply loyalty points by 2,Low,True
+BR010,Student Discount,Discount,Student discount with valid ID,Customer.student_verified equals True,Apply 12% discount,Medium,True

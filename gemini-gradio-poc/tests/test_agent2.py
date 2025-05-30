@@ -1,6 +1,9 @@
 import pytest
 import json
-from gemini-gradio-poc.chat_app import json_to_drl_gdst, verify_drools_execution
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'utils'))
+from rule_utils import json_to_drl_gdst, verify_drools_execution
 
 def test_json_to_drl_gdst(monkeypatch):
     class MockResponse:
@@ -11,7 +14,7 @@ def test_json_to_drl_gdst(monkeypatch):
     class MockClient:
         def __init__(self): self.models = self
         def get(self, name): return MockModel()
-    monkeypatch.setattr("gemini-gradio-poc.chat_app.initialize_gemini", lambda: MockClient())
+    monkeypatch.setattr("rule_utils.initialize_gemini_client", lambda: MockClient())
     json_data = {"rule": "test"}
     drl, gdst = json_to_drl_gdst(json_data)
     assert "rule" in drl
