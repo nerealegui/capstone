@@ -267,8 +267,19 @@ Active: {rule.get('active', True)}
         return f"Invalid JSON format: {str(e)}", rag_state_df
     except Exception as e:
         return f"Error adding rules to knowledge base: {str(e)}", rag_state_df
+
+def preview_apply_rule():
+    """
+    Preview and apply the current rule by generating DRL and GDST files.
+    
+    Returns:
+        Tuple[str, str, str]: Status message, DRL file path, GDST file path
+    """
     global rule_response
     try:
+        if 'rule_response' not in globals() or not rule_response:
+            return "No rule to apply. Please interact with the chat first.", None, None
+            
         drl, gdst = json_to_drl_gdst(rule_response)
         verified = verify_drools_execution(drl, gdst)
         if verified:
@@ -330,7 +341,21 @@ def create_gradio_interface():
                                 value="Knowledge base not built yet.",
                                 interactive=False
                             )
-                        # You can add more KB setup UI here if needed
+                        
+                        gr.Markdown("### Business Rule Upload & Extraction")
+                        with gr.Accordion("Upload Business Rules CSV", open=True):
+                            csv_upload = gr.File(
+                                label="Upload Business Rules CSV",
+                                file_types=['.csv'],
+                                height=100
+                            )
+                            extract_button = gr.Button("Extract Rules from CSV", variant="primary")
+                            extraction_status = gr.Textbox(
+                                label="Extraction Status",
+                                value="Upload a CSV file and click 'Extract Rules' to begin.",
+                                interactive=False
+                            )
+                    
                     # Agent Config Variables Column
                     with gr.Column(scale=1):
                         gr.Markdown("# Agent Configuration")
@@ -344,21 +369,8 @@ def create_gradio_interface():
             # Tab 2: Business Rules Management
             with gr.Tab("Business Rules"):
                 with gr.Row():
-                    # Left panel: Rule Upload & Extraction
+                    # Left panel: Rule Validation
                     with gr.Column(scale=1):
-                        gr.Markdown("### Rule Extraction")
-                        csv_upload = gr.File(
-                            label="Upload Business Rules CSV",
-                            file_types=['.csv'],
-                            height=100
-                        )
-                        extract_button = gr.Button("Extract Rules from CSV", variant="primary")
-                        extraction_status = gr.Textbox(
-                            label="Extraction Status",
-                            value="Upload a CSV file and click 'Extract Rules' to begin.",
-                            interactive=False
-                        )
-                        
                         gr.Markdown("### Rule Validation")
                         rule_input = gr.Textbox(
                             label="New Rule (JSON Format)",

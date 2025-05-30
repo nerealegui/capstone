@@ -8,3 +8,10 @@ venv/
 env/
 .venv/
 .env/
+# Additional cache and temp files
+*.egg-info/
+.coverage
+.tox/
+dist/
+build/
+*.so
