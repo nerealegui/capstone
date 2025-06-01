@@ -91,7 +91,15 @@ def read_documents_from_paths(file_paths):
                         documents.append({'filename': filename, 'text': text})
                         print(f"    ✅ Read {filename}")
                     else:
-                         print(f"    ⚠️  {filename} is empty or could not be read successfully.")
+                        print(f"    ⚠️  {filename} is empty or could not be read successfully.")
+                elif filename.lower().endswith(".txt"):
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        text = f.read()
+                    if text is not None and text.strip():
+                        documents.append({'filename': filename, 'text': text})
+                        print(f"    ✅ Read {filename}")
+                    else:
+                        print(f"    ⚠️  {filename} is empty or could not be read successfully.")
                 else:
                     print(f"  Skipping unsupported file type: {filename}")
             else:

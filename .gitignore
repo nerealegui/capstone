@@ -1,1 +1,17 @@
 .env
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+venv/
+env/
+.venv/
+.env/
+# Additional cache and temp files
+*.egg-info/
+.coverage
+.tox/
+dist/
+build/
+*.so

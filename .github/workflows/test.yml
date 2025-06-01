@@ -1,0 +1,38 @@
+name: Tests
+
+on:
+  pull_request:
+    branches: [ main, master ]
+  push:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        cd gemini-gradio-poc
+        pip install -r requirements.txt
+    
+    - name: Run tests
+      run: |
+        cd gemini-gradio-poc
+        python -m pytest tests/test_rule_extractor.py -v
+      env:
+        GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+    
+    - name: Test import functionality
+      run: |
+        cd gemini-gradio-poc
+        python -c "from utils.rule_extractor import extract_rules_from_csv, validate_rule_conflicts; print('Rule extractor imports successfully')"
+        python -c "from interface.chat_app import build_knowledge_base_process; print('Chat app imports successfully')"
