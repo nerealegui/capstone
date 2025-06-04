@@ -752,14 +752,14 @@ def create_gradio_interface():
         )
 
         # Ensure chat_interface uses state_rag_df as input and output, so it always gets the latest KB
-        def chat_and_update(user_input, history, rag_state_df):
+        def chat_and_update(user_input, history, rag_state_df, mode=None, industry=None):
             global rule_response
             response = chat_with_rag(user_input, history, rag_state_df)
             name = rule_response.get('name', 'Name will appear here after input.')
             summary = rule_response.get('summary', 'Summary will appear here after input.')
             return response, name, summary, rag_state_df
         chat_interface.fn = chat_and_update
-        chat_interface.additional_inputs = [state_rag_df]
+        chat_interface.additional_inputs = [state_rag_df, agent3_mode, industry_selector]  # Keep all inputs
         chat_interface.additional_outputs = [name_display, summary_display, state_rag_df]
 
         preview_button.click(
