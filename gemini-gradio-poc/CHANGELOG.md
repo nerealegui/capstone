@@ -2,6 +2,32 @@
 
 ## [Unreleased]
 
+### Added - Configuration Save/Apply Functionality (Issue #18)
+- **Configuration Management System**: Complete save/apply functionality for agent prompts, model settings, and Agent 3 configurations
+- **Persistent Agent 3 Settings**: Save and restore industry selection, chat mode, and enabled status
+- **Configuration Validation**: Robust validation system to ensure configuration integrity
+- **Configuration Summary**: Visual summary of current configuration settings
+- **Reset to Defaults**: One-click reset functionality to restore default configurations
+- **Runtime Configuration Updates**: Apply configuration changes without restart
+- **Configuration Status Reporting**: Real-time feedback on save/apply operations
+- **Automated Configuration Loading**: Load saved configurations on application startup
+
+### Enhanced Configuration Features
+- **Save Configuration Button**: 💾 Save current configuration to persistent storage
+- **Apply Configuration Button**: ⚡ Load and apply saved configuration settings
+- **Reset Configuration Button**: 🔄 Reset all settings to default values
+- **Configuration Status Display**: Real-time status updates for all configuration operations
+- **Configuration Summary Panel**: Detailed overview of current configuration settings
+- **Agent 3 Settings Persistence**: Industry context, chat mode, and feature toggles saved across sessions
+
+### Technical Implementation
+- **Configuration Manager Module**: New `utils/config_manager.py` with comprehensive configuration handling
+- **JSON Configuration Storage**: Persistent storage in `config/user_config.json`
+- **Configuration Validation System**: Validate configuration structure and values before saving/applying
+- **Configuration Merging**: Smart merging of user configurations with default values
+- **Error Handling**: Robust error handling with fallback to defaults when needed
+- **Test Suite**: Comprehensive tests for configuration management functionality
+
 ### Added - Agent 3 Implementation
 - **Agent 3 Business Rules Management Assistant**: Complete implementation of conversational interaction, conflict detection, impact analysis, and orchestration capabilities
 - **Industry-Specific Configurations**: Support for restaurant, retail, manufacturing, healthcare, and generic industries with specialized parameters

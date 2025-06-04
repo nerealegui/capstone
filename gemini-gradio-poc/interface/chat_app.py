@@ -20,6 +20,15 @@ from utils.agent3_utils import (
     orchestrate_rule_generation,
     _extract_existing_rules_from_kb
 )
+from utils.config_manager import (
+    get_default_config,
+    save_config,
+    load_config,
+    apply_config_to_runtime,
+    validate_config,
+    get_config_summary,
+    reset_config_to_defaults
+)
 
 # Commented out initialize_gemini function because it will live in rag_utils.py
 # def initialize_gemini():
@@ -139,8 +148,27 @@ def chat_with_rag(user_input: str, history: list, rag_state_df: pd.DataFrame):
 def chat_with_agent3(user_input: str, history: list, rag_state_df: pd.DataFrame, industry: str = "generic"):
     """
     Enhanced chat function using Agent 3 for conversational interaction with conflict detection and impact analysis.
+    Uses saved configuration when available.
     """
     global rule_response
+    
+    # Load saved configuration to get current Agent 3 settings
+    try:
+        config, _ = load_config()
+        saved_industry = config["agent3_settings"]["industry"]
+        agent3_enabled = config["agent3_settings"]["enabled"]
+        
+        # Use saved industry if provided industry is default
+        if industry == "generic" and saved_industry != "generic":
+            industry = saved_industry
+            
+        # Check if Agent 3 is enabled
+        if not agent3_enabled:
+            return "Agent 3 is currently disabled. Please enable it in the Configuration tab."
+            
+    except Exception as e:
+        print(f"Warning: Could not load saved configuration: {e}")
+        # Continue with provided parameters
     
     # Defensive: ensure rag_state_df is always a DataFrame
     if rag_state_df is None:
@@ -481,8 +509,181 @@ def preview_apply_rule():
     """
     return preview_apply_rule_with_agent3()
 
+def save_current_config(agent1_prompt, agent2_prompt, agent3_prompt, default_model, 
+                       generation_config_str, industry, chat_mode, enabled):
+    """
+    Save the current configuration to file.
+    
+    Args:
+        agent1_prompt (str): Agent 1 prompt
+        agent2_prompt (str): Agent 2 prompt  
+        agent3_prompt (str): Agent 3 prompt
+        default_model (str): Default model name
+        generation_config_str (str): Generation config as JSON string
+        industry (str): Selected industry
+        chat_mode (str): Chat mode selection
+        enabled (bool): Agent 3 enabled status
+        
+    Returns:
+        str: Status message
+    """
+    try:
+        # Parse generation config
+        try:
+            generation_config = json.loads(generation_config_str)
+        except json.JSONDecodeError:
+            return "❌ Error: Invalid JSON format in Generation Config"
+        
+        # Build configuration dictionary
+        config = {
+            "agent_prompts": {
+                "agent1": agent1_prompt,
+                "agent2": agent2_prompt,
+                "agent3": agent3_prompt
+            },
+            "model_config": {
+                "default_model": default_model,
+                "generation_config": generation_config,
+                "agent3_generation_config": {
+                    "temperature": 0.3,
+                    "response_mime_type": "text/plain"
+                }
+            },
+            "agent3_settings": {
+                "industry": industry,
+                "chat_mode": chat_mode,
+                "enabled": enabled
+            },
+            "ui_settings": {
+                "default_tab": "Chat & Rule Summary"
+            }
+        }
+        
+        # Validate configuration
+        is_valid, validation_msg = validate_config(config)
+        if not is_valid:
+            return f"❌ Configuration validation failed: {validation_msg}"
+        
+        # Save configuration
+        success, msg = save_config(config)
+        if success:
+            return f"✅ {msg}"
+        else:
+            return f"❌ {msg}"
+            
+    except Exception as e:
+        return f"❌ Error saving configuration: {str(e)}"
+
+def apply_saved_config():
+    """
+    Load and apply saved configuration.
+    
+    Returns:
+        Tuple: Updated configuration values for UI components
+    """
+    try:
+        # Load configuration
+        config, load_msg = load_config()
+        
+        # Apply to runtime
+        apply_success, apply_msg = apply_config_to_runtime(config)
+        
+        # Extract values for UI
+        agent1_prompt = config["agent_prompts"]["agent1"]
+        agent2_prompt = config["agent_prompts"]["agent2"] 
+        agent3_prompt = config["agent_prompts"]["agent3"]
+        default_model = config["model_config"]["default_model"]
+        generation_config_str = json.dumps(config["model_config"]["generation_config"], indent=2)
+        industry = config["agent3_settings"]["industry"]
+        chat_mode = config["agent3_settings"]["chat_mode"]
+        enabled = config["agent3_settings"]["enabled"]
+        
+        # Create status message
+        if apply_success:
+            status_msg = f"✅ Configuration loaded and applied successfully.\n{load_msg}"
+        else:
+            status_msg = f"⚠️ Configuration loaded but application failed: {apply_msg}\n{load_msg}"
+        
+        return (
+            agent1_prompt, agent2_prompt, agent3_prompt, default_model, 
+            generation_config_str, industry, chat_mode, enabled, status_msg
+        )
+        
+    except Exception as e:
+        # Return defaults on error
+        default_config = get_default_config()
+        return (
+            default_config["agent_prompts"]["agent1"],
+            default_config["agent_prompts"]["agent2"],
+            default_config["agent_prompts"]["agent3"],
+            default_config["model_config"]["default_model"],
+            json.dumps(default_config["model_config"]["generation_config"], indent=2),
+            default_config["agent3_settings"]["industry"],
+            default_config["agent3_settings"]["chat_mode"],
+            default_config["agent3_settings"]["enabled"],
+            f"❌ Error loading configuration: {str(e)}. Using defaults."
+        )
+
+def get_current_config_summary():
+    """
+    Get a summary of the current configuration.
+    
+    Returns:
+        str: Configuration summary
+    """
+    try:
+        config, _ = load_config()
+        return get_config_summary(config)
+    except Exception as e:
+        return f"Error generating configuration summary: {str(e)}"
+
+def reset_configuration():
+    """
+    Reset configuration to default values.
+    
+    Returns:
+        Tuple: Reset configuration values and status message
+    """
+    try:
+        success, msg = reset_config_to_defaults()
+        
+        if success:
+            # Load the reset defaults
+            return apply_saved_config()
+        else:
+            return (
+                AGENT1_PROMPT, AGENT2_PROMPT, AGENT3_PROMPT, DEFAULT_MODEL,
+                json.dumps(GENERATION_CONFIG, indent=2), "generic", 
+                "Enhanced Agent 3", True, f"❌ {msg}"
+            )
+            
+    except Exception as e:
+        return (
+            AGENT1_PROMPT, AGENT2_PROMPT, AGENT3_PROMPT, DEFAULT_MODEL,
+            json.dumps(GENERATION_CONFIG, indent=2), "generic", 
+            "Enhanced Agent 3", True, f"❌ Error resetting configuration: {str(e)}"
+        )
+
 def create_gradio_interface():
     """Create and return the Gradio interface for the Gemini Chat Application with two tabs: Configuration and Chat/Rule Summary."""
+
+    # Load saved configuration on startup
+    try:
+        startup_config, startup_msg = load_config()
+        print(f"Startup configuration: {startup_msg}")
+    except Exception as e:
+        print(f"Warning: Could not load startup configuration: {e}")
+        startup_config = get_default_config()
+
+    # Extract startup values
+    startup_agent1_prompt = startup_config["agent_prompts"]["agent1"]
+    startup_agent2_prompt = startup_config["agent_prompts"]["agent2"]
+    startup_agent3_prompt = startup_config["agent_prompts"]["agent3"]
+    startup_model = startup_config["model_config"]["default_model"]
+    startup_generation_config = json.dumps(startup_config["model_config"]["generation_config"], indent=2)
+    startup_industry = startup_config["agent3_settings"]["industry"]
+    startup_chat_mode = startup_config["agent3_settings"]["chat_mode"]
+    startup_agent3_enabled = startup_config["agent3_settings"]["enabled"]
 
     # Shared components
     name_display = gr.Textbox(value="Name will appear here after input.", label="Name")
@@ -540,19 +741,32 @@ def create_gradio_interface():
                     # Agent Config Variables Column
                     with gr.Column(scale=1):
                         gr.Markdown("# Agent Configuration")
-                        agent1_prompt_box = gr.Textbox(value=AGENT1_PROMPT, label="Agent 1 Prompt", lines=8)
-                        agent2_prompt_box = gr.Textbox(value=AGENT2_PROMPT, label="Agent 2 Prompt", lines=4)
+                        
+                        with gr.Accordion("Configuration Controls", open=True):
+                            with gr.Row():
+                                save_config_btn = gr.Button("💾 Save Configuration", variant="primary", scale=1)
+                                apply_config_btn = gr.Button("⚡ Apply Configuration", variant="secondary", scale=1)
+                                reset_config_btn = gr.Button("🔄 Reset to Defaults", variant="stop", scale=1)
+                            
+                            config_status = gr.Textbox(
+                                label="Configuration Status",
+                                value="Ready to save or apply configuration changes.",
+                                interactive=False,
+                                lines=3
+                            )
+                        
+                        agent1_prompt_box = gr.Textbox(value=startup_agent1_prompt, label="Agent 1 Prompt", lines=8)
+                        agent2_prompt_box = gr.Textbox(value=startup_agent2_prompt, label="Agent 2 Prompt", lines=4)
                         
                         # Agent 3 Configuration Section
                         gr.Markdown("### Agent 3 (Business Rules Management)")
                         with gr.Accordion("Agent 3 Configuration", open=True):
-                            from config.agent_config import AGENT3_PROMPT
-                            agent3_prompt_box = gr.Textbox(value=AGENT3_PROMPT, label="Agent 3 Prompt", lines=6)
+                            agent3_prompt_box = gr.Textbox(value=startup_agent3_prompt, label="Agent 3 Prompt", lines=6)
                             
                             # Industry Selection for Agent 3
                             industry_selector = gr.Dropdown(
                                 choices=list(INDUSTRY_CONFIGS.keys()),
-                                value="generic",
+                                value=startup_industry,
                                 label="Industry Context",
                                 info="Select industry for specialized rule analysis"
                             )
@@ -560,15 +774,30 @@ def create_gradio_interface():
                             # Agent 3 Mode Toggle
                             agent3_mode = gr.Radio(
                                 choices=["Standard Chat", "Enhanced Agent 3"],
-                                value="Enhanced Agent 3",
+                                value=startup_chat_mode,
                                 label="Chat Mode",
                                 info="Enhanced mode includes conflict detection and impact analysis"
                             )
+                            
+                            # Agent 3 Enabled Toggle
+                            agent3_enabled = gr.Checkbox(
+                                value=startup_agent3_enabled,
+                                label="Enable Agent 3 Features",
+                                info="Toggle Agent 3 enhanced capabilities"
+                            )
                         
-                        default_model_box = gr.Textbox(value=DEFAULT_MODEL, label="Default Model")
-                        generation_config_box = gr.Textbox(value=json.dumps(GENERATION_CONFIG, indent=2), label="Generation Config (JSON)", lines=6)
-                        # Optionally, add a save/apply button here to update config at runtime
-                        # gr.Button("Save Config", variant="primary")
+                        default_model_box = gr.Textbox(value=startup_model, label="Default Model")
+                        generation_config_box = gr.Textbox(value=startup_generation_config, label="Generation Config (JSON)", lines=6)
+                        
+                        # Configuration Summary
+                        with gr.Accordion("Configuration Summary", open=False):
+                            config_summary = gr.Markdown("Click 'Apply Configuration' to see current settings summary.")
+                            
+                            summary_btn = gr.Button("🔍 Show Configuration Summary", variant="secondary")
+                            summary_btn.click(
+                                get_current_config_summary,
+                                outputs=[config_summary]
+                            )
 
             # Tab 2: Business Rules Management
             with gr.Tab("Business Rules"):
@@ -770,6 +999,35 @@ def create_gradio_interface():
         chat_interface.chatbot.change(
             update_rule_summary,
             outputs=[name_display, summary_display]
+        )
+        
+        # Configuration save/apply event handlers
+        save_config_btn.click(
+            save_current_config,
+            inputs=[
+                agent1_prompt_box, agent2_prompt_box, agent3_prompt_box, 
+                default_model_box, generation_config_box, industry_selector,
+                agent3_mode, agent3_enabled
+            ],
+            outputs=[config_status]
+        )
+        
+        apply_config_btn.click(
+            apply_saved_config,
+            outputs=[
+                agent1_prompt_box, agent2_prompt_box, agent3_prompt_box,
+                default_model_box, generation_config_box, industry_selector,
+                agent3_mode, agent3_enabled, config_status
+            ]
+        )
+        
+        reset_config_btn.click(
+            reset_configuration,
+            outputs=[
+                agent1_prompt_box, agent2_prompt_box, agent3_prompt_box,
+                default_model_box, generation_config_box, industry_selector,
+                agent3_mode, agent3_enabled, config_status
+            ]
         )
     return demo
 
