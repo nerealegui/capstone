@@ -9,6 +9,7 @@ from config.agent_config import *
 from google import genai
 from google.genai import types
 import json
+from utils.json_response_handler import JsonResponseHandler
 
 # Initialize Gemini client globally (will be properly initialized on first use with API key)
 # Initialize to None; it will be set when initialize_gemini_client is called.
@@ -378,7 +379,9 @@ def rag_generate(query: str, df: pd.DataFrame, agent_prompt: str, model_name: st
 
     # 3. Combine Agent Prompt, RAG Context, and Current User Query for the final user turn
     # Place the prompt and context *before* the user's query in the final turn's text part
-    current_user_turn_text = f"{agent_prompt}\n\n{context_text}User Query: {query}"
+    # Enhance the agent prompt for better JSON responses 
+    enhanced_prompt = enhance_json_prompt(agent_prompt)
+    current_user_turn_text = f"{enhanced_prompt}\n\n{context_text}User Query: {query}"
 
     # Validate inputs before creating the API call
     if not query or not query.strip():
@@ -484,12 +487,15 @@ def rag_generate(query: str, df: pd.DataFrame, agent_prompt: str, model_name: st
         llm_response_text = response.text
         print("LLM response received.")
 
-        # Validate that the response looks like JSON before returning
+        # Use JsonResponseHandler to handle the response
         try:
-            json.loads(llm_response_text)
-            return llm_response_text
-        except json.JSONDecodeError:
-            print(f"Warning: LLM response is not valid JSON.")
+            # Attempt to parse and validate the JSON, which will clean it if needed
+            parsed_json = JsonResponseHandler.parse_json_response(llm_response_text)
+            # If successful, re-serialize to ensure proper JSON formatting
+            return json.dumps(parsed_json)
+        except ValueError:
+            print(f"Warning: LLM response is not valid JSON even after cleaning.")
+            print(f"Raw LLM Response received:\n{llm_response_text[:300]}...")
             return json.dumps({
                  "name": "LLM JSON Error",
                  "summary": f"The AI returned a response, but it wasn't valid JSON. Raw response start: {llm_response_text[:150]}...",
@@ -503,3 +509,16 @@ def rag_generate(query: str, df: pd.DataFrame, agent_prompt: str, model_name: st
             "summary": f"An error occurred during AI response generation: {str(e)}",
             "logic": {"message": "LLM generation failed."}
         })
+
+def enhance_json_prompt(prompt: str) -> str:
+    """
+    Enhances a prompt to encourage valid JSON responses from Gemini.
+    
+    Args:
+        prompt (str): Original prompt
+        
+    Returns:
+        str: Enhanced prompt with JSON-specific instructions
+    """
+    # Use JsonResponseHandler's enhance_json_prompt method
+    return JsonResponseHandler.enhance_json_prompt(prompt)
