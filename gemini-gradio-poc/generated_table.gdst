@@ -1,114 +1,81 @@
 <decision-table52>
-  <tableName>MediumRestaurantSalesStaffing</tableName>
+  <tableName>Assign Employees to Medium Restaurants</tableName>
   <rowNumberCol>
     <hideColumn>false</hideColumn>
-    <width>100</width>
+    <width>-1</width>
   </rowNumberCol>
   <descriptionCol>
     <hideColumn>false</hideColumn>
-    <width>300</width>
+    <width>-1</width>
   </descriptionCol>
-  <metadataCols/>
   <attributeCols>
     <attributeCol>
       <hideColumn>false</hideColumn>
-      <width>100</width>
+      <width>-1</width>
       <attribute>salience</attribute>
-      <type>NUMERIC_INTEGER</type>
+      <fieldType>NUMERIC</fieldType>
+      <header>Salience</header>
+      <defaultValue>1</defaultValue>
     </attributeCol>
   </attributeCols>
-  <conditionPatterns>
+  <conditionCols>
     <pattern>
       <factType>Restaurant</factType>
-      <boundName>restaurant</boundName>
-      <fieldConstraints>
-        <fieldConstraint>
-          <fieldName>size</fieldName>
-          <fieldType>String</fieldType>
-          <expressionValue>
-            <typedExpression>
-              <dataType>STRING</dataType>
-              <value>"Medium"</value>
-            </typedExpression>
-          </expressionValue>
-          <constraintValueType>1</constraintValueType>
-        </fieldConstraint>
-      </fieldConstraints>
-      <isNegated>false</isNegated>
+      <field>size</field>
+      <fieldType>STRING</fieldType>
+      <operator>==</operator>
+      <constraintValueType>1</constraintValueType>
+      <expression>size</expression>
+      <header>Restaurant Size</header>
+      <hideColumn>false</hideColumn>
+      <width>-1</width>
     </pattern>
     <pattern>
-      <factType>Forecast</factType>
-      <boundName>forecast</boundName>
-      <fieldConstraints>
-        <fieldConstraint>
-          <fieldName>total_sales</fieldName>
-          <fieldType>Integer</fieldType>
-          <expressionValue>
-            <typedExpression>
-              <dataType>NUMERIC_INTEGER</dataType>
-              <value>>=100</value>
-            </typedExpression>
-          </expressionValue>
-          <constraintValueType>1</constraintValueType>
-        </fieldConstraint>
-        <fieldConstraint>
-          <fieldName>total_sales</fieldName>
-          <fieldType>Integer</fieldType>
-          <expressionValue>
-            <typedExpression>
-              <dataType>NUMERIC_INTEGER</dataType>
-              <value><=200</value>
-            </typedExpression>
-          </expressionValue>
-          <constraintValueType>1</constraintValueType>
-        </fieldConstraint>
-      </fieldConstraints>
-      <isNegated>false</isNegated>
+      <factType>Restaurant</factType>
+      <field>sales</field>
+      <fieldType>NUMERIC</fieldType>
+      <operator>>=</operator>
+      <constraintValueType>1</constraintValueType>
+      <expression>minSales</expression>
+      <header>Minimum Sales</header>
+      <hideColumn>false</hideColumn>
+      <width>-1</width>
     </pattern>
-  </conditionPatterns>
+    <pattern>
+      <factType>Restaurant</factType>
+      <field>sales</field>
+      <fieldType>NUMERIC</fieldType>
+      <operator>&lt;=</operator>
+      <constraintValueType>1</constraintValueType>
+      <expression>maxSales</expression>
+      <header>Maximum Sales</header>
+      <hideColumn>false</hideColumn>
+      <width>-1</width>
+    </pattern>
+  </conditionCols>
   <actionCols>
+    <setFieldCol>
+      <field>employeeCount</field>
+      <fieldType>NUMERIC</fieldType>
+      <expression>employeeCount + 10</expression>
+      <header>Assign Employees</header>
+      <hideColumn>false</hideColumn>
+      <width>-1</width>
+      <factType>Restaurant</factType>
+    </setFieldCol>
     <insertFactCol>
-      <factType>Staffing</factType>
-      <boundName>staffing</boundName>
-      <fieldName>base_employees</fieldName>
-      <fieldType>Integer</fieldType>
-      <expressionValue>
-        <typedExpression>
-          <dataType>NUMERIC_INTEGER</dataType>
-          <value>5</value>
-        </typedExpression>
-      </expressionValue>
-      <factField>base_employees</factField>
-      <type>MODIFY</type>
+      <factType>String</factType>
+      <expression>"Assigned 10 employees to restaurant: " + $restaurant.getName()</expression>
+      <header>Log Message</header>
+      <hideColumn>true</hideColumn>
+      <width>-1</width>
+      <factField>message</factField>
+      <type>String</type>
     </insertFactCol>
   </actionCols>
   <auditLog>
     <filter class="org.drools.guvnor.client.modeldriven.dt52.auditlog.DecisionTableAuditLogFilter">
       <acceptedTypes>
-        <entry>
-          <string>INSERT_FACT</string>
-          <boolean>false</boolean>
-        </entry>
-        <entry>
-          <string>UPDATE_FACT</string>
-          <boolean>false</boolean>
-        </entry>
-        <entry>
-          <string>DELETE_FACT</string>
-          <boolean>false</boolean>
-        </entry>
-        <entry>
-          <string>ENABLE_RULE</string>
-          <boolean>false</boolean>
-        </entry>
-        <entry>
-          <string>DISABLE_RULE</string>
-          <boolean>false</boolean>
-        </entry>
-        <entry>
-          <string>SET_ROW_METADATA</string>
-          <boolean>false</boolean>
-        </entry>
         <entry>
           <string>INSERT_COLUMN</string>
           <boolean>false</boolean>
@@ -142,39 +109,69 @@
   </imports>
   <rules>
     <rule>
-      <rowNumber>1</rowNumber>
-      <description>Assign 5 base employees to medium-sized restaurants when sales are between 100 and 200.</description>
-      <metadata/>
+      <description>Assign to medium restaurants</description>
       <attributeCols>
-        <attributeCol>100</attributeCol>
+        <attributeCol>
+          <defaultValue>1</defaultValue>
+          <value>1</value>
+        </attributeCol>
       </attributeCols>
-      <conditionPatterns>
+      <conditionCols>
         <pattern>
           <factType>Restaurant</factType>
-          <boundName>restaurant</boundName>
-          <fieldConstraints>
-            <fieldConstraint>Medium</fieldConstraint>
-          </fieldConstraints>
-          <isNegated>false</isNegated>
+          <field>size</field>
+          <fieldType>STRING</fieldType>
+          <operator>==</operator>
+          <constraintValueType>1</constraintValueType>
+          <expression>size</expression>
+          <header>Restaurant Size</header>
+          <hideColumn>false</hideColumn>
+          <width>-1</width>
+          <value>medium</value>
         </pattern>
         <pattern>
-          <factType>Forecast</factType>
-          <boundName>forecast</boundName>
-          <fieldConstraints>
-            <fieldConstraint>
-              <expressionValue/>
-              <constraintValueType>1</constraintValueType>
-            </fieldConstraint>
-            <fieldConstraint>
-              <expressionValue/>
-              <constraintValueType>1</constraintValueType>
-            </fieldConstraint>
-          </fieldConstraints>
-          <isNegated>false</isNegated>
+          <factType>Restaurant</factType>
+          <field>sales</field>
+          <fieldType>NUMERIC</fieldType>
+          <operator>&gt;=</operator>
+          <constraintValueType>1</constraintValueType>
+          <expression>minSales</expression>
+          <header>Minimum Sales</header>
+          <hideColumn>false</hideColumn>
+          <width>-1</width>
+          <value>100</value>
         </pattern>
-      </conditionPatterns>
+        <pattern>
+          <factType>Restaurant</factType>
+          <field>sales</field>
+          <fieldType>NUMERIC</fieldType>
+          <operator>&lt;=</operator>
+          <constraintValueType>1</constraintValueType>
+          <expression>maxSales</expression>
+          <header>Maximum Sales</header>
+          <hideColumn>false</hideColumn>
+          <width>-1</width>
+          <value>200</value>
+        </pattern>
+      </conditionCols>
       <actionCols>
-        <insertFactCol>5</insertFactCol>
+        <setFieldCol>
+          <field>employeeCount</field>
+          <fieldType>NUMERIC</fieldType>
+          <expression>employeeCount + 10</expression>
+          <header>Assign Employees</header>
+          <hideColumn>false</hideColumn>
+          <width>-1</width>
+          <factType>Restaurant</factType>
+          <value></value>
+        </setFieldCol>
+        <insertFactCol>
+           <factType>String</factType>
+            <expression>"Assigned 10 employees to restaurant: " + $restaurant.getName()</expression>
+          <header>Log Message</header>
+          <hideColumn>true</hideColumn>
+           <width>-1</width>
+         </insertFactCol>
       </actionCols>
     </rule>
   </rules>

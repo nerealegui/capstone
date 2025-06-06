@@ -1,18 +1,12 @@
 ```drl
 package rules;
 
-import com.example.Restaurant;
-import com.example.Forecast;
-import com.example.Staffing;
-
-rule "MediumRestaurantSalesStaffing"
-    salience 100
+rule "Assign Employees to Medium Restaurants"
+    salience 1
     when
-        $restaurant : Restaurant( size == "Medium" )
-        $forecast : Forecast( total_sales >= 100, total_sales <= 200 )
-        $staffing : Staffing()
+        $restaurant : Restaurant( size == "medium", sales >= 100, sales <= 200 )
     then
-        $staffing.setBase_employees(5);
-        update($staffing);
-        System.out.println("Rule MediumRestaurantSalesStaffing fired for restaurant: " + $restaurant.getName() + " with sales: " + $forecast.getTotal_sales());
+        $restaurant.setEmployeeCount($restaurant.getEmployeeCount() + 10);
+        update($restaurant);
+        System.out.println("Assigned 10 employees to restaurant: " + $restaurant.getName());
 end

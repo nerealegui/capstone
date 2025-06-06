@@ -2,6 +2,24 @@
 
 # Changelog
 
+## [2025-06-04] - Fixed ChatInterface Parameter Mismatch
+
+### Fixed
+- **TypeError in chat_and_update Function**: Fixed the `TypeError: create_gradio_interface.<locals>.chat_and_update() takes 3 positional arguments but 5 were given` error that was occurring when using the chat interface.
+- **Root Cause**: The `chat_and_update` function was defined with only 3 parameters, but the Gradio ChatInterface was configured to pass 5 parameters when it was called.
+- **Technical Solution**:
+  - Updated `chat_and_update` function to accept all required parameters: `user_input`, `history`, `rag_state_df`, `mode`, and `industry`
+  - Made `mode` and `industry` parameters optional with default values of `None`
+  - Ensured consistent `additional_inputs` configuration when reassigning the function to the ChatInterface
+
+### Impact
+- The Gradio UI now works correctly without the TypeError
+- Chat functionality is fully operational
+- Parameter consistency maintained throughout the interface
+
+### Files Modified
+- `interface/chat_app.py`: Updated `chat_and_update` function definition and maintained configuration consistency
+
 ## [2025-01-10] - Debug Enhancements for RAG History Processing
 
 ### Added
