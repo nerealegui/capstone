@@ -5,6 +5,7 @@ from typing import List, Dict, Any
 from google.genai import types
 from config.agent_config import DEFAULT_MODEL, GENERATION_CONFIG
 from utils.rag_utils import initialize_gemini_client
+import time
 
 def extract_rules_from_csv(csv_file_path: str) -> List[Dict[str, Any]]:
     """
@@ -30,7 +31,8 @@ def extract_rules_from_csv(csv_file_path: str) -> List[Dict[str, Any]]:
             structured_rule = _convert_csv_rule_to_json(rule)
             if structured_rule:
                 structured_rules.append(structured_rule)
-        
+                # Add a delay between requests (adjust the delay as needed)
+                time.sleep(2.5)  # At least 2 seconds, add a buffer
         return structured_rules
         
     except Exception as e:
