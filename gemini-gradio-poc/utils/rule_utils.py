@@ -5,6 +5,7 @@ from google.genai import types
 from config.agent_config import DEFAULT_MODEL, GENERATION_CONFIG
 from utils.rag_utils import initialize_gemini_client
 from utils.rule_versioning import update_rule_version
+import re  # Add the regex module
 
 def json_to_drl_gdst(json_data, update_rule_version_info=True, rule_storage_path="data/rules"):
     """
@@ -241,6 +242,10 @@ Do not include any additional text, just return the DRL and GDST contents in the
             drl_content = "\n".join(lines[:midpoint]).strip()
             gdst_content = "\n".join(lines[midpoint:]).strip()
         
+        # Apply regex cleanup to remove unwanted text
+        drl_content = re.sub(r"```drl|```", "", drl_content).strip()
+        gdst_content = re.sub(r"```gdst|```", "", gdst_content).strip()
+
         # Update rule versioning information if requested
         if update_rule_version_info and isinstance(json_data, dict):
             _update_rule_json_with_drl_generation(json_data, rule_storage_path)
