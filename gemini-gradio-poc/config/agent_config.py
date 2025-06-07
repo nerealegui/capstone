@@ -4,9 +4,10 @@
 AGENT1_PROMPT = """
 You are an expert in translating restaurant business rules into structured logic.
 Your task is to extract the key logic (conditions and actions) from the user's sentence.
-
+You need to check if there is already a rule for the same task, if so use the same name and the task will be to modigy the rule
+If no rule for the same task exists, create a new rule with a unique name.
 Respond strictly in JSON format with two keys:
-- "name": a name for the rule.
+- "name": a name for the rule. Che
 - "summary": a brief natural language summary of the rule.
 - "logic": containing "conditions" and "actions".
     - "conditions": a list of conditions that must be met.
@@ -14,7 +15,190 @@ Respond strictly in JSON format with two keys:
 """
 
 AGENT2_PROMPT = """You are an expert in translating business rules into Drools syntax.
-Your task is to convert the structured JSON representation of a rule into proper Drools rule language (DRL) format."""
+Your task is to convert the structured JSON representation of a rule into proper Drools rule language (DRL) format.
+
+This is an example of a drl file. When writing it, do not include the drl''' at the beginning and do not include ''' at the end:
+package rules;
+
+import java.util.Map;
+
+rule "assign_employees_medium_sales"
+    salience 10
+    when
+        $restaurant : Map( this["restaurant_size"] == "medium", this["sales"] >= 100, this["sales"] <= 200 )
+    then
+        System.out.println("Assigning 10 employees to medium restaurant.");
+        $restaurant.put("number_of_employees", 10);
+        update($restaurant);
+end
+
+This is an example of a gdst file. Do not include the gdst''' at the beginning and do not include ''' at the end:
+<decision-table52>
+  <tableName>Assign Employees to Small Restaurants</tableName>
+  <rowNumberCol>
+    <width>30</width>
+    <isUseImportedTypes>false</isUseImportedTypes>
+    <header>Row Number</header>
+    <hideColumn>false</hideColumn>
+  </rowNumberCol>
+  <descriptionCol>
+    <width>200</width>
+    <isUseImportedTypes>false</isUseImportedTypes>
+    <header>Description</header>
+    <hideColumn>false</hideColumn>
+  </descriptionCol>
+  <ruleNameCol>
+    <width>100</width>
+    <isUseImportedTypes>false</isUseImportedTypes>
+    <header>Rule Name</header>
+    <hideColumn>false</hideColumn>
+  </ruleNameCol>
+  <metadataCols/>
+  <attributeCols>
+    <attributeCol>
+      <width>100</width>
+      <isUseImportedTypes>false</isUseImportedTypes>
+      <attribute>salience</attribute>
+      <header>Salience</header>
+      <hideColumn>false</hideColumn>
+    </attributeCol>
+  </attributeCols>
+  <conditionPatterns>
+    <pattern>
+      <factType>Restaurant</factType>
+      <boundName>restaurant</boundName>
+      <isNegated>false</isNegated>
+      <window>
+        <parameters/>
+      </window>
+      <fieldConstraints>
+        <fieldConstraint>
+          <fieldName>size</fieldName>
+          <fieldType>String</fieldType>
+          <expression>
+            <parts/>
+            <index>2147483647</index>
+          </expression>
+          <parameters/>
+          <fieldConstraintList/>
+        </fieldConstraint>
+        <fieldConstraint>
+          <fieldName>employees.size</fieldName>
+          <fieldType>Integer</fieldType>
+          <expression>
+            <parts/>
+            <index>2147483647</index>
+          </expression>
+          <parameters/>
+          <fieldConstraintList/>
+        </fieldConstraint>
+      </fieldConstraints>
+      <isUseInstanceOf>false</isUseInstanceOf>
+      <factTypePackage>com.example</factTypePackage>
+      <columnWidth>100</columnWidth>
+      <header>Restaurant Size</header>
+      <hideColumn>false</hideColumn>
+    </pattern>
+  </conditionPatterns>
+  <actionCols>
+    <insertFactCol>
+      <factType>Employee</factType>
+      <boundName>employee1</boundName>
+      <fieldValues>
+        <fieldValue>
+          <field>restaurant</field>
+          <fieldType>Restaurant</fieldType>
+          <expression>
+            <parts/>
+            <index>2147483647</index>
+          </expression>
+          <parameters/>
+        </fieldValue>
+      </fieldValues>
+      <header>Assign Employee 1</header>
+      <hideColumn>false</hideColumn>
+      <factTypePackage>com.example</factTypePackage>
+    </insertFactCol>
+    <insertFactCol>
+      <factType>Employee</factType>
+      <boundName>employee2</boundName>
+      <fieldValues>
+        <fieldValue>
+          <field>restaurant</field>
+          <fieldType>Restaurant</fieldType>
+          <expression>
+            <parts/>
+            <index>2147483647</index>
+          </expression>
+          <parameters/>
+        </fieldValue>
+      </fieldValues>
+      <header>Assign Employee 2</header>
+      <hideColumn>false</hideColumn>
+      <factTypePackage>com.example</factTypePackage>
+    </insertFactCol>
+    <logExecution>
+      <header>Log</header>
+      <hideColumn>false</hideColumn>
+    </logExecution>
+  </actionCols>
+  <auditLog>
+    <filter class="org.drools.guvnor.client.modeldriven.dt52.auditlog.DecisionTableAuditLogFilter">
+      <acceptedTypes>
+        <entry>
+          <string>INSERT_FACT</string>
+          <boolean>true</boolean>
+        </entry>
+        <entry>
+          <string>DELETE_FACT</string>
+          <boolean>false</boolean>
+        </entry>
+        <entry>
+          <string>MODIFY_FACT</string>
+          <boolean>false</boolean>
+        </entry>
+        <entry>
+          <string>RETRACT_FACT</string>
+          <boolean>false</boolean>
+        </entry>
+        <entry>
+          <string>ENABLE_RULE</string>
+          <boolean>true</boolean>
+        </entry>
+        <entry>
+          <string>DISABLE_RULE</string>
+          <boolean>false</boolean>
+        </entry>
+      </acceptedTypes>
+    </filter>
+    <entries/>
+  </auditLog>
+  <imports>
+    <imports>
+      <java.lang.String>com.example.Restaurant</java.lang.String>
+    </imports>
+    <imports>
+      <java.lang.String>com.example.Employee</java.lang.String>
+    </imports>
+  </imports>
+  <decisionTable>
+    <rows>
+      <row>
+        <entry>1</entry>
+        <entry>Assign two employees to small restaurant</entry>
+        <entry>Assign Employees to Small Restaurants 1</entry>
+        <entry>10</entry>
+        <entry>small</entry>
+        <entry>&lt; 2</entry>
+        <entry>new Employee(restaurant)</entry>
+        <entry>new Employee(restaurant)</entry>
+        <entry>Assigned 2 employees to small restaurant: restaurant.getName()</entry>
+      </row>
+    </rows>
+  </decisionTable>
+</decision-table52>
+
+"""
 
 AGENT3_PROMPT = """
 You are Agent 3, an intelligent business rules management assistant specializing in conversational interaction, conflict detection, impact analysis, and orchestration. You help users manage business rules across various industries through intuitive dialogue.

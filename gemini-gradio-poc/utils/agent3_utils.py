@@ -219,10 +219,13 @@ def _generate_conflict_analysis(
     
     Proposed Rule: {json.dumps(proposed_rule, indent=2)}
     
+    Existing Rules: {json.dumps(existing_rules, indent=2)}
+
     Detected Conflicts: {json.dumps(conflicts, indent=2)}
     
     Key Industry Parameters: {industry_config['key_parameters']}
     
+    Check all the current defined rules and check if the proposed rule could conflict with any existing rule.
     Provide a clear, conversational analysis of these conflicts and recommend resolution strategies.
     """
     
@@ -238,7 +241,6 @@ def _generate_conflict_analysis(
     except Exception as e:
         return f"Error analyzing conflicts: {str(e)}"
 
-
 def _generate_impact_analysis(
     proposed_rule: Dict[str, Any], 
     existing_rules: List[Dict[str, Any]], 
@@ -252,6 +254,8 @@ def _generate_impact_analysis(
     
     Proposed Rule: {json.dumps(proposed_rule, indent=2)}
     
+    Existing Rules: {json.dumps(existing_rules, indent=2)}
+
     Industry Context: {industry_config}
     
     Assess impact on: {industry_config['impact_areas']}
@@ -262,9 +266,11 @@ def _generate_impact_analysis(
     - Risk assessment
     - Implementation considerations
     
-    Format as JSON with clear impact ratings (High/Medium/Low).
+    Check the existing rules for potential impacts, and suggest modifications to the proposed rule based on the existing rules and industry context.
+
+    Format a comprehensive response that the user can understand, with clear impact ratings (High/Medium/Low).
     """
-    
+    # Format as JSON with clear impact ratings (High/Medium/Low).
     contents = [types.Content(role="user", parts=[types.Part.from_text(text=prompt)])]
     
     try:
@@ -274,6 +280,7 @@ def _generate_impact_analysis(
             config=types.GenerateContentConfig(response_mime_type="application/json")
         )
         return json.loads(response.text)
+           
     except Exception as e:
         return {
             "error": f"Impact analysis failed: {str(e)}",

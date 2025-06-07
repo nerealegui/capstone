@@ -203,6 +203,7 @@ def validate_rule_conflicts(new_rule: Dict[str, Any], existing_rules: List[Dict[
             })
     
     return conflicts
+   
 
 def save_extracted_rules(rules: List[Dict[str, Any]], output_path: str, update_existing: bool = False) -> bool:
     """
