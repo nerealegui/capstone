@@ -31,16 +31,21 @@ def extract_rules_from_csv(csv_file_path: str) -> List[Dict[str, Any]]:
         
         for rule in csv_rules:
             structured_rule = _convert_csv_rule_to_json(rule)
-            if structured_rule:
+            if structured_rule and isinstance(structured_rule, dict):  # Validate it's a dictionary
                 # Add versioning metadata to the extracted rule
                 versioned_rule = create_versioned_rule(
-                    structured_rule,
+                    rule_data=structured_rule,  # Add explicit parameter name
                     change_type="create",
                     change_summary="Rule extracted from CSV upload"
                 )
-                structured_rules.append(versioned_rule)
-                # Add a delay between requests (adjust the delay as needed)
-                time.sleep(2.5)  # At least 2 seconds, add a buffer
+                if isinstance(versioned_rule, dict):  # Verify versioned rule is also a dictionary
+                    structured_rules.append(versioned_rule)
+                else:
+                    print(f"Warning: Versioning returned invalid format: {type(versioned_rule)}")
+            else:
+                print(f"Warning: Skipping invalid rule format: {type(structured_rule)}")
+            # Add a delay between requests (adjust the delay as needed)
+            time.sleep(2.5)  # At least 2 seconds, add a buffer
         return structured_rules
         
     except Exception as e:
@@ -89,7 +94,7 @@ Convert to this JSON structure:
   "active": "active status from CSV"
 }}
 
-Return only valid JSON, no additional text.
+Return a single JSON object only (not a list).
 """
         
         contents = [
@@ -120,7 +125,13 @@ Return only valid JSON, no additional text.
         
         # Parse JSON response
         structured_rule = json.loads(response_text)
+        #return structured_rule
+        # Ensure the result is a dictionary
+        if not isinstance(structured_rule, dict):
+            raise ValueError(f"Expected a dictionary, but got {type(structured_rule)}")
+        
         return structured_rule
+       
         
     except Exception as e:
         print(f"Error converting CSV rule to JSON: {e}")

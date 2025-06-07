@@ -243,7 +243,7 @@ def create_versioned_rule(rule_data: Dict[str, Any], change_type: str = "create"
     return version_manager.add_version_metadata(
         rule_data, change_type, change_summary, impact_analysis
     )
-
+    
 def update_rule_version(rule_data: Dict[str, Any], change_type: str = "update",
                        change_summary: Optional[str] = None,
                        impact_analysis: Optional[str] = None,
