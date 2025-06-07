@@ -24,6 +24,7 @@ from utils.agent3_utils import (
 )
 from utils.config_manager import (
     get_default_config,
+    reload_prompts_from_defaults,
     save_config,
     load_config,
     apply_config_to_runtime,
@@ -708,6 +709,16 @@ def initialize_gemini_client():
 def create_gradio_interface():
     """Create and return the Gradio interface for the Gemini Chat Application with two tabs: Configuration and Chat/Rule Summary."""
 
+    # Reload prompts from defaults on startup
+    try:
+        success, reload_msg = reload_prompts_from_defaults()
+        if success:
+            print(f"Prompts reloaded successfully: {reload_msg}")
+        else:
+            print(f"Warning: Failed to reload prompts: {reload_msg}")
+    except Exception as e:
+        print(f"Error reloading prompts on startup: {e}")
+    
     # Load saved configuration on startup
     try:
         startup_config, startup_msg = load_config()
