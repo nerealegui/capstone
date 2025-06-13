@@ -376,7 +376,7 @@ def validate_new_rule(rule_json_str: str):
                 conflict_messages.append(f"⚠️ {conflict['type']}: {conflict['message']}")
             return "Validation Issues Found:\n" + "\n".join(conflict_messages)
         else:
-            return "✅ Rule validation passed. No conflicts detected."
+            return ""
             
     except json.JSONDecodeError as e:
         return f"❌ Invalid JSON format: {str(e)}"
@@ -577,7 +577,6 @@ def analyze_impact_only(industry: str = "generic"):
 
         # If no conflicts, show positive impact analysis
         success_message = (
-            "✅ No Conflicts Detected by Agent 3!\n\n" +
             f"📊 Impact Analysis Summary:\n{json.dumps(impact_analysis, indent=2)}\n\n" +
             f"📈 Detailed Analysis:\n{conflict_analysis}\n\n" +
             "Rule is ready for implementation. Use the Decision Support section below to proceed."

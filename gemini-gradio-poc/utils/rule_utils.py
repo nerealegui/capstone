@@ -23,7 +23,40 @@ def json_to_drl_gdst(json_data, update_rule_version_info=True, rule_storage_path
         "Given the following JSON, generate equivalent Drools DRL and GDST file contents. "
         "Return DRL first, then GDST, separated by a delimiter '---GDST---'.\n\n"
         f"JSON:\n{json.dumps(json_data, indent=2)}"
-        """ This is an example of a drl file. When writing it, do not include the ```drl at the beginning AND do not include ''' at the end:
+        """ 
+        🔧 General Instructions:
+- Use the Drools rule language syntax and conventions.
+- Assume all domain objects used in rules are strongly typed Java objects.
+- Import any necessary object types at the top of the DRL file.
+- If you are creating a rule, clearly define the object’s class name, fields, and package in a comment above the rule (or include a class stub).
+- If you are modifying an already existing rule, just import it using its full package name (e.g., `com.example.Order`).
+
+📄 DRL File Guidelines:
+- Add necessary `import` statements at the top.
+- Use proper type bindings (e.g., `$order: Order(...)`) and not `Map` or untyped objects.
+- If the object is undefined or new (when you are creating a new rule), mention it as a note or include a class definition block in comments.
+- Do not include code fences or markdown formatting.
+
+📄 GDST File Guidelines:
+- Set the correct `<factType>` and `<factTypePackage>` for each pattern and action.
+- Include all object types used in the `<imports>` section.
+- If a new rule is created, include the new objects definition or a description of expected fields in a comment.
+
+Example note if the object is new:
+// New object definition required:
+package com.example;
+
+public class Policy {
+private String policyType;
+private double amount;
+// getters and setters
+}
+
+🛑 Never use untyped `Map` unless explicitly instructed. Always prefer typed fact classes.
+
+Your output must be executable by Drools and help the developer avoid compilation errors due to missing object types.
+
+This is an example of a drl file. When writing it, do not include the ```drl at the beginning AND do not include ''' at the end:
 package rules;
 
 import java.util.Map;

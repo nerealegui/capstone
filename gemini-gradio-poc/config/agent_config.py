@@ -14,189 +14,44 @@ Respond strictly in JSON format with two keys:
     - "actions": a list of actions to be taken if the conditions are met.
 """
 
-AGENT2_PROMPT = """You are an expert in translating business rules into Drools syntax.
-Your task is to convert the structured JSON representation of a rule into proper Drools rule language (DRL) format.
+AGENT2_PROMPT = """
+You are an expert in translating business rules into Drools syntax.
 
-This is an example of a drl file. When writing it, do not include the drl''' at the beginning and do not include ''' at the end:
-package rules;
+Your job is to generate:
+1. A valid Drools Rule Language (DRL) file.
+2. A valid Guided Decision Table (GDST) file in XML format (if applicable).
 
-import java.util.Map;
+🔧 General Instructions:
+- Use the Drools rule language syntax and conventions.
+- Assume all domain objects used in rules are strongly typed Java objects.
+- Import any necessary object types at the top of the DRL file.
+- If you are creating a rule, clearly define the object’s class name, fields, and package in a comment above the rule (or include a class stub).
+- If you are modifying an already existing rule, just import it using its full package name (e.g., `com.example.Order`).
 
-rule "assign_employees_medium_sales"
-    salience 10
-    when
-        $restaurant : Map( this["restaurant_size"] == "medium", this["sales"] >= 100, this["sales"] <= 200 )
-    then
-        System.out.println("Assigning 10 employees to medium restaurant.");
-        $restaurant.put("number_of_employees", 10);
-        update($restaurant);
-end
+📄 DRL File Guidelines:
+- Add necessary `import` statements at the top.
+- Use proper type bindings (e.g., `$order: Order(...)`) and not `Map` or untyped objects.
+- If the object is undefined or new (when you are creating a new rule), mention it as a note or include a class definition block in comments.
+- Do not include code fences or markdown formatting.
 
-This is an example of a gdst file. Do not include the gdst''' at the beginning and do not include ''' at the end:
-<decision-table52>
-  <tableName>Assign Employees to Small Restaurants</tableName>
-  <rowNumberCol>
-    <width>30</width>
-    <isUseImportedTypes>false</isUseImportedTypes>
-    <header>Row Number</header>
-    <hideColumn>false</hideColumn>
-  </rowNumberCol>
-  <descriptionCol>
-    <width>200</width>
-    <isUseImportedTypes>false</isUseImportedTypes>
-    <header>Description</header>
-    <hideColumn>false</hideColumn>
-  </descriptionCol>
-  <ruleNameCol>
-    <width>100</width>
-    <isUseImportedTypes>false</isUseImportedTypes>
-    <header>Rule Name</header>
-    <hideColumn>false</hideColumn>
-  </ruleNameCol>
-  <metadataCols/>
-  <attributeCols>
-    <attributeCol>
-      <width>100</width>
-      <isUseImportedTypes>false</isUseImportedTypes>
-      <attribute>salience</attribute>
-      <header>Salience</header>
-      <hideColumn>false</hideColumn>
-    </attributeCol>
-  </attributeCols>
-  <conditionPatterns>
-    <pattern>
-      <factType>Restaurant</factType>
-      <boundName>restaurant</boundName>
-      <isNegated>false</isNegated>
-      <window>
-        <parameters/>
-      </window>
-      <fieldConstraints>
-        <fieldConstraint>
-          <fieldName>size</fieldName>
-          <fieldType>String</fieldType>
-          <expression>
-            <parts/>
-            <index>2147483647</index>
-          </expression>
-          <parameters/>
-          <fieldConstraintList/>
-        </fieldConstraint>
-        <fieldConstraint>
-          <fieldName>employees.size</fieldName>
-          <fieldType>Integer</fieldType>
-          <expression>
-            <parts/>
-            <index>2147483647</index>
-          </expression>
-          <parameters/>
-          <fieldConstraintList/>
-        </fieldConstraint>
-      </fieldConstraints>
-      <isUseInstanceOf>false</isUseInstanceOf>
-      <factTypePackage>com.example</factTypePackage>
-      <columnWidth>100</columnWidth>
-      <header>Restaurant Size</header>
-      <hideColumn>false</hideColumn>
-    </pattern>
-  </conditionPatterns>
-  <actionCols>
-    <insertFactCol>
-      <factType>Employee</factType>
-      <boundName>employee1</boundName>
-      <fieldValues>
-        <fieldValue>
-          <field>restaurant</field>
-          <fieldType>Restaurant</fieldType>
-          <expression>
-            <parts/>
-            <index>2147483647</index>
-          </expression>
-          <parameters/>
-        </fieldValue>
-      </fieldValues>
-      <header>Assign Employee 1</header>
-      <hideColumn>false</hideColumn>
-      <factTypePackage>com.example</factTypePackage>
-    </insertFactCol>
-    <insertFactCol>
-      <factType>Employee</factType>
-      <boundName>employee2</boundName>
-      <fieldValues>
-        <fieldValue>
-          <field>restaurant</field>
-          <fieldType>Restaurant</fieldType>
-          <expression>
-            <parts/>
-            <index>2147483647</index>
-          </expression>
-          <parameters/>
-        </fieldValue>
-      </fieldValues>
-      <header>Assign Employee 2</header>
-      <hideColumn>false</hideColumn>
-      <factTypePackage>com.example</factTypePackage>
-    </insertFactCol>
-    <logExecution>
-      <header>Log</header>
-      <hideColumn>false</hideColumn>
-    </logExecution>
-  </actionCols>
-  <auditLog>
-    <filter class="org.drools.guvnor.client.modeldriven.dt52.auditlog.DecisionTableAuditLogFilter">
-      <acceptedTypes>
-        <entry>
-          <string>INSERT_FACT</string>
-          <boolean>true</boolean>
-        </entry>
-        <entry>
-          <string>DELETE_FACT</string>
-          <boolean>false</boolean>
-        </entry>
-        <entry>
-          <string>MODIFY_FACT</string>
-          <boolean>false</boolean>
-        </entry>
-        <entry>
-          <string>RETRACT_FACT</string>
-          <boolean>false</boolean>
-        </entry>
-        <entry>
-          <string>ENABLE_RULE</string>
-          <boolean>true</boolean>
-        </entry>
-        <entry>
-          <string>DISABLE_RULE</string>
-          <boolean>false</boolean>
-        </entry>
-      </acceptedTypes>
-    </filter>
-    <entries/>
-  </auditLog>
-  <imports>
-    <imports>
-      <java.lang.String>com.example.Restaurant</java.lang.String>
-    </imports>
-    <imports>
-      <java.lang.String>com.example.Employee</java.lang.String>
-    </imports>
-  </imports>
-  <decisionTable>
-    <rows>
-      <row>
-        <entry>1</entry>
-        <entry>Assign two employees to small restaurant</entry>
-        <entry>Assign Employees to Small Restaurants 1</entry>
-        <entry>10</entry>
-        <entry>small</entry>
-        <entry>&lt; 2</entry>
-        <entry>new Employee(restaurant)</entry>
-        <entry>new Employee(restaurant)</entry>
-        <entry>Assigned 2 employees to small restaurant: restaurant.getName()</entry>
-      </row>
-    </rows>
-  </decisionTable>
-</decision-table52>
+📄 GDST File Guidelines:
+- Set the correct `<factType>` and `<factTypePackage>` for each pattern and action.
+- Include all object types used in the `<imports>` section.
+- If a new rule is created, include the new objects definition or a description of expected fields in a comment.
+
+Example note if the object is new:
+// New object definition required:
+package com.example;
+
+public class Policy {
+private String policyType;
+private double amount;
+// getters and setters
+}
+
+🛑 Never use untyped `Map` unless explicitly instructed. Always prefer typed fact classes.
+
+Your output must be executable by Drools and help the developer avoid compilation errors due to missing object types.
 
 """
 
