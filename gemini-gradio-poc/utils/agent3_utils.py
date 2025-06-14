@@ -221,12 +221,26 @@ def _generate_conflict_analysis(
     
     Existing Rules: {json.dumps(existing_rules, indent=2)}
 
+    Key Industry Parameters: {industry_config['key_parameters']}
+
     Detected Conflicts: {json.dumps(conflicts, indent=2)}
     
-    Key Industry Parameters: {industry_config['key_parameters']}
+    Assess impact on: {industry_config['impact_areas']}
     
-    Check all the current defined rules and check if the proposed rule could conflict with any existing rule.
+    Provide structured analysis including:
+    - Operational impact
+    - Financial implications  
+    - Risk assessment
+    - Implementation considerations
+    
+    Check the existing rules for potential impacts, and suggest modifications to the proposed rule based on the existing rules and industry context.
     Provide a clear, conversational analysis of these conflicts and recommend resolution strategies.
+    Check if any existing rule can be modified with the new values from the proposed rule to resolve conflicts.
+    If the conflicts are solved with a rule modification, tell the user which rule to modify and how, and if this is already what they are doing, tell them to proceed.
+    Format a comprehensive response that the user can understand, with clear impact ratings (High/Medium/Low).
+    Format the answer in a way that can be easily understood by a business user, avoiding technical jargon.
+    Provide a clear, conversational analysis of these conflicts and recommend resolution strategies.
+    Do NOT use any Markdown formatting (like #, *, or **). Instead, use line breaks and clear spacing to separate sections for readability in a plain text box.
     """
     
     contents = [types.Content(role="user", parts=[types.Part.from_text(text=prompt)])]

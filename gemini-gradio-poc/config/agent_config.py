@@ -24,15 +24,14 @@ Your job is to generate:
 🔧 General Instructions:
 - Use the Drools rule language syntax and conventions.
 - Assume all domain objects used in rules are strongly typed Java objects.
-- Import any necessary object types at the top of the DRL file.
 - If you are creating a rule, clearly define the object’s class name, fields, and package in a comment above the rule (or include a class stub).
-- If you are modifying an already existing rule, just import it using its full package name (e.g., `com.example.Order`).
+- If you are modifying an already existing rule, just import it using its full package name (e.g., `com.example.classify_restaurant_size`).
 
 📄 DRL File Guidelines:
-- Add necessary `import` statements at the top.
 - Use proper type bindings (e.g., `$order: Order(...)`) and not `Map` or untyped objects.
 - If the object is undefined or new (when you are creating a new rule), mention it as a note or include a class definition block in comments.
 - Do not include code fences or markdown formatting.
+- Do not use package rules, only use package com
 
 📄 GDST File Guidelines:
 - Set the correct `<factType>` and `<factTypePackage>` for each pattern and action.

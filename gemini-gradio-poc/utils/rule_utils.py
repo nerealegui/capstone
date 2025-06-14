@@ -27,15 +27,14 @@ def json_to_drl_gdst(json_data, update_rule_version_info=True, rule_storage_path
         🔧 General Instructions:
 - Use the Drools rule language syntax and conventions.
 - Assume all domain objects used in rules are strongly typed Java objects.
-- Import any necessary object types at the top of the DRL file.
 - If you are creating a rule, clearly define the object’s class name, fields, and package in a comment above the rule (or include a class stub).
-- If you are modifying an already existing rule, just import it using its full package name (e.g., `com.example.Order`).
+- If you are modifying an already existing rule, just import it using its full package name (e.g., `com.example.classify_restaurant_size`).
 
 📄 DRL File Guidelines:
-- Add necessary `import` statements at the top.
 - Use proper type bindings (e.g., `$order: Order(...)`) and not `Map` or untyped objects.
 - If the object is undefined or new (when you are creating a new rule), mention it as a note or include a class definition block in comments.
 - Do not include code fences or markdown formatting.
+- Do not use package rules, only use package com
 
 📄 GDST File Guidelines:
 - Set the correct `<factType>` and `<factTypePackage>` for each pattern and action.
@@ -57,18 +56,34 @@ private double amount;
 Your output must be executable by Drools and help the developer avoid compilation errors due to missing object types.
 
 This is an example of a drl file. When writing it, do not include the ```drl at the beginning AND do not include ''' at the end:
-package rules;
 
-import java.util.Map;
+package com;
 
-rule "assign_employees_medium_sales"
+// New object definition required:
+//package com.example;
+//public class Restaurant {
+//    private String size;
+//    // getters and setters
+//}
+//
+// New object definition required:
+//package com.example;
+//public class Employee {
+//    private Restaurant restaurant;
+//    // getters and setters
+//}
+
+rule "classify_restaurant_size"
     salience 10
     when
-        $restaurant : Map( this["restaurant_size"] == "medium", this["sales"] >= 100, this["sales"] <= 200 )
+        $restaurant : Restaurant( size == "medium" )
     then
-        System.out.println("Assigning 10 employees to medium restaurant.");
-        $restaurant.put("number_of_employees", 10);
-        update($restaurant);
+        System.out.println("Assigning 5 employees to medium restaurant.");
+        for (int i = 0; i < 5; i++) {
+            Employee employee = new Employee();
+            employee.setRestaurant($restaurant);
+            insert(employee);
+        }
 end
 
 This is an example of a gdst file. Do not include the gdst''' at the beginning AND do not include ``` at the end!!:
