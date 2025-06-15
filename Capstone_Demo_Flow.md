@@ -66,11 +66,7 @@ Follow Sarah (Operations Manager) and Alex (IT Admin) as they transform their ru
 
 **Demo Actions:**
 1. Navigate to **Knowledge Base Setup** section
-2. Upload sample restaurant documents:
-   - Employee handbook
-   - Scheduling policies
-   - Labor compliance requirements
-   - Previous rule documents
+2. Upload `new_restauran_content.docx` to the RAG backend
 3. Configure chunking parameters (size: 1000, overlap: 200)
 4. Click "Build Knowledge Base"
 5. Monitor processing status and completion
@@ -81,23 +77,38 @@ Follow Sarah (Operations Manager) and Alex (IT Admin) as they transform their ru
 - **Institutional Knowledge**: Preserves business expertise in AI system
 
 **Script:**
-> "The system is now ingesting FastBite's existing policies and procedures. This creates a knowledge base that ensures all new rules align with existing policies and compliance requirements. The RAG (Retrieval-Augmented Generation) technology makes the AI contextually aware of your specific business environment."
+> "The system is now ingesting FastBite's business knowledge from `new_restauran_content.docx`. This creates a knowledge base that ensures all new rules align with existing policies and compliance requirements. The RAG (Retrieval-Augmented Generation) technology makes the AI contextually aware of your specific business environment."
+
+### Step 4: Load Business Rules
+**Transition:** Upload existing business rules to establish the baseline rule set
+
+**Demo Actions:**
+1. Navigate to **Business Rules** tab  
+2. Upload `restauran_rules.csv` to the Rules module
+3. Review imported rules structure
+4. Apply rules to activate the rule set
+
+**Value Proposition (Admin):**
+- **Rule Digitization**: Converts business logic into transparent, auditable format
+- **Baseline Establishment**: Creates foundation for automated rule enforcement  
+- **Consistency Assurance**: Ensures all interactions follow organization-approved logic
+
+**Script:**
+> "Now Alex uploads `restauran_rules.csv` which contains FastBite's current business rules. This digitizes their business logic so it's transparent, auditable, and ready for automated enforcement. All subsequent user interactions will be governed by these organization-approved rules."
 
 ---
 
 ## Act II: Business Rule Creation & Management
 *Role: Sarah (Operations Manager)*
 
-### Step 4: Natural Language Rule Creation
-**Transition:** Sarah needs to create a new scheduling rule due to increased weekend demand
+### Step 5: Natural Language Rule Creation
+**Transition:** Sarah needs to create a new employee assignment rule
 
 **Demo Actions:**
 1. Access **Chat Interface**
 2. Enter natural language request:
    ```
-   "Create a rule that requires a minimum of 3 experienced staff members 
-   during weekend dinner rush (Friday-Sunday, 5 PM - 9 PM). Experienced 
-   staff are those with more than 6 months of service."
+   "Create a rule that assigns 10 employees to medium-sized restaurants when sales are between 100 and 200"
    ```
 3. Observe Agent 1 processing and JSON conversion
 4. Review the structured rule output
@@ -110,11 +121,11 @@ Follow Sarah (Operations Manager) and Alex (IT Admin) as they transform their ru
 **Script:**
 > "Sarah, our Operations Manager, simply describes what she needs in plain English. Watch how Agent 1 immediately understands the business context and converts this into a structured rule format. No technical training required!"
 
-### Step 5: Enhanced Conflict Detection & Impact Analysis
+### Step 6: Enhanced Conflict Detection & Impact Analysis
 **Transition:** System analyzes the new rule against existing policies
 
 **Demo Actions:**
-1. System automatically triggers Agent 3 analysis
+1. Click **"analizar impacto"** (analyze impact)
 2. Review conflict detection results:
    - Checks against existing scheduling rules
    - Identifies potential labor cost impacts
@@ -133,38 +144,44 @@ Follow Sarah (Operations Manager) and Alex (IT Admin) as they transform their ru
 **Script:**
 > "This is where the magic happens. Agent 3 automatically analyzes Sarah's new rule against all existing policies. It identifies potential conflicts and provides a comprehensive impact analysis. Notice how it considers both operational efficiency and financial implications specific to restaurant operations."
 
-### Step 6: Decision Support & Rule Refinement
-**Transition:** Sarah reviews analysis and makes informed decisions
+### Step 7: Decision Support & Rule Refinement
+**Transition:** Sarah reviews analysis and adjusts the rule based on feedback
 
 **Demo Actions:**
-1. Navigate to **Decision Support** section
-2. Review the three options:
-   - **Proceed**: Implement rule as specified
-   - **Modify**: Adjust rule based on analysis
-   - **Cancel**: Abort rule creation
-3. Select "Modify" to demonstrate refinement process
-4. Adjust rule parameters:
+1. Review Agent 3 recommendations and conflict analysis
+2. Enter refinement request:
    ```
-   "Modify the rule to require 2 experienced staff instead of 3, 
-   but add 1 additional staff member of any experience level"
+   "Can you assign 5 employees instead?"
    ```
-5. Re-analyze modified rule
-6. Select "Proceed" after satisfactory analysis
+3. Click **"analizar impacto"** again to analyze the updated rule
+4. Compare impact analysis results between original and refined rule
+5. Review persistent conflicts or new recommendations
+6. Enter additional refinement:
+   ```
+   "Can you change the restaurant sales to 300 and 500"
+   ```
+7. Analyze final rule version and update as advised by the system
 
 **Value Proposition (User):**
 - **Informed Decision Making**: Data-driven rule modifications
 - **Iterative Refinement**: Easy to adjust rules based on analysis
 - **Business Continuity**: Balance operational needs with practical constraints
+- **Collaborative Negotiation**: System facilitates rule optimization through dialogue
 
 **Script:**
 > "Sarah can now make an informed decision. The analysis showed that requiring 3 experienced staff might strain the schedule, so she's modifying the rule to balance experience requirements with staffing availability. The system immediately re-analyzes the adjusted rule."
 
 ---
 
+**Script:**
+> "The system not only detects persistent conflicts but facilitates negotiation and iterative refinement—mirroring real-world business collaboration. Sarah can easily adjust the rule parameters until she finds the optimal balance for FastBite's operations."
+
+---
+
 ## Act III: Rule Processing & Implementation
 *Roles: Sarah (User) + Alex (Admin)*
 
-### Step 7: Automated Rule Generation
+### Step 8: Automated Rule Generation
 **Transition:** System generates technical implementation files
 
 **Demo Actions:**
@@ -188,7 +205,7 @@ Follow Sarah (Operations Manager) and Alex (IT Admin) as they transform their ru
 **Script:**
 > "Behind the scenes, Agent 2 is generating production-ready rule files in industry-standard formats. The Drools DRL file contains the executable business logic, while the GDST table provides a visual representation that business users can validate."
 
-### Step 8: File Download & System Integration
+### Step 9: File Download & System Integration
 **Transition:** Prepare rules for deployment in existing systems
 
 **Demo Actions:**
@@ -211,12 +228,12 @@ Follow Sarah (Operations Manager) and Alex (IT Admin) as they transform their ru
 ## Act IV: Bulk Rule Management & Knowledge Integration
 *Role: Sarah (User) with Alex (Admin) support*
 
-### Step 9: CSV Bulk Rule Upload
+### Step 10: CSV Bulk Rule Upload
 **Transition:** Import existing scheduling rules from spreadsheets
 
 **Demo Actions:**
 1. Navigate to **Business Rules** tab
-2. Upload CSV file containing existing rules:
+2. Upload `restauran_rules.csv` containing existing rules:
    ```csv
    Rule Name,Condition,Action,Priority
    Peak Hour Coverage,Hour >= 11 AND Hour <= 14,Min Staff = 4,High
@@ -233,9 +250,9 @@ Follow Sarah (Operations Manager) and Alex (IT Admin) as they transform their ru
 - **Data Migration**: Smooth transition from spreadsheet-based management
 
 **Script:**
-> "FastBite has dozens of existing rules in spreadsheets. Rather than recreating them one by one, Sarah can upload the entire CSV file. The Rule Extractor intelligently parses the data and converts it into structured format."
+> "FastBite has dozens of existing rules in spreadsheets. Rather than recreating them one by one, Sarah can upload `restauran_rules.csv` directly. The Rule Extractor intelligently parses the data and converts it into structured format."
 
-### Step 10: Rule Validation & Conflict Resolution
+### Step 11: Rule Validation & Conflict Resolution
 **Transition:** System validates uploaded rules and identifies issues
 
 **Demo Actions:**
@@ -256,7 +273,7 @@ Follow Sarah (Operations Manager) and Alex (IT Admin) as they transform their ru
 **Script:**
 > "The system automatically validates all uploaded rules and identifies potential conflicts. Here we see two rules that might conflict during weekend peak hours. The system provides clear explanations and suggests resolution strategies."
 
-### Step 11: Knowledge Base Integration
+### Step 12: Knowledge Base Integration
 **Transition:** Integrate validated rules into searchable knowledge base
 
 **Demo Actions:**
