@@ -97,3 +97,15 @@
 - **Conflict Analysis**: "Check if my new discount policy conflicts with existing rules"
 - **Impact Assessment**: "What's the business impact of changing our employee scheduling rule?"
 - **Decision Making**: Interactive confirmation with detailed analysis before rule implementation
+
+### UI Improvements
+- **Enhanced Rule Display**: Added rule IDs to the extracted rules table for better identification
+- **Improved Business Rules Visibility**: Rules now display ID, Name, and Description columns in the UI
+
+### Enhanced - Batch CSV Rule Extraction
+- **Batch Processing of Rules**: New utility to extract and save multiple rules to CSV in one go
+- **CSV Template Generation**: Automatic generation of CSV template with all rule fields
+- **Field Mapping Assistance**: Help users map fields correctly for accurate rule extraction
+- **Extraction Progress Tracking**: Real-time progress updates and summary upon completion
+- **Error Handling and Reporting**: Comprehensive error handling with detailed reports on extraction issues
+- **Documentation**: Usage instructions and examples in `docs/BATCH_CSV_RULE_EXTRACTION.md`

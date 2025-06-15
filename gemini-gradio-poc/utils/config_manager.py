@@ -27,7 +27,6 @@ def get_default_config() -> Dict[str, Any]:
         },
         "agent3_settings": {
             "industry": "generic",
-            "chat_mode": "Enhanced Agent 3",
             "enabled": True
         },
         "ui_settings": {
@@ -135,7 +134,7 @@ def validate_config(config: Dict[str, Any]) -> Tuple[bool, str]:
                 return False, f"Missing model config key: {key}"
         
         # Check Agent 3 settings
-        agent3_keys = ["industry", "chat_mode", "enabled"]
+        agent3_keys = ["industry", "enabled"]
         for key in agent3_keys:
             if key not in config["agent3_settings"]:
                 return False, f"Missing Agent 3 setting: {key}"
@@ -143,11 +142,6 @@ def validate_config(config: Dict[str, Any]) -> Tuple[bool, str]:
         # Validate industry selection
         if config["agent3_settings"]["industry"] not in INDUSTRY_CONFIGS:
             return False, f"Invalid industry: {config['agent3_settings']['industry']}"
-        
-        # Validate chat mode
-        valid_modes = ["Standard Chat", "Enhanced Agent 3"]
-        if config["agent3_settings"]["chat_mode"] not in valid_modes:
-            return False, f"Invalid chat mode: {config['agent3_settings']['chat_mode']}"
         
         return True, "Configuration is valid"
     
@@ -197,7 +191,7 @@ def get_config_summary(config: Dict[str, Any]) -> str:
             "",
             f"🤖 **Model**: {config['model_config']['default_model']}",
             f"🏭 **Industry**: {config['agent3_settings']['industry'].title()}",
-            f"💬 **Chat Mode**: {config['agent3_settings']['chat_mode']}",
+            f"💬 **Chat Mode**: Enhanced Agent 3 (Simplified)",
             f"✅ **Agent 3 Enabled**: {config['agent3_settings']['enabled']}",
             "",
             "📝 **Agent Prompts**:",
