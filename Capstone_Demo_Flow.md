@@ -10,6 +10,8 @@ This document provides a comprehensive demo flow for the Capstone Intelligent Bu
 
 **Audio Guide Available:** For accessibility purposes and quick learning, an audio TLDR guide is available at [gemini-gradio-poc/audio/intelligent_business_rules_guide.wav](./gemini-gradio-poc/audio/intelligent_business_rules_guide.wav). This audio guide serves as a mini-training on how to use the intelligent business rule management tool effectively.
 
+[Listen to audio](https://github.com/user-attachments/assets/4a3acb5f-1437-4800-8626-deeb5de494b6)
+
 ---
 
 ## Demo Narrative Overview
