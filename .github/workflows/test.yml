@@ -12,6 +12,8 @@ jobs:
     
     steps:
     - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
     
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -24,10 +26,10 @@ jobs:
         cd gemini-gradio-poc
         pip install -r requirements.txt
     
-    - name: Run tests
+    - name: Run all tests
       run: |
         cd gemini-gradio-poc
-        python -m pytest tests/test_rule_extractor.py -v
+        python -m pytest tests/ -v
       env:
         GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
     
