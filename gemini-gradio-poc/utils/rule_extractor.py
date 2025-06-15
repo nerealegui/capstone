@@ -31,15 +31,15 @@ def extract_rules_from_csv(csv_file_path: str) -> List[Dict[str, Any]]:
         
         # Use LLM to convert all CSV rows to structured JSON format
         # For larger files, processing is automatically handled in batches
-        max_batch_size = MAX_BATCH_SIZE
+        max_batch_size = 30
         if len(csv_rules) > max_batch_size:
-            print(f"Processing {len(csv_rules)} rules in multiple batches of {MAX_BATCH_SIZE}")
+            print(f"Processing {len(csv_rules)} rules in multiple batches of {max_batch_size}")
             all_rules = []
             
             # Process in batches to avoid context length issues
-            for i in range(0, len(csv_rules), MAX_BATCH_SIZE):
-                batch = csv_rules[i:i+MAX_BATCH_SIZE]
-                print(f"Processing batch {i//MAX_BATCH_SIZE + 1} with {len(batch)} rules")
+            for i in range(0, len(csv_rules), max_batch_size):
+                batch = csv_rules[i:i+max_batch_size]
+                print(f"Processing batch {i//max_batch_size + 1} with {len(batch)} rules")
                 batch_rules = _convert_all_csv_rules_to_json(batch)
                 all_rules.extend(batch_rules)
             
