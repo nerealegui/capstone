@@ -8,6 +8,8 @@ This document provides a comprehensive demo flow for the Capstone Intelligent Bu
 **Demo Duration:** 15-20 minutes  
 **Prerequisites:** [System setup per ARCHITECTURE.md](./ARCHITECTURE.md)
 
+**Audio Guide Available:** For accessibility purposes and quick learning, an audio TLDR guide is available at [gemini-gradio-poc/audio/intelligent_business_rules_guide.wav](./gemini-gradio-poc/audio/intelligent_business_rules_guide.wav). This audio guide serves as a mini-training on how to use the intelligent business rule management tool effectively.
+
 ---
 
 ## Demo Narrative Overview
@@ -250,7 +252,7 @@ Follow Sarah (Operations Manager) and Alex (IT Admin) as they transform their ru
 - **Data Migration**: Smooth transition from spreadsheet-based management
 
 **Script:**
-> "FastBite has dozens of existing rules in spreadsheets. Rather than recreating them one by one, Sarah can upload `restauran_rules.csv` directly. The Rule Extractor intelligently parses the data and converts it into structured format."
+> "FastBite has dozens of existing rules in spreadsheets. Rather than recreating them one by one, Sarah can upload `restauran_rules.csv` directly. The Rule Extractor intelligently parses the data and converts it to structured format."
 
 ### Step 11: Rule Validation & Conflict Resolution
 **Transition:** System validates uploaded rules and identifies issues
@@ -322,7 +324,7 @@ Follow Sarah (Operations Manager) and Alex (IT Admin) as they transform their ru
 #### For IT Administrators (Alex's Perspective)
 - **Control**: Centralized configuration and industry customization
 - **Integration**: Standards-based output compatible with existing systems
-- **Quality**: Automated validation and verification processes
+- **Quality**: Automated verification and validation processes
 - **Scalability**: Easy replication across business units
 - **Governance**: Complete audit trail and change management
 

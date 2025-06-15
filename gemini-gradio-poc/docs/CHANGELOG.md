@@ -2,6 +2,17 @@
 
 # Changelog
 
+## [2025-06-15] - Added Audio Guide and Documentation Updates
+
+### Added
+- **Audio Guide**: Added `intelligent_business_rules_guide.wav` to provide an audio TLDR guide for accessibility and quick learning
+- **Documentation Updates**: Enhanced README.md and Capstone_Demo_Flow.md to reference the audio guide
+- **Accessibility Improvement**: Added dedicated Accessibility Resources section to README.md
+
+### Changes
+- **README Structure**: Updated documentation section to include Demo Flow document
+- **Capstone Demo Flow**: Added audio guide reference in the executive summary section
+
 ## [2025-06-15] - Added Capstone Demo Flow Documentation
 
 ### Added
