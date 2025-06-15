@@ -1,6 +1,13 @@
 """
 Agent 3 utilities for conversational interaction, conflict detection, impact analysis, and orchestration.
-Implements the enhanced business rules management capabilities.
+Implements enhanced business rules management capabilities with versioning support.
+
+Refactoring improvements:
+- Modular function organization for better maintainability
+- Improved error handling and validation
+- Better naming conventions for clarity
+- Reduced code duplication through helper functions
+- Enhanced documentation and type hints
 """
 
 import json
@@ -17,6 +24,11 @@ from config.agent_config import (
 )
 from utils.rag_utils import initialize_gemini_client, rag_generate
 from utils.rule_extractor import validate_rule_conflicts
+from utils.rule_versioning import (
+    get_rule_version_history, 
+    get_rule_version_summary, 
+    update_rule_version
+)
 
 
 def analyze_rule_conflicts(
@@ -339,3 +351,304 @@ def _extract_existing_rules_from_kb(rag_df: pd.DataFrame) -> List[Dict[str, Any]
     except Exception as e:
         print(f"Error extracting existing rules: {e}")
         return []
+
+
+# === Rule Versioning Functions for Agent 3 ===
+# Refactoring improvement: Organized versioning functions in dedicated section
+
+class VersioningResponseFormatter:
+    """
+    Utility class for formatting versioning information for user presentation.
+    Refactoring improvement: Separated formatting logic into dedicated class.
+    """
+    
+    @staticmethod
+    def format_rule_change_summary(rule_id: str, version_summary: Dict[str, Any]) -> str:
+        """
+        Format a user-friendly rule change summary.
+        
+        Args:
+            rule_id: The rule identifier
+            version_summary: Version summary data
+            
+        Returns:
+            Formatted string for user presentation
+        """
+        if version_summary["total_versions"] == 0:
+            return f"No version history found for rule '{rule_id}'."
+        
+        summary_lines = [
+            f"**Rule Version Summary for {rule_id}:**",
+            f"- Total versions: {version_summary['total_versions']}",
+            f"- Current version: {version_summary['current_version']}",
+            f"- Created: {VersioningResponseFormatter._format_timestamp(version_summary['created_at'])}",
+            f"- Last modified: {VersioningResponseFormatter._format_timestamp(version_summary['last_modified'])}",
+            "",
+            "**Recent Changes:**"
+        ]
+        
+        # Show last 3 changes for better readability
+        recent_changes = version_summary['change_history'][:3]
+        for change in recent_changes:
+            change_line = f"- v{change['version']}: {change['change_summary']}"
+            if change['drl_generated']:
+                change_line += " ✓ DRL Generated"
+            if change['timestamp']:
+                change_line += f" ({VersioningResponseFormatter._format_timestamp(change['timestamp'])})"
+            summary_lines.append(change_line)
+        
+        if len(version_summary['change_history']) > 3:
+            summary_lines.append(f"... and {len(version_summary['change_history']) - 3} more versions")
+        
+        return "\n".join(summary_lines)
+    
+    @staticmethod
+    def format_detailed_history(rule_id: str, history: List[Dict[str, Any]]) -> str:
+        """
+        Format detailed version history for comprehensive view.
+        
+        Args:
+            rule_id: The rule identifier
+            history: List of historical versions
+            
+        Returns:
+            Detailed formatted string with complete version history
+        """
+        if not history:
+            return f"No version history found for rule '{rule_id}'."
+        
+        history_lines = [f"**Complete Version History for Rule {rule_id}:**", ""]
+        
+        for version_data in history:
+            version_info = version_data.get("version_info", {})
+            version_lines = [
+                f"### Version {version_info.get('version', 'Unknown')}",
+                f"- **Change Type:** {version_info.get('change_type', 'Unknown')}",
+                f"- **Summary:** {version_info.get('change_summary', 'No summary')}",
+                f"- **Timestamp:** {VersioningResponseFormatter._format_timestamp(version_info.get('last_modified'))}",
+                f"- **DRL Generated:** {'Yes' if version_info.get('drl_generated') else 'No'}"
+            ]
+            
+            if version_info.get('impact_analysis'):
+                version_lines.append(f"- **Impact Analysis:** {version_info['impact_analysis']}")
+            
+            version_lines.append("")  # Empty line between versions
+            history_lines.extend(version_lines)
+        
+        return "\n".join(history_lines)
+    
+    @staticmethod
+    def _format_timestamp(timestamp: Optional[str]) -> str:
+        """Format timestamp for user display, truncating microseconds."""
+        if not timestamp:
+            return 'Unknown'
+        # Truncate to 19 characters to remove microseconds
+        return timestamp[:19] if len(timestamp) > 19 else timestamp
+
+
+class RuleImpactAnalyzer:
+    """
+    Utility class for analyzing rule modification impacts.
+    Refactoring improvement: Separated impact analysis logic into dedicated class.
+    """
+    
+    @staticmethod
+    def analyze_modification_impact(rule_id: str, proposed_changes: str) -> str:
+        """
+        Analyze the potential impact of modifying an existing rule.
+        
+        Args:
+            rule_id: The ID of the rule to be modified
+            proposed_changes: Description of the proposed changes
+            
+        Returns:
+            Impact analysis string with recommendations
+        """
+        try:
+            version_summary = get_rule_version_summary(rule_id)
+            
+            if version_summary["total_versions"] == 0:
+                return RuleImpactAnalyzer._format_new_rule_impact(rule_id)
+            
+            return RuleImpactAnalyzer._format_existing_rule_impact(
+                rule_id, version_summary, proposed_changes
+            )
+            
+        except Exception as e:
+            return f"Error analyzing modification impact: {str(e)}"
+    
+    @staticmethod
+    def _format_new_rule_impact(rule_id: str) -> str:
+        """Format impact analysis for new rules."""
+        return f"Impact Analysis: Rule '{rule_id}' not found. This would be a new rule creation."
+    
+    @staticmethod
+    def _format_existing_rule_impact(
+        rule_id: str, 
+        version_summary: Dict[str, Any], 
+        proposed_changes: str
+    ) -> str:
+        """Format impact analysis for existing rules."""
+        impact_lines = [
+            f"**Modification Impact Analysis for Rule {rule_id}:**",
+            f"- Current version: {version_summary['current_version']}",
+            f"- Total previous modifications: {version_summary['total_versions'] - 1}",
+            f"- Proposed changes: {proposed_changes}",
+            "",
+            "**Potential Impacts:**"
+        ]
+        
+        # Check if DRL was previously generated
+        has_drl = any(
+            change.get('drl_generated', False) 
+            for change in version_summary['change_history']
+        )
+        if has_drl:
+            impact_lines.append("- ⚠️  This rule has generated DRL/GDST files that may need regeneration")
+        
+        # Check modification frequency
+        if version_summary['total_versions'] > 5:
+            impact_lines.append("- ⚠️  This rule has been modified frequently - consider stability")
+        
+        # Add last modification timestamp
+        recent_changes = version_summary['change_history'][:2]
+        if len(recent_changes) > 1:
+            last_change = recent_changes[0].get('timestamp', '')
+            if last_change:
+                formatted_time = VersioningResponseFormatter._format_timestamp(last_change)
+                impact_lines.append(f"- Last modified: {formatted_time}")
+        
+        impact_lines.extend([
+            "",
+            "**Recommendation:** Review conflicts with existing rules before proceeding."
+        ])
+        
+        return "\n".join(impact_lines)
+
+
+def get_rule_change_summary(rule_id: str) -> str:
+    """
+    Get a formatted summary of rule changes for Agent 3 to present to users.
+    Refactoring improvement: Delegated formatting to dedicated class.
+    
+    Args:
+        rule_id: The ID of the rule to get change summary for
+        
+    Returns:
+        Formatted string with rule change information
+    """
+    try:
+        version_summary = get_rule_version_summary(rule_id)
+        return VersioningResponseFormatter.format_rule_change_summary(rule_id, version_summary)
+        
+    except Exception as e:
+        return f"Error retrieving version summary for rule '{rule_id}': {str(e)}"
+
+
+def get_detailed_rule_history(rule_id: str) -> str:
+    """
+    Get detailed version history for a rule formatted for Agent 3.
+    Refactoring improvement: Delegated formatting to dedicated class.
+    
+    Args:
+        rule_id: The ID of the rule
+        
+    Returns:
+        Detailed formatted string with complete version history
+    """
+    try:
+        history = get_rule_version_history(rule_id)
+        return VersioningResponseFormatter.format_detailed_history(rule_id, history)
+        
+    except Exception as e:
+        return f"Error retrieving detailed history for rule '{rule_id}': {str(e)}"
+
+
+def add_impact_analysis_to_rule(rule_data: Dict[str, Any], impact_analysis: str) -> Dict[str, Any]:
+    """
+    Add impact analysis to a rule and update its version.
+    Refactoring improvement: Better error handling and validation.
+    
+    Args:
+        rule_data: The rule data dictionary
+        impact_analysis: The impact analysis text to add
+        
+    Returns:
+        Updated rule with impact analysis and new version
+    """
+    if not isinstance(rule_data, dict):
+        print("Warning: Rule data must be a dictionary")
+        return rule_data
+    
+    if not impact_analysis or not isinstance(impact_analysis, str):
+        print("Warning: Impact analysis must be a non-empty string")
+        return rule_data
+    
+    try:
+        updated_rule = update_rule_version(
+            rule_data,
+            change_type="impact_analysis",
+            change_summary="Added impact analysis from Agent 3",
+            impact_analysis=impact_analysis
+        )
+        return updated_rule
+    except Exception as e:
+        print(f"Error adding impact analysis to rule: {e}")
+        return rule_data
+
+
+def check_rule_modification_impact(rule_id: str, proposed_changes: str) -> str:
+    """
+    Analyze the potential impact of modifying an existing rule.
+    Refactoring improvement: Delegated analysis to dedicated class.
+    
+    Args:
+        rule_id: The ID of the rule to be modified
+        proposed_changes: Description of the proposed changes
+        
+    Returns:
+        Impact analysis string with detailed recommendations
+    """
+    if not rule_id or not isinstance(rule_id, str):
+        return "Error: Rule ID must be a non-empty string"
+    
+    if not proposed_changes or not isinstance(proposed_changes, str):
+        return "Error: Proposed changes must be a non-empty string"
+    
+    return RuleImpactAnalyzer.analyze_modification_impact(rule_id, proposed_changes)
+
+
+def get_versioning_help_text() -> str:
+    """
+    Get help text explaining versioning features for Agent 3 responses.
+    Refactoring improvement: Centralized help text for consistency.
+    
+    Returns:
+        Formatted help text about versioning features
+    """
+    return """
+**Rule Versioning Features:**
+
+📋 **Available Commands:**
+- `get_rule_change_summary(rule_id)` - Get a brief version summary
+- `get_detailed_rule_history(rule_id)` - Get complete version history
+- `check_rule_modification_impact(rule_id, changes)` - Analyze modification impact
+
+📊 **Version Information Includes:**
+- Version numbers and timestamps
+- Change types (create, update, modify, drl_generation)
+- Change summaries and impact analysis
+- DRL/GDST generation tracking
+
+⚠️ **Impact Analysis Features:**
+- Identifies rules with generated DRL/GDST files
+- Tracks modification frequency
+- Provides stability recommendations
+- Suggests conflict review before changes
+
+💡 **Best Practices:**
+- Review version history before making changes
+- Consider impact analysis recommendations
+- Document significant changes in summaries
+- Monitor frequently modified rules for stability
+"""
