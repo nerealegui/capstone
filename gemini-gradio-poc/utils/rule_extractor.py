@@ -1,12 +1,10 @@
 import csv
 import json
-import os
 import pandas as pd
 from typing import List, Dict, Any
 from google.genai import types
 from config.agent_config import DEFAULT_MODEL, GENERATION_CONFIG
 from utils.rag_utils import initialize_gemini_client
-from utils.rule_versioning import create_versioned_rule, update_rule_version
 import time
 
 def extract_rules_from_csv(csv_file_path: str) -> List[Dict[str, Any]]:
@@ -31,21 +29,10 @@ def extract_rules_from_csv(csv_file_path: str) -> List[Dict[str, Any]]:
         
         for rule in csv_rules:
             structured_rule = _convert_csv_rule_to_json(rule)
-            if structured_rule and isinstance(structured_rule, dict):  # Validate it's a dictionary
-                # Add versioning metadata to the extracted rule
-                versioned_rule = create_versioned_rule(
-                    rule_data=structured_rule,  # Add explicit parameter name
-                    change_type="create",
-                    change_summary="Rule extracted from CSV upload"
-                )
-                if isinstance(versioned_rule, dict):  # Verify versioned rule is also a dictionary
-                    structured_rules.append(versioned_rule)
-                else:
-                    print(f"Warning: Versioning returned invalid format: {type(versioned_rule)}")
-            else:
-                print(f"Warning: Skipping invalid rule format: {type(structured_rule)}")
-            # Add a delay between requests (adjust the delay as needed)
-            time.sleep(2.5)  # At least 2 seconds, add a buffer
+            if structured_rule:
+                structured_rules.append(structured_rule)
+                # Add a delay between requests (adjust the delay as needed)
+                time.sleep(2.5)  # At least 2 seconds, add a buffer
         return structured_rules
         
     except Exception as e:
@@ -94,7 +81,7 @@ Convert to this JSON structure:
   "active": "active status from CSV"
 }}
 
-Return a single JSON object only (not a list).
+Return only valid JSON, no additional text.
 """
         
         contents = [
@@ -125,13 +112,7 @@ Return a single JSON object only (not a list).
         
         # Parse JSON response
         structured_rule = json.loads(response_text)
-        #return structured_rule
-        # Ensure the result is a dictionary
-        if not isinstance(structured_rule, dict):
-            raise ValueError(f"Expected a dictionary, but got {type(structured_rule)}")
-        
         return structured_rule
-       
         
     except Exception as e:
         print(f"Error converting CSV rule to JSON: {e}")
@@ -203,55 +184,21 @@ def validate_rule_conflicts(new_rule: Dict[str, Any], existing_rules: List[Dict[
             })
     
     return conflicts
-   
 
-def save_extracted_rules(rules: List[Dict[str, Any]], output_path: str, update_existing: bool = False) -> bool:
+def save_extracted_rules(rules: List[Dict[str, Any]], output_path: str) -> bool:
     """
-    Save extracted rules to a JSON file with versioning support.
+    Save extracted rules to a JSON file.
     
     Args:
         rules (List[Dict[str, Any]]): List of structured rules
         output_path (str): Path to save the JSON file
-        update_existing (bool): Whether to update existing rules or overwrite
         
     Returns:
         bool: True if successful, False otherwise
     """
     try:
-        rules_to_save = rules.copy()
-        
-        # If updating existing, merge with current rules
-        if update_existing and os.path.exists(output_path):
-            try:
-                with open(output_path, 'r') as f:
-                    existing_rules = json.load(f)
-                
-                if isinstance(existing_rules, list):
-                    # Create a map of existing rules by rule_id
-                    existing_map = {rule.get("rule_id"): rule for rule in existing_rules}
-                    
-                    # Update or add rules
-                    for new_rule in rules:
-                        rule_id = new_rule.get("rule_id")
-                        if rule_id in existing_map:
-                            # Update existing rule with versioning
-                            updated_rule = update_rule_version(
-                                new_rule,
-                                change_type="update",
-                                change_summary="Rule updated via CSV upload"
-                            )
-                            existing_map[rule_id] = updated_rule
-                        else:
-                            # Add new rule (should already have versioning from extraction)
-                            existing_map[rule_id] = new_rule
-                    
-                    rules_to_save = list(existing_map.values())
-                
-            except Exception as e:
-                print(f"Warning: Could not merge with existing rules: {e}")
-        
         with open(output_path, 'w') as f:
-            json.dump(rules_to_save, f, indent=2)
+            json.dump(rules, f, indent=2)
         return True
     except Exception as e:
         print(f"Error saving rules: {e}")

@@ -15,6 +15,3 @@ env/
 dist/
 build/
 *.so
-
-# Rule versioning temporary files (created during demo/testing)
-gemini-gradio-poc/data/rule_versions/
