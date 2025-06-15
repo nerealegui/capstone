@@ -22,7 +22,7 @@ Welcome to the Capstone project! This repository provides an intelligent, agent-
 - [Changelog](./gemini-gradio-poc/docs/CHANGELOG.md)
 
 ## Accessibility Resources
-- **Audio Guide**: An audio TLDR guide is available at [gemini-gradio-poc/audio/intelligent_business_rules_guide.wav](./gemini-gradio-poc/audio/intelligent_business_rules_guide.wav). This serves as a mini-training on how to use the intelligent business rule management tool effectively.
+- **Audio Guide**: An audio TLDR guide is available at [gemini-gradio-poc/audio/intelligent_business_rules_guide.wav](./gemini-gradio-poc/audio/intelligent_business_rules_guide.wav). This serves as a mini-training on how to use the intelligent business rule management tool effectively. It goes over the content in [Capstone_Demo_Flow.md](https://github.com/nerealegui/capstone/blob/fee758e35c16387e2ca0d3a7cf4c659a1b7761b7/Capstone_Demo_Flow.md)
 
 ---
 
