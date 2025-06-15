@@ -12,6 +12,40 @@ from config.agent_config import (
 # Configuration file path
 CONFIG_FILE = "config/user_config.json"
 
+def reload_prompts_from_defaults() -> Tuple[bool, str]:
+    """
+    Force reload prompts from agent_config.py into the runtime configuration.
+    
+    Returns:
+        Tuple[bool, str]: Reload status and message
+    """
+    try:
+        # Load default configuration
+        default_config = get_default_config()
+        
+        # Extract prompts from default configuration
+        prompts = default_config["agent_prompts"]
+        
+        # Load existing configuration
+        if os.path.exists(CONFIG_FILE):
+            with open(CONFIG_FILE, 'r') as f:
+                config = json.load(f)
+        else:
+            config = default_config
+        
+        # Update prompts in the existing configuration
+        config["agent_prompts"] = prompts
+        
+        # Save updated configuration
+        success, msg = save_config(config)
+        if success:
+            return True, "Prompts reloaded successfully from defaults."
+        else:
+            return False, f"Error saving updated configuration: {msg}"
+    
+    except Exception as e:
+        return False, f"Error reloading prompts: {str(e)}"
+
 def get_default_config() -> Dict[str, Any]:
     """Get the default configuration."""
     return {
