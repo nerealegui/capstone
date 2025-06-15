@@ -369,66 +369,6 @@ def _update_rule_in_list(rules_list: list, updated_rule: Dict[str, Any]) -> None
             break
 
 
-def load_rule_with_version_info(rule_id: str, rule_storage_path: str = "data/rules") -> Optional[Dict[str, Any]]:
-    """
-    Load a rule with its version information from storage.
-    Refactoring improvement: Better error handling and path management.
-    
-    Args:
-        rule_id: The ID of the rule to load
-        rule_storage_path: Path where rules are stored
-        
-    Returns:
-        Rule dictionary with version info, or None if not found
-    """
-    if not rule_id:
-        return None
-    
-    potential_paths = [
-        Path(rule_storage_path) / "extracted_rules.json",
-        Path("data") / "extracted_rules.json", 
-        Path("extracted_rules.json")
-    ]
-    
-    for rules_file in potential_paths:
-        rule_data = _search_rule_in_file(rules_file, rule_id)
-        if rule_data:
-            return rule_data
-    
-    return None
-
-
-def _search_rule_in_file(rules_file: Path, rule_id: str) -> Optional[Dict[str, Any]]:
-    """
-    Search for a specific rule in a file.
-    Refactoring improvement: Extracted search logic for reusability.
-    
-    Args:
-        rules_file: Path to the rules file
-        rule_id: ID of the rule to find
-        
-    Returns:
-        Rule data if found, None otherwise
-    """
-    try:
-        rules_data = RuleFileManager.load_rules_from_file(rules_file)
-        if rules_data is None:
-            return None
-        
-        # Handle both list and single rule formats
-        if isinstance(rules_data, list):
-            for rule in rules_data:
-                if rule.get("rule_id") == rule_id:
-                    return rule
-        elif isinstance(rules_data, dict) and rules_data.get("rule_id") == rule_id:
-            return rules_data
-            
-    except Exception as e:
-        print(f"Error searching rule in file {rules_file}: {e}")
-    
-    return None
-
-
 def verify_drools_execution(drl_content: str, gdst_content: str) -> bool:
     """
     Verify that the generated DRL and GDST content is valid for Drools execution.

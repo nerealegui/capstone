@@ -1,7 +1,6 @@
 import os
 import gradio as gr
 import json
-import os
 import pandas as pd
 import numpy as np
 from google import genai
@@ -31,17 +30,6 @@ from utils.config_manager import (
     get_config_summary,
     reset_config_to_defaults
 )
-
-# Commented out initialize_gemini function because it will live in rag_utils.py
-# def initialize_gemini():
-#     api_key = os.environ.get('GOOGLE_API_KEY')
-#     if not api_key:
-#         raise ValueError("Google API key not found in environment variables. Please check your .env file.")
-
-#     client = genai.Client(
-#         api_key=api_key
-#     )
-#     return client
 
 # New function to build_knowledge_base_process, which calls functions in rag_utils.
 def build_knowledge_base_process(

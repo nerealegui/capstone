@@ -1,6 +1,4 @@
 import os
-import PyPDF2 # type: ignore
-from docx import Document
 import pandas as pd
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
@@ -40,33 +38,6 @@ def initialize_gemini_client():
     return client
 
 # Function to read docx files
-def read_docx(file_path):
-    """Reads text from a .docx file."""
-    try:
-        doc = Document(file_path)
-        doc_text = [para.text for para in doc.paragraphs]
-        return "\n".join(filter(None, doc_text))
-    except Exception as e:
-        print(f"Error reading DOCX {os.path.basename(file_path)}: {e}")
-        return None
-
-# Function to read pdf files
-def read_pdf(file_path):
-    """Reads text from a .pdf file."""
-    try:
-        with open(file_path, 'rb') as f:
-            reader = PyPDF2.PdfReader(f)
-            if reader.is_encrypted:
-                try:
-                    reader.decrypt('')
-                except Exception:
-                    print(f"Warning: Could not decrypt PDF {os.path.basename(file_path)}. Skipping.")
-                    return None
-            return "\n".join(filter(None, [page.extract_text() for page in reader.pages if page.extract_text()]))
-    except Exception as e:
-        print(f"Error reading PDF {os.path.basename(file_path)}: {e}")
-        return None
-
 def read_documents_from_paths(file_paths):
     """Reads text from a list of document file paths."""
     documents = []
@@ -208,52 +179,6 @@ def embed_texts(texts: list[str], task_type: str = "RETRIEVAL_DOCUMENT") -> list
     return paired_results
 
 # Defining a function to calculate cosine similarity
-def retrieve(query: str, df: pd.DataFrame, top_k: int = 3) -> pd.DataFrame:
-    """
-    Embeds a query and finds the top_k most similar document chunks from the DataFrame.
-    Uses google.genai for query embedding.
-    """
-    if df is None or df.empty or 'embedding' not in df.columns or 'chunk' not in df.columns:
-        return pd.DataFrame(columns=['filename', 'chunk', 'score'])
-
-    df_valid_embeddings = df[df['embedding'].apply(lambda x: isinstance(x, (list, np.ndarray)) and len(x) > 0)].copy()
-
-    if df_valid_embeddings.empty:
-        return pd.DataFrame(columns=['filename', 'chunk', 'score'])
-
-    try:
-        emb_matrix = np.vstack(df_valid_embeddings["embedding"].apply(np.asarray).values)
-    except Exception as e:
-        print(f"Error preparing embedding matrix for retrieval: {e}")
-        return pd.DataFrame(columns=['filename', 'chunk', 'score'])
-
-    # Embed the query
-    try:
-        # Call embed_texts within rag_utils, which now uses genai.Client
-        query_embedding_result_pair = embed_texts([query], task_type="RETRIEVAL_QUERY")
-
-        if not query_embedding_result_pair or query_embedding_result_pair[0][1] is None:
-            print("Error: Failed to embed query.")
-            return pd.DataFrame(columns=['filename', 'chunk', 'score'])
-        q_emb = query_embedding_result_pair[0][1]
-
-    except Exception as e:
-        print(f"Error embedding query for retrieval: {e}")
-        return pd.DataFrame(columns=['filename', 'chunk', 'score'])
-
-    try:
-        q_emb_2d = np.asarray(q_emb).reshape(1, -1)
-        sims = cosine_similarity(q_emb_2d, emb_matrix)[0]
-    except Exception as e:
-        print(f"Error calculating cosine similarity: {e}")
-        return pd.DataFrame(columns=['filename', 'chunk', 'score'])
-
-    df_scores = df_valid_embeddings.copy()
-    df_scores["score"] = sims
-
-    top_k = min(top_k, len(df_scores))
-    return df_scores.sort_values("score", ascending=False).head(top_k).reset_index(drop=True)
-
 # RAG Chain (Combining Retrieval of most relevant resutls based on a score and LLM Call) 
 def rag_generate(query: str, df: pd.DataFrame, agent_prompt: str, model_name: str, generation_config: types.GenerateContentConfig, history: list, top_k: int = 3) -> str:
     """
