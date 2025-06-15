@@ -2,6 +2,50 @@
 
 # Changelog
 
+## [2025-06-15] - Added Capstone Demo Flow Documentation
+
+### Added
+- **Comprehensive Demo Flow Document**: Created `Capstone_Demo_Flow.md` providing a complete demonstration script for the Capstone Intelligent Business Rule Management system
+- **Narrative-Driven Presentation**: Structured demo around FastBite Restaurant scenario with clear character roles (Sarah - Operations Manager, Alex - IT Admin)
+- **Multi-Act Structure**: Organized demo into four acts covering system setup, rule creation, processing, and bulk management
+- **Value Proposition Mapping**: Explicit value propositions for both administrative and end-user perspectives at each step
+- **Cross-Referenced Documentation**: Integrated references to existing ARCHITECTURE.md, BUSINESS.md, README.md, and technical documentation
+- **Dual-Purpose Design**: Document serves both as presentation script and practical quickstart guide
+
+### Features Demonstrated
+- **System Configuration**: Industry-specific setup and agent configuration for restaurant operations
+- **Knowledge Base Setup**: Document upload and RAG integration for contextual intelligence
+- **Natural Language Rule Creation**: Agent 1 conversion from business language to structured JSON
+- **Enhanced Analysis**: Agent 3 conflict detection, impact analysis, and decision support
+- **Rule Generation**: Agent 2 automated DRL/GDST file creation with verification
+- **Bulk Rule Management**: CSV upload, intelligent extraction, validation, and knowledge base integration
+- **File Export**: Production-ready rule files for system integration
+
+### Technical Details
+- **Target Audience**: Business stakeholders, technical implementers, system administrators
+- **Demo Duration**: 15-20 minutes structured presentation
+- **Format**: Markdown with clear sections, code examples, and transition scripts
+- **Integration References**: Links to all relevant technical and business documentation
+- **Implementation Guidance**: Next steps for pilot programs and full deployment
+
+### Dependencies
+- References existing documentation structure
+- Aligns with current Gradio UI implementation
+- Compatible with multi-agent architecture (Agent 1, 2, 3)
+- Supports all current industry configurations
+
+### Usage
+The demo flow can be used for:
+- **Sales Presentations**: Showcase system capabilities to potential clients
+- **Training Sessions**: Onboard new users and administrators
+- **Stakeholder Demos**: Demonstrate business value to executives and decision-makers
+- **Implementation Planning**: Guide pilot programs and deployment strategies
+- **User Documentation**: Serve as comprehensive getting-started guide
+
+### File Location
+- **Main Document**: `/Capstone_Demo_Flow.md` in repository root
+- **Ready for Integration**: Suitable for `/docs` folder or as standalone quickstart guide
+
 ## [2025-06-04] - Fixed ChatInterface Parameter Mismatch
 
 ### Fixed
