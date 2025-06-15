@@ -24,7 +24,6 @@ from utils.agent3_utils import (
 )
 from utils.config_manager import (
     get_default_config,
-    reload_prompts_from_defaults,
     save_config,
     load_config,
     apply_config_to_runtime,
@@ -376,7 +375,7 @@ def validate_new_rule(rule_json_str: str):
                 conflict_messages.append(f"⚠️ {conflict['type']}: {conflict['message']}")
             return "Validation Issues Found:\n" + "\n".join(conflict_messages)
         else:
-            return ""
+            return "✅ Rule validation passed. No conflicts detected."
             
     except json.JSONDecodeError as e:
         return f"❌ Invalid JSON format: {str(e)}"
@@ -577,7 +576,8 @@ def analyze_impact_only(industry: str = "generic"):
 
         # If no conflicts, show positive impact analysis
         success_message = (
-            ##f"📊 Impact Analysis Summary:\n{json.dumps(impact_analysis, indent=2)}\n\n" +
+            "✅ No Conflicts Detected by Agent 3!\n\n" +
+            f"📊 Impact Analysis Summary:\n{json.dumps(impact_analysis, indent=2)}\n\n" +
             f"📈 Detailed Analysis:\n{conflict_analysis}\n\n" +
             "Rule is ready for implementation. Use the Decision Support section below to proceed."
         )
@@ -708,16 +708,6 @@ def initialize_gemini_client():
 def create_gradio_interface():
     """Create and return the Gradio interface for the Gemini Chat Application with two tabs: Configuration and Chat/Rule Summary."""
 
-    # Reload prompts from defaults on startup
-    try:
-        success, reload_msg = reload_prompts_from_defaults()
-        if success:
-            print(f"Prompts reloaded successfully: {reload_msg}")
-        else:
-            print(f"Warning: Failed to reload prompts: {reload_msg}")
-    except Exception as e:
-        print(f"Error reloading prompts on startup: {e}")
-    
     # Load saved configuration on startup
     try:
         startup_config, startup_msg = load_config()
