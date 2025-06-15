@@ -1,0 +1,116 @@
+[
+  {
+    "rule_id": "DEMO_REFACTORED_001",
+    "name": "VIP Customer Discount Enhanced",
+    "category": "Discount",
+    "description": "Apply enhanced 20% discount for VIP customers",
+    "summary": "VIP customers with orders over $100 receive a 15% discount with enhanced tracking",
+    "conditions": [
+      {
+        "field": "customer.status",
+        "operator": "equals",
+        "value": "VIP"
+      },
+      {
+        "field": "order.value",
+        "operator": "greater_than",
+        "value": 100
+      }
+    ],
+    "actions": [
+      {
+        "type": "apply_discount",
+        "percentage": 20
+      }
+    ],
+    "priority": "High",
+    "active": true,
+    "version_info": {
+      "version": 1,
+      "created_at": "2025-06-15T17:58:22.966975",
+      "last_modified": "2025-06-15T17:58:22.966975",
+      "change_type": "create",
+      "change_summary": "Initial VIP discount rule creation with enhanced features",
+      "impact_analysis": "Low impact - new enhanced discount rule for VIP customers",
+      "user": "system",
+      "drl_generated": false,
+      "drl_generation_timestamp": null
+    }
+  },
+  {
+    "rule_id": "DEMO_REFACTORED_001",
+    "name": "VIP Customer Discount Enhanced",
+    "category": "Discount",
+    "description": "Apply enhanced 20% discount for VIP customers",
+    "summary": "VIP customers with orders over $100 receive a 15% discount with enhanced tracking",
+    "conditions": [
+      {
+        "field": "customer.status",
+        "operator": "equals",
+        "value": "VIP"
+      },
+      {
+        "field": "order.value",
+        "operator": "greater_than",
+        "value": 100
+      }
+    ],
+    "actions": [
+      {
+        "type": "apply_discount",
+        "percentage": 20
+      }
+    ],
+    "priority": "High",
+    "active": true,
+    "version_info": {
+      "version": 2,
+      "created_at": "2025-06-15T17:58:22.966975",
+      "last_modified": "2025-06-15T17:58:22.967352",
+      "change_type": "update",
+      "change_summary": "Increased VIP discount from 15% to 20% with enhanced tracking",
+      "impact_analysis": "Medium impact - affects all VIP customer orders with improved benefits",
+      "user": "system",
+      "drl_generated": false,
+      "drl_generation_timestamp": null
+    }
+  },
+  {
+    "rule_id": "DEMO_REFACTORED_001",
+    "name": "VIP Customer Discount Enhanced",
+    "category": "Discount",
+    "description": "Apply enhanced 20% discount for VIP customers",
+    "summary": "VIP customers with orders over $100 receive a 15% discount with enhanced tracking",
+    "conditions": [
+      {
+        "field": "customer.status",
+        "operator": "equals",
+        "value": "VIP"
+      },
+      {
+        "field": "order.value",
+        "operator": "greater_than",
+        "value": 100
+      }
+    ],
+    "actions": [
+      {
+        "type": "apply_discount",
+        "percentage": 20
+      }
+    ],
+    "priority": "High",
+    "active": true,
+    "version_info": {
+      "version": 3,
+      "created_at": "2025-06-15T17:58:22.966975",
+      "last_modified": "2025-06-15T17:58:22.968013",
+      "change_type": "drl_generation",
+      "change_summary": "Generated enhanced DRL and GDST files from JSON rule",
+      "impact_analysis": null,
+      "user": "system",
+      "drl_generated": true,
+      "drl_generation_timestamp": "2025-06-15T17:58:22.968013"
+    }
+  }
+]
