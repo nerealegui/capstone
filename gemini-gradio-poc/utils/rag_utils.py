@@ -25,9 +25,6 @@ def initialize_gemini_client():
 
         try:
             client = genai.Client(api_key=api_key)
-            # Basic check to see if client works (optional but helpful)
-            # print("Listing models to verify client...")
-            # list(client.models.list()) # This might be slow, keep commented unless needed for debug
             print("✅ Gemini client (google.genai) initialized successfully.")
         except Exception as e:
             print(f"❌ Failed to initialize Gemini client (google.genai): {e}")

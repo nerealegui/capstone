@@ -84,10 +84,6 @@ def check_dependencies():
         "PyPDF2"        
     ]
     pip_args = [sys.executable, "-m", "pip", "install"]
-    # If not in venv, add --break-system-packages for Homebrew Python/PEP 668
-    if not os.environ.get('VIRTUAL_ENV'):
-        pip_args.append("--break-system-packages")
-        print("\n⚠️  Warning: Not running inside a virtual environment. Using --break-system-packages for pip.\n")
     for dep in dependencies:
         try:
             subprocess.check_call(pip_args + [dep])
