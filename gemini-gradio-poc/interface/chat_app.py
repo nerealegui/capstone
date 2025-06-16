@@ -20,7 +20,9 @@ from utils.agent3_utils import (
     assess_rule_impact, 
     generate_conversational_response,
     orchestrate_rule_generation,
-    _extract_existing_rules_from_kb
+    _extract_existing_rules_from_kb,
+    format_impact_analysis_display,
+    format_impact_status_summary
 )
 from utils.config_manager import (
     get_default_config,
@@ -227,7 +229,7 @@ def chat_with_agent3(user_input: str, history: list, rag_state_df: pd.DataFrame,
                     proposed_rule, existing_rules, industry
                 )
                 
-                # Build comprehensive response
+                # Build comprehensive response with formatted analysis
                 context.update({
                     "intent": "rule_creation",
                     "proposed_rule": proposed_rule,
@@ -235,12 +237,14 @@ def chat_with_agent3(user_input: str, history: list, rag_state_df: pd.DataFrame,
                     "impact_analysis": impact_analysis
                 })
                 
+                # Create a concise summary for the conversational response
+                conflict_status = f"{len(conflicts)} conflicts found" if conflicts else "No conflicts detected"
+                formatted_analysis = format_impact_analysis_display(impact_analysis, conflicts)
+                
                 response = generate_conversational_response(
-                    f"I've created a rule based on your request. Here's my analysis:\n\n"
-                    f"Proposed Rule: {proposed_rule.get('name', 'Unnamed Rule')}\n"
-                    f"Conflicts Found: {len(conflicts)}\n"
-                    f"Impact Level: {impact_analysis.get('risk_level', 'Unknown')}\n\n"
-                    f"Conflict Analysis: {conflict_analysis}\n\n"
+                    f"I've created a rule based on your request:\n\n"
+                    f"**{proposed_rule.get('name', 'Unnamed Rule')}**\n"
+                    f"{formatted_analysis}\n\n"
                     f"Would you like me to proceed with generating the DRL files, or would you like to modify the rule first?",
                     context, rag_state_df, industry
                 )
@@ -519,7 +523,10 @@ def analyze_impact_only(industry: str = "generic"):
     global rule_response
     try:
         if 'rule_response' not in globals() or not rule_response:
-            return "No rule to analyze. Please interact with the chat first.", None, None
+            return "❌ **No Rule Available**\n\nPlease interact with the chat first to generate a rule for analysis.", None, None
+
+        # Get rule name for display
+        rule_name = rule_response.get('name', 'Unknown Rule')
 
         # Get existing rules for validation
         existing_rules = []
@@ -538,36 +545,19 @@ def analyze_impact_only(industry: str = "generic"):
             rule_response, existing_rules, industry
         )
 
-        if conflicts:
-            conflict_messages = []
-            for conflict in conflicts:
-                impact_info = conflict.get('industry_impact', 'No impact analysis available')
-                conflict_messages.append(
-                    f"⚠️ {conflict['type']}: {conflict['message']}\n"
-                    f"   Industry Impact: {impact_info}"
-                )
-            
-            detailed_message = (
-                "⚠️ Conflicts Detected by Agent 3:\n\n" + 
-                "\n\n".join(conflict_messages) + 
-                f"\n\n📊 Detailed Analysis:\n{conflict_analysis}\n\n" +
-                f"📈 Impact Assessment:\n{json.dumps(impact_analysis, indent=2)}\n\n" +
-                "Please use the Decision Support section below to proceed, modify, or cancel."
-            )
-            return (detailed_message, None, None)
+        # Add conflict information to impact analysis
+        impact_analysis['conflicts_detected'] = len(conflicts) > 0
+        impact_analysis['conflict_count'] = len(conflicts)
 
-        # If no conflicts, show positive impact analysis
-        success_message = (
-            "✅ No Conflicts Detected by Agent 3!\n\n" +
-            f"📊 Impact Analysis Summary:\n{json.dumps(impact_analysis, indent=2)}\n\n" +
-            f"📈 Detailed Analysis:\n{conflict_analysis}\n\n" +
-            "Rule is ready for implementation. Use the Decision Support section below to proceed."
+        # Use the new Configuration Summary style formatting
+        formatted_status = format_impact_status_summary(
+            impact_analysis, conflicts, rule_name
         )
         
-        return (success_message, None, None)
+        return (formatted_status, None, None)
             
     except Exception as e:
-        return (f"Agent 3 Analysis Error: {str(e)}", None, None)
+        return (f"❌ **Analysis Error**\n\nUnable to analyze rule: {str(e)}", None, None)
 
 def preview_apply_rule_with_agent3(industry: str = "generic"):
     """
@@ -598,22 +588,19 @@ def preview_apply_rule_with_agent3(industry: str = "generic"):
         )
 
         if conflicts:
-            conflict_messages = []
-            for conflict in conflicts:
-                impact_info = conflict.get('industry_impact', 'No impact analysis available')
-                conflict_messages.append(
-                    f"⚠️ {conflict['type']}: {conflict['message']}\n"
-                    f"   Industry Impact: {impact_info}"
-                )
+            # Get rule name for display
+            rule_name = rule_response.get('name', 'Unknown Rule')
             
-            detailed_message = (
-                "⚠️ Conflicts Detected by Agent 3:\n\n" + 
-                "\n\n".join(conflict_messages) + 
-                f"\n\n📊 Detailed Analysis:\n{conflict_analysis}\n\n" +
-                f"📈 Impact Assessment:\n{json.dumps(impact_analysis, indent=2)}\n\n" +
-                "Please resolve these conflicts before proceeding."
+            # Add conflict information to impact analysis
+            impact_analysis['conflicts_detected'] = len(conflicts) > 0
+            impact_analysis['conflict_count'] = len(conflicts)
+
+            # Use the new Configuration Summary style formatting
+            formatted_status = format_impact_status_summary(
+                impact_analysis, conflicts, rule_name
             )
-            return (detailed_message, None, None)
+            
+            return (formatted_status, None, None)
 
         # If no conflicts, orchestrate with Agent 2
         should_proceed, status_msg, orchestration_result = orchestrate_rule_generation(
@@ -634,9 +621,21 @@ def preview_apply_rule_with_agent3(industry: str = "generic"):
                 with open(gdst_path, "w") as f:
                     f.write(gdst)
                 
+                # Get rule name for display
+                rule_name = rule_response.get('name', 'Unknown Rule')
+                
+                # Add success information to impact analysis
+                impact_analysis['conflicts_detected'] = False
+                impact_analysis['conflict_count'] = 0
+                
+                # Use the new Configuration Summary style formatting
+                formatted_status = format_impact_status_summary(
+                    impact_analysis, [], rule_name
+                )
+                
                 success_message = (
-                    "✅ Rule Successfully Applied by Agent 3!\n\n" +
-                    f"📊 Impact Analysis Summary:\n{json.dumps(impact_analysis, indent=2)}\n\n" +
+                    formatted_status + 
+                    "\n\n✅ **Files Generated Successfully**\n\n" +
                     "Your DRL and GDST files are ready for download."
                 )
                 return (success_message, drl_path, gdst_path)
@@ -711,7 +710,7 @@ def create_gradio_interface():
     summary_display = gr.Textbox(value="Summary will appear here after input.", label="Summary")
     drl_file = gr.File(label="Download DRL", visible=False)  # Hidden in Enhanced Agent 3 mode
     gdst_file = gr.File(label="Download GDST", visible=False)  # Hidden in Enhanced Agent 3 mode
-    status_box = gr.Textbox(label="Status")
+    status_box = gr.Markdown("Click 'Analyze Impact' to see rule analysis summary.")
 
     # --- State for RAG DataFrame (must be defined before use) ---
     state_rag_df = gr.State(pd.DataFrame())
@@ -897,7 +896,10 @@ def create_gradio_interface():
                         # Fixed button for Enhanced Agent 3 mode only
                         action_button = gr.Button("Analyze Impact", variant="primary")
                         
+                        # Impact Analysis Status - Always visible
+                        gr.Markdown("## Impact Analysis Status")
                         status_box.render()
+                        
                         drl_file.render()
                         gdst_file.render()
                         

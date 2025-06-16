@@ -239,25 +239,30 @@ def _generate_impact_analysis(
     existing_rules: List[Dict[str, Any]], 
     industry_config: Dict[str, Any]
 ) -> Dict[str, Any]:
-    """Generate impact analysis using Agent 3."""
+    """Generate concise, user-friendly impact analysis using Agent 3."""
     client = initialize_gemini_client()
     
+    # Check for conflicts first
+    conflicts, _ = analyze_rule_conflicts(proposed_rule, existing_rules)
+    has_conflicts = len(conflicts) > 0
+    
     prompt = f"""
-    Analyze the business impact of this proposed rule:
+    Provide a CONCISE business impact analysis for this rule:
     
-    Proposed Rule: {json.dumps(proposed_rule, indent=2)}
+    Rule: {proposed_rule.get('name', 'Unnamed Rule')} - {proposed_rule.get('summary', 'No summary')}
     
-    Industry Context: {industry_config}
+    {'⚠️ CONFLICTS DETECTED: ' + str(len(conflicts)) + ' conflicts found with existing rules' if has_conflicts else '✅ NO CONFLICTS: Rule is compatible with existing rules'}
     
-    Assess impact on: {industry_config['impact_areas']}
+    Industry: {industry_config.get('key_parameters', ['general'])[0]}
     
-    Provide structured analysis including:
-    - Operational impact
-    - Financial implications  
-    - Risk assessment
-    - Implementation considerations
+    Provide ONLY:
+    1. Overall Risk Level: High/Medium/Low
+    2. Key Impact (1-2 sentences max)
+    3. Main Benefit (1 sentence)
+    4. Implementation Ease: Easy/Moderate/Complex
     
-    Format as JSON with clear impact ratings (High/Medium/Low).
+    Keep response under 150 words total. Be direct and actionable.
+    Format as JSON with keys: risk_level, key_impact, main_benefit, implementation_ease
     """
     
     contents = [types.Content(role="user", parts=[types.Part.from_text(text=prompt)])]
@@ -268,13 +273,20 @@ def _generate_impact_analysis(
             contents=contents,
             config=types.GenerateContentConfig(response_mime_type="application/json")
         )
-        return json.loads(response.text)
+        analysis = json.loads(response.text)
+        # Add conflict status to the response
+        analysis["conflicts_detected"] = has_conflicts
+        analysis["conflict_count"] = len(conflicts)
+        return analysis
     except Exception as e:
         return {
-            "error": f"Impact analysis failed: {str(e)}",
-            "operational_impact": "Unknown",
-            "financial_impact": "Unknown", 
-            "risk_level": "Medium"
+            "error": f"Analysis failed: {str(e)}",
+            "risk_level": "Medium",
+            "key_impact": "Unable to assess impact",
+            "main_benefit": "Unknown",
+            "implementation_ease": "Unknown",
+            "conflicts_detected": has_conflicts,
+            "conflict_count": len(conflicts)
         }
 
 
@@ -339,3 +351,143 @@ def _extract_existing_rules_from_kb(rag_df: pd.DataFrame) -> List[Dict[str, Any]
     except Exception as e:
         print(f"Error extracting existing rules: {e}")
         return []
+
+
+def format_impact_analysis_display(
+    impact_analysis: Dict[str, Any], 
+    conflicts: List[Dict[str, Any]] = None
+) -> str:
+    """
+    Format impact analysis for user-friendly display.
+    
+    Args:
+        impact_analysis: The impact analysis results
+        conflicts: Optional list of conflicts detected
+    
+    Returns:
+        Formatted string for UI display
+    """
+    if not impact_analysis:
+        return "❌ Unable to analyze impact"
+    
+    # Handle conflicts prominently
+    conflicts = conflicts or []
+    has_conflicts = impact_analysis.get("conflicts_detected", len(conflicts) > 0)
+    conflict_count = impact_analysis.get("conflict_count", len(conflicts))
+    
+    if has_conflicts:
+        status_icon = "⚠️"
+        conflict_status = f"**{conflict_count} CONFLICT{'S' if conflict_count != 1 else ''} DETECTED**"
+    else:
+        status_icon = "✅"
+        conflict_status = "**NO CONFLICTS DETECTED**"
+    
+    # Get risk level with appropriate emoji
+    risk_level = impact_analysis.get("risk_level", "Medium")
+    risk_icons = {"High": "🔴", "Medium": "🟡", "Low": "🟢"}
+    risk_icon = risk_icons.get(risk_level, "🟡")
+    
+    # Get implementation ease with emoji
+    implementation = impact_analysis.get("implementation_ease", "Unknown")
+    impl_icons = {"Easy": "🟢", "Moderate": "🟡", "Complex": "🔴"}
+    impl_icon = impl_icons.get(implementation, "❓")
+    
+    formatted_output = f"""
+{status_icon} **Status**: {conflict_status}
+
+{risk_icon} **Risk Level**: {risk_level}
+
+📊 **Key Impact**: {impact_analysis.get("key_impact", "No impact analysis available")}
+
+💡 **Main Benefit**: {impact_analysis.get("main_benefit", "Benefits unclear")}
+
+{impl_icon} **Implementation**: {implementation}
+    """.strip()
+    
+    return formatted_output
+
+
+def format_impact_status_summary(
+    impact_analysis: Dict[str, Any], 
+    conflicts: List[Dict[str, Any]] = None,
+    rule_name: str = "Unknown Rule"
+) -> str:
+    """
+    Format impact analysis status in Configuration Summary style.
+    
+    Args:
+        impact_analysis: The impact analysis results
+        conflicts: Optional list of conflicts detected
+        rule_name: Name of the rule being analyzed
+    
+    Returns:
+        Formatted markdown string for UI display
+    """
+    if not impact_analysis:
+        return "❌ **Impact Analysis Failed**\n\nNo analysis results available."
+    
+    # Handle conflicts prominently
+    conflicts = conflicts or []
+    has_conflicts = impact_analysis.get("conflicts_detected", len(conflicts) > 0)
+    conflict_count = impact_analysis.get("conflict_count", len(conflicts))
+    
+    # Get analysis components
+    risk_level = impact_analysis.get("risk_level", "Medium")
+    key_impact = impact_analysis.get("key_impact", "Analysis pending...")
+    main_benefit = impact_analysis.get("main_benefit", "Benefits assessment pending...")
+    implementation_ease = impact_analysis.get("implementation_ease", "Moderate")
+    
+    # Risk level icons
+    risk_icons = {"High": "🔴", "Medium": "🟡", "Low": "🟢"}
+    risk_icon = risk_icons.get(risk_level, "🟡")
+    
+    # Implementation ease icons
+    impl_icons = {"Easy": "🟢", "Moderate": "🟡", "Complex": "🔴"}
+    impl_icon = impl_icons.get(implementation_ease, "🟡")
+    
+    # Build summary
+    summary_lines = [
+        "📊 **Impact Analysis Summary**",
+        "",
+        f"📝 **Rule**: {rule_name}",
+        ""
+    ]
+    
+    # Conflict status (most prominent)
+    if has_conflicts:
+        summary_lines.extend([
+            f"⚠️ **CONFLICTS DETECTED**: {conflict_count} conflict(s) found",
+            "🚨 **Action Required**: Review conflicts before proceeding",
+            ""
+        ])
+    else:
+        summary_lines.extend([
+            "✅ **NO CONFLICTS**: Rule is compatible with existing rules",
+            ""
+        ])
+    
+    # Impact assessment
+    summary_lines.extend([
+        "📈 **Impact Assessment**:",
+        f"- {risk_icon} **Risk Level**: {risk_level}",
+        f"- {impl_icon} **Implementation**: {implementation_ease}",
+        "",
+        f"🎯 **Key Impact**: {key_impact}",
+        "",
+        f"💡 **Main Benefit**: {main_benefit}"
+    ])
+    
+    # Add conflict details if any
+    if has_conflicts and conflicts:
+        summary_lines.extend([
+            "",
+            "⚠️ **Conflict Details**:"
+        ])
+        for i, conflict in enumerate(conflicts[:3], 1):  # Show max 3 conflicts
+            conflict_type = conflict.get("type", "unknown").replace("_", " ").title()
+            summary_lines.append(f"- **Conflict {i}**: {conflict_type}")
+        
+        if len(conflicts) > 3:
+            summary_lines.append(f"- *...and {len(conflicts) - 3} more conflicts*")
+    
+    return "\n".join(summary_lines)
