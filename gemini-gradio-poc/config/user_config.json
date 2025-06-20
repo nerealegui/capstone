@@ -16,7 +16,6 @@
   },
   "agent3_settings": {
     "industry": "restaurant",
-    "chat_mode": "Enhanced Agent 3",
     "enabled": true
   },
   "ui_settings": {

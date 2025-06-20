@@ -361,7 +361,7 @@ def validate_new_rule(rule_json_str: str):
         # Load existing rules (from sample data for now)
         existing_rules = []
         try:
-            with open("data/sample_rules.json", 'r') as f:
+            with open("extracted_rules.json", 'r') as f:
                 existing_rules = json.load(f)
         except FileNotFoundError:
             pass
@@ -530,14 +530,22 @@ def analyze_impact_only(industry: str = "generic"):
     global rule_response
     try:
         if 'rule_response' not in globals() or not rule_response:
+            print("[analyze_impact_only] No rule response available")
             return "No rule to analyze. Please interact with the chat first.", None, None
+        
+        print(f"[analyze_impact_only] Analyzing rule impact for: {rule_response.get('name', 'Unknown rule')}")
 
         # Get existing rules for validation
         existing_rules = []
         try:
-            with open("data/sample_rules.json", 'r') as f:
+            with open("extracted_rules.json", 'r') as f:
                 existing_rules = json.load(f)
+                print(f"[analyze_impact_only] Successfully loaded {len(existing_rules)} rules from extracted_rules.json")
         except FileNotFoundError:
+            print("[analyze_impact_only] Warning: extracted_rules.json file not found")
+            pass
+        except json.JSONDecodeError as e:
+            print(f"[analyze_impact_only] Error parsing extracted_rules.json: {e}")
             pass
 
         # Use Agent 3 for enhanced conflict detection and impact analysis
@@ -594,7 +602,7 @@ def preview_apply_rule_with_agent3(industry: str = "generic"):
         # Get existing rules for validation
         existing_rules = []
         try:
-            with open("data/sample_rules.json", 'r') as f:
+            with open("extracted_rules.json", 'r') as f:
                 existing_rules = json.load(f)
         except FileNotFoundError:
             pass
@@ -948,7 +956,7 @@ def create_gradio_interface():
                                 # Get existing rules for validation
                                 existing_rules = []
                                 try:
-                                    with open("data/sample_rules.json", 'r') as f:
+                                    with open("extracted_rules.json", 'r') as f:
                                         existing_rules = json.load(f)
                                 except FileNotFoundError:
                                     pass
