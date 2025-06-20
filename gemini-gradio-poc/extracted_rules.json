@@ -1,250 +1,1568 @@
 [
-  [
-    {
-      "rule_id": "BR001",
-      "name": "VIP Customer Discount",
-      "category": "Discount",
-      "description": "Apply 15% discount for VIP customers",
-      "summary": "Applies a 15% discount to VIP customers with order values exceeding 100.",
-      "conditions": [
-        {
-          "field": "Customer status",
-          "operator": "equals",
-          "value": "VIP"
-        },
-        {
-          "field": "order value",
-          "operator": "greater_than",
-          "value": "100"
-        }
-      ],
-      "actions": [
-        {
-          "type": "Apply discount",
-          "details": "Apply 15% discount"
-        }
-      ],
-      "priority": "High",
-      "active": "true"
-    }
-  ],
   {
-    "rule_id": "BR002",
-    "name": "Bulk Order Discount",
-    "category": "Discount",
-    "description": "Apply 10% discount for orders over $500",
-    "summary": "Applies a discount to large orders.",
+    "rule_id": "BR001a",
+    "name": "classify_restaurant_size",
+    "category": "staffing",
+    "description": "Assign employees for small restaurants",
+    "summary": "Assigns 4 employees to small restaurants.",
     "conditions": [
       {
-        "field": "Order value",
-        "operator": "greater_than",
-        "value": "500"
-      }
-    ],
-    "actions": [
-      {
-        "type": "discount",
-        "details": "Apply 10% discount"
-      }
-    ],
-    "priority": "Medium",
-    "active": "true"
-  },
-  {
-    "rule_id": "BR003",
-    "name": "Employee Discount",
-    "category": "Discount",
-    "description": "Apply 20% discount for employees",
-    "summary": "Applies a 20% discount to employees.",
-    "conditions": [
-      {
-        "field": "Customer type",
+        "field": "size",
         "operator": "equals",
-        "value": "Employee"
+        "value": "Small"
       }
     ],
     "actions": [
       {
-        "type": "discount",
-        "details": "Apply 20% discount"
+        "type": "assign_employees",
+        "details": "number_employees = 4"
       }
     ],
     "priority": "High",
-    "active": "true"
+    "active": "TRUE"
   },
-  [
-    {
-      "rule_id": "BR004",
-      "name": "First Time Customer",
-      "category": "Promotion",
-      "description": "Welcome discount for new customers",
-      "summary": "Applies a 5% discount to first-time customers with orders over 50.",
-      "conditions": [
-        {
-          "field": "Customer.first_order",
-          "operator": "equals",
-          "value": "True"
-        },
-        {
-          "field": "order_value",
-          "operator": "greater_than",
-          "value": "50"
-        }
-      ],
-      "actions": [
-        {
-          "type": "discount",
-          "details": "Apply 5% discount"
-        }
-      ],
-      "priority": "Low",
-      "active": "true"
-    }
-  ],
-  [
-    {
-      "rule_id": "BR005",
-      "name": "Weekend Surcharge",
-      "category": "Pricing",
-      "description": "Apply 5% surcharge on weekends",
-      "summary": "Applies a 5% surcharge on weekends.",
-      "conditions": [
-        {
-          "field": "Day of week",
-          "operator": "equals",
-          "value": "Saturday"
-        },
-        {
-          "field": "Day of week",
-          "operator": "equals",
-          "value": "Sunday"
-        }
-      ],
-      "actions": [
-        {
-          "type": "surcharge",
-          "details": "Add 5% surcharge"
-        }
-      ],
-      "priority": "Medium",
-      "active": "true"
-    }
-  ],
-  [
-    {
-      "rule_id": "BR006",
-      "name": "Express Delivery",
-      "category": "Shipping",
-      "description": "Free express delivery for premium customers",
-      "summary": "Provides free express delivery to premium customers when their order value exceeds 200.",
-      "conditions": [
-        {
-          "field": "Customer.tier",
-          "operator": "equals",
-          "value": "Premium"
-        },
-        {
-          "field": "order_value",
-          "operator": "greater_than",
-          "value": "200"
-        }
-      ],
-      "actions": [
-        {
-          "type": "Set shipping",
-          "details": "to free express"
-        }
-      ],
-      "priority": "High",
-      "active": "true"
-    }
-  ],
   {
-    "rule_id": "BR007",
-    "name": "Minimum Order",
-    "category": "Validation",
-    "description": "Minimum order value requirement",
-    "summary": "Rejects orders below a specified minimum value.",
+    "rule_id": "BR001b",
+    "name": "classify_restaurant_size",
+    "category": "staffing",
+    "description": "Assign employees for medium restaurants",
+    "summary": "Assigns 7 employees to medium restaurants.",
     "conditions": [
       {
-        "field": "Order value",
+        "field": "size",
+        "operator": "equals",
+        "value": "Medium"
+      }
+    ],
+    "actions": [
+      {
+        "type": "assign_employees",
+        "details": "number_employees = 7"
+      }
+    ],
+    "priority": "High",
+    "active": "TRUE"
+  },
+  {
+    "rule_id": "BR001c",
+    "name": "classify_restaurant_size",
+    "category": "staffing",
+    "description": "Assign employees for large restaurants",
+    "summary": "Assigns 9 employees to large restaurants.",
+    "conditions": [
+      {
+        "field": "size",
+        "operator": "equals",
+        "value": "Large"
+      }
+    ],
+    "actions": [
+      {
+        "type": "assign_employees",
+        "details": "number_employees = 9"
+      }
+    ],
+    "priority": "High",
+    "active": "TRUE"
+  },
+  {
+    "rule_id": "BR002a",
+    "name": "total_sales_staff_allocation",
+    "category": "total_sales",
+    "description": "Determine employee count based on total sales brackets",
+    "summary": "Assigns 2 employees when min_sales is greater or equal to 0 and max_sales is less than 50.",
+    "conditions": [
+      {
+        "field": "min_sales",
+        "operator": "greater_than_or_equals",
+        "value": "0"
+      },
+      {
+        "field": "max_sales",
+        "operator": "less_than",
+        "value": "50"
+      }
+    ],
+    "actions": [
+      {
+        "type": "assign_employees",
+        "details": "number_employees=2"
+      }
+    ],
+    "priority": "High",
+    "active": "TRUE"
+  },
+  {
+    "rule_id": "BR002b",
+    "name": "total_sales_staff_allocation",
+    "category": "total_sales",
+    "description": "Determine employee count based on total sales brackets",
+    "summary": "Assigns 3 employees when min_sales is greater or equal to 50 and max_sales is less than 100.",
+    "conditions": [
+      {
+        "field": "min_sales",
+        "operator": "greater_than_or_equals",
+        "value": "50"
+      },
+      {
+        "field": "max_sales",
+        "operator": "less_than",
+        "value": "100"
+      }
+    ],
+    "actions": [
+      {
+        "type": "assign_employees",
+        "details": "number_employees=3"
+      }
+    ],
+    "priority": "High",
+    "active": "TRUE"
+  },
+  {
+    "rule_id": "BR002c",
+    "name": "total_sales_staff_allocation",
+    "category": "total_sales",
+    "description": "Determine employee count based on total sales brackets",
+    "summary": "Assigns 4 employees when min_sales is greater or equal to 100 and max_sales is less than 200.",
+    "conditions": [
+      {
+        "field": "min_sales",
+        "operator": "greater_than_or_equals",
+        "value": "100"
+      },
+      {
+        "field": "max_sales",
+        "operator": "less_than",
+        "value": "200"
+      }
+    ],
+    "actions": [
+      {
+        "type": "assign_employees",
+        "details": "number_employees=4"
+      }
+    ],
+    "priority": "High",
+    "active": "TRUE"
+  },
+  {
+    "rule_id": "BR002d",
+    "name": "total_sales_staff_allocation",
+    "category": "total_sales",
+    "description": "Determine employee count based on total sales brackets",
+    "summary": "Assigns 5 employees when min_sales is greater or equal to 200 and max_sales is less than 300.",
+    "conditions": [
+      {
+        "field": "min_sales",
+        "operator": "greater_than_or_equals",
+        "value": "200"
+      },
+      {
+        "field": "max_sales",
+        "operator": "less_than",
+        "value": "300"
+      }
+    ],
+    "actions": [
+      {
+        "type": "assign_employees",
+        "details": "number_employees=5"
+      }
+    ],
+    "priority": "High",
+    "active": "TRUE"
+  },
+  {
+    "rule_id": "BR002e",
+    "name": "total_sales_staff_allocation",
+    "category": "total_sales",
+    "description": "Determine employee count based on total sales brackets",
+    "summary": "Assigns 6 employees when min_sales is greater or equal to 300 and max_sales is less than 600.",
+    "conditions": [
+      {
+        "field": "min_sales",
+        "operator": "greater_than_or_equals",
+        "value": "300"
+      },
+      {
+        "field": "max_sales",
+        "operator": "less_than",
+        "value": "600"
+      }
+    ],
+    "actions": [
+      {
+        "type": "assign_employees",
+        "details": "number_employees=6"
+      }
+    ],
+    "priority": "High",
+    "active": "TRUE"
+  },
+  {
+    "rule_id": "BR002f",
+    "name": "total_sales_staff_allocation",
+    "category": "total_sales",
+    "description": "Determine employee count based on total sales brackets",
+    "summary": "Assigns 7 employees when min_sales is greater or equal to 600 and max_sales is less than 800.",
+    "conditions": [
+      {
+        "field": "min_sales",
+        "operator": "greater_than_or_equals",
+        "value": "600"
+      },
+      {
+        "field": "max_sales",
+        "operator": "less_than",
+        "value": "800"
+      }
+    ],
+    "actions": [
+      {
+        "type": "assign_employees",
+        "details": "number_employees=7"
+      }
+    ],
+    "priority": "High",
+    "active": "TRUE"
+  },
+  {
+    "rule_id": "BR002g",
+    "name": "total_sales_staff_allocation",
+    "category": "total_sales",
+    "description": "Determine employee count based on total sales brackets",
+    "summary": "Assigns 9 employees when min_sales is greater or equal to 800 and max_sales is less than 1000.",
+    "conditions": [
+      {
+        "field": "min_sales",
+        "operator": "greater_than_or_equals",
+        "value": "800"
+      },
+      {
+        "field": "max_sales",
+        "operator": "less_than",
+        "value": "1000"
+      }
+    ],
+    "actions": [
+      {
+        "type": "assign_employees",
+        "details": "number_employees=9"
+      }
+    ],
+    "priority": "High",
+    "active": "TRUE"
+  },
+  {
+    "rule_id": "BR003a",
+    "name": "partial_sales_employee_increase",
+    "category": "partial_sales",
+    "description": "Increase staff based on partial sales thresholds",
+    "summary": "Does not add extra employees when min_sales is greater or equal to 0 and max_sales is less than 5.",
+    "conditions": [
+      {
+        "field": "min_sales",
+        "operator": "greater_than_or_equals",
+        "value": "0"
+      },
+      {
+        "field": "max_sales",
+        "operator": "less_than",
+        "value": "5"
+      }
+    ],
+    "actions": [
+      {
+        "type": "add_employees",
+        "details": "extra_employees=0"
+      }
+    ],
+    "priority": "High",
+    "active": "TRUE"
+  },
+  {
+    "rule_id": "BR003b",
+    "name": "partial_sales_employee_increase",
+    "category": "partial_sales",
+    "description": "Increase staff based on partial sales thresholds",
+    "summary": "Adds 1 extra employee when min_sales is greater or equal to 5 and max_sales is less than 12.",
+    "conditions": [
+      {
+        "field": "min_sales",
+        "operator": "greater_than_or_equals",
+        "value": "5"
+      },
+      {
+        "field": "max_sales",
+        "operator": "less_than",
+        "value": "12"
+      }
+    ],
+    "actions": [
+      {
+        "type": "add_employees",
+        "details": "extra_employees=1"
+      }
+    ],
+    "priority": "High",
+    "active": "TRUE"
+  },
+  {
+    "rule_id": "BR003c",
+    "name": "partial_sales_employee_increase",
+    "category": "partial_sales",
+    "description": "Increase staff based on partial sales thresholds",
+    "summary": "Adds 2 extra employees when min_sales is greater or equal to 12 and max_sales is less than 17.",
+    "conditions": [
+      {
+        "field": "min_sales",
+        "operator": "greater_than_or_equals",
+        "value": "12"
+      },
+      {
+        "field": "max_sales",
+        "operator": "less_than",
+        "value": "17"
+      }
+    ],
+    "actions": [
+      {
+        "type": "add_employees",
+        "details": "extra_employees=2"
+      }
+    ],
+    "priority": "High",
+    "active": "TRUE"
+  },
+  {
+    "rule_id": "BR003d",
+    "name": "partial_sales_employee_increase",
+    "category": "partial_sales",
+    "description": "Increase staff based on partial sales thresholds",
+    "summary": "Adds 3 extra employees when min_sales is greater or equal to 17 and max_sales is less than 20.",
+    "conditions": [
+      {
+        "field": "min_sales",
+        "operator": "greater_than_or_equals",
+        "value": "17"
+      },
+      {
+        "field": "max_sales",
+        "operator": "less_than",
+        "value": "20"
+      }
+    ],
+    "actions": [
+      {
+        "type": "add_employees",
+        "details": "extra_employees=3"
+      }
+    ],
+    "priority": "High",
+    "active": "TRUE"
+  },
+  {
+    "rule_id": "BR003e",
+    "name": "partial_sales_employee_increase",
+    "category": "partial_sales",
+    "description": "Increase staff based on partial sales thresholds",
+    "summary": "Adds 5 extra employees when min_sales is greater or equal to 20 and max_sales is less than 25.",
+    "conditions": [
+      {
+        "field": "min_sales",
+        "operator": "greater_than_or_equals",
+        "value": "20"
+      },
+      {
+        "field": "max_sales",
         "operator": "less_than",
         "value": "25"
       }
     ],
     "actions": [
       {
-        "type": "Reject order",
-        "details": "Reject order with message"
+        "type": "add_employees",
+        "details": "extra_employees=5"
       }
     ],
     "priority": "High",
-    "active": true
+    "active": "TRUE"
   },
   {
-    "rule_id": "BR008",
-    "name": "Late Night Order",
-    "category": "Restriction",
-    "description": "No orders after 11 PM",
-    "summary": "Rejects orders placed after 11 PM.",
+    "rule_id": "BR004",
+    "name": "autoking_employee_adjustment",
+    "category": "autoking",
+    "description": "Adjust staffing depending on Autoking presence",
+    "summary": "Adds 1 extra employee if Autoking is present.",
     "conditions": [
       {
-        "field": "Current time",
-        "operator": "greater_than",
-        "value": "23:00"
-      }
-    ],
-    "actions": [
-      {
-        "type": "Reject order",
-        "details": "Reject order with message"
-      }
-    ],
-    "priority": "Medium",
-    "active": "true"
-  },
-  {
-    "rule_id": "BR009",
-    "name": "Holiday Bonus",
-    "category": "Promotion",
-    "description": "Double loyalty points on holidays",
-    "summary": "This rule doubles loyalty points earned on holidays.",
-    "conditions": [
-      {
-        "field": "Date",
-        "operator": "is",
-        "value": "holiday"
-      }
-    ],
-    "actions": [
-      {
-        "type": "Multiply",
-        "details": "loyalty points by 2"
-      }
-    ],
-    "priority": "Low",
-    "active": "true"
-  },
-  {
-    "rule_id": "BR010",
-    "name": "Student Discount",
-    "category": "Discount",
-    "description": "Student discount with valid ID",
-    "summary": "Applies a 12% discount to students with verified IDs.",
-    "conditions": [
-      {
-        "field": "Customer.student_verified",
+        "field": "autoking",
         "operator": "equals",
         "value": "True"
       }
     ],
     "actions": [
       {
-        "type": "Apply Discount",
-        "details": "Apply 12% discount"
+        "type": "add_employees",
+        "details": "extra_employees=1"
       }
     ],
-    "priority": "Medium",
-    "active": true
+    "priority": "High",
+    "active": "TRUE"
+  },
+  {
+    "rule_id": "BR005a",
+    "name": "extra_restaurants_employee_addition",
+    "category": "extra_restaurants",
+    "description": "Add extra staff to specific restaurant Ids",
+    "summary": "Adds 1 extra employee to specific restaurant IDs (156, 250, 759, 772).",
+    "conditions": [
+      {
+        "field": "restaurant_id",
+        "operator": "equals",
+        "value": "156"
+      },
+      {
+        "field": "restaurant_id",
+        "operator": "equals",
+        "value": "250"
+      },
+      {
+        "field": "restaurant_id",
+        "operator": "equals",
+        "value": "759"
+      },
+      {
+        "field": "restaurant_id",
+        "operator": "equals",
+        "value": "772"
+      }
+    ],
+    "actions": [
+      {
+        "type": "add_employees",
+        "details": "extra_employees=1"
+      }
+    ],
+    "priority": "High",
+    "active": "TRUE"
+  },
+  {
+    "rule_id": "BR005b",
+    "name": "extra_restaurants_employee_addition",
+    "category": "extra_restaurants",
+    "description": "Add extra staff to specific restaurant Ids",
+    "summary": "Adds 2 extra employees to specific restaurant IDs (233, 501, 442, 534).",
+    "conditions": [
+      {
+        "field": "restaurant_id",
+        "operator": "equals",
+        "value": "233"
+      },
+      {
+        "field": "restaurant_id",
+        "operator": "equals",
+        "value": "501"
+      },
+      {
+        "field": "restaurant_id",
+        "operator": "equals",
+        "value": "442"
+      },
+      {
+        "field": "restaurant_id",
+        "operator": "equals",
+        "value": "534"
+      }
+    ],
+    "actions": [
+      {
+        "type": "add_employees",
+        "details": "extra_employees=2"
+      }
+    ],
+    "priority": "High",
+    "active": "TRUE"
+  },
+  {
+    "rule_id": "BR006a",
+    "name": "opening_shift_employee_recommendation",
+    "category": "opening",
+    "description": "Recommend employees for opening shifts based on sales and hours before opening",
+    "summary": "Recommends 1 employee for opening shifts if sales are greater or equal to 1000 and hours_until_opening is between 3 and 2.5.",
+    "conditions": [
+      {
+        "field": "sales",
+        "operator": "greater_than_or_equals",
+        "value": "1000"
+      },
+      {
+        "field": "hours_until_opening",
+        "operator": "between",
+        "value": "3 AND 2.5"
+      }
+    ],
+    "actions": [
+      {
+        "type": "recommend_employees",
+        "details": "number_employees=1"
+      }
+    ],
+    "priority": "High",
+    "active": "TRUE"
+  },
+  {
+    "rule_id": "BR006b",
+    "name": "opening_shift_employee_recommendation",
+    "category": "opening",
+    "description": "Recommend employees for opening shifts based on sales and hours before opening",
+    "summary": "Recommends 1 employee for opening shifts if sales are greater or equal to 1000 and hours_until_opening is between 2.5 and 2.",
+    "conditions": [
+      {
+        "field": "sales",
+        "operator": "greater_than_or_equals",
+        "value": "1000"
+      },
+      {
+        "field": "hours_until_opening",
+        "operator": "between",
+        "value": "2.5 AND 2"
+      }
+    ],
+    "actions": [
+      {
+        "type": "recommend_employees",
+        "details": "number_employees=1"
+      }
+    ],
+    "priority": "High",
+    "active": "TRUE"
+  },
+  {
+    "rule_id": "BR006c",
+    "name": "opening_shift_employee_recommendation",
+    "category": "opening",
+    "description": "Recommend employees for opening shifts based on sales and hours before opening",
+    "summary": "Recommends 2 employees for opening shifts if sales are greater or equal to 1000 and hours_until_opening is between 2 and 1.5.",
+    "conditions": [
+      {
+        "field": "sales",
+        "operator": "greater_than_or_equals",
+        "value": "1000"
+      },
+      {
+        "field": "hours_until_opening",
+        "operator": "between",
+        "value": "2 AND 1.5"
+      }
+    ],
+    "actions": [
+      {
+        "type": "recommend_employees",
+        "details": "number_employees=2"
+      }
+    ],
+    "priority": "High",
+    "active": "TRUE"
+  },
+  {
+    "rule_id": "BR006d",
+    "name": "opening_shift_employee_recommendation",
+    "category": "opening",
+    "description": "Recommend employees for opening shifts based on sales and hours before opening",
+    "summary": "Recommends 2 employees for opening shifts if sales are greater or equal to 1000 and hours_until_opening is between 1.5 and 1.",
+    "conditions": [
+      {
+        "field": "sales",
+        "operator": "greater_than_or_equals",
+        "value": "1000"
+      },
+      {
+        "field": "hours_until_opening",
+        "operator": "between",
+        "value": "1.5 AND 1"
+      }
+    ],
+    "actions": [
+      {
+        "type": "recommend_employees",
+        "details": "number_employees=2"
+      }
+    ],
+    "priority": "High",
+    "active": "TRUE"
+  },
+  {
+    "rule_id": "BR006e",
+    "name": "opening_shift_employee_recommendation",
+    "category": "opening",
+    "description": "Recommend employees for opening shifts based on sales and hours before opening",
+    "summary": "Recommends 2 employees for opening shifts if sales are greater or equal to 1000 and hours_until_opening is between 1 and 0.5.",
+    "conditions": [
+      {
+        "field": "sales",
+        "operator": "greater_than_or_equals",
+        "value": "1000"
+      },
+      {
+        "field": "hours_until_opening",
+        "operator": "between",
+        "value": "1 AND 0.5"
+      }
+    ],
+    "actions": [
+      {
+        "type": "recommend_employees",
+        "details": "number_employees=2"
+      }
+    ],
+    "priority": "High",
+    "active": "TRUE"
+  },
+  {
+    "rule_id": "BR006f",
+    "name": "opening_shift_employee_recommendation",
+    "category": "opening",
+    "description": "Recommend employees for opening shifts based on sales and hours before opening",
+    "summary": "Recommends 3 employees for opening shifts if sales are greater or equal to 1000 and hours_until_opening is between 0.5 and 0.",
+    "conditions": [
+      {
+        "field": "sales",
+        "operator": "greater_than_or_equals",
+        "value": "1000"
+      },
+      {
+        "field": "hours_until_opening",
+        "operator": "between",
+        "value": "0.5 AND 0"
+      }
+    ],
+    "actions": [
+      {
+        "type": "recommend_employees",
+        "details": "number_employees=3"
+      }
+    ],
+    "priority": "High",
+    "active": "TRUE"
+  },
+  {
+    "rule_id": "BR007a",
+    "name": "short_distance_employee_recomendation",
+    "category": "staffing",
+    "description": "Recommend employees depending on the distance based on the size of the restaurant and the opening and closing hours",
+    "summary": "Recommends 1 employee for company 18001 if the distance is short, the size is small, opening hour is 14:00 and closing hour is 15:00",
+    "conditions": [
+      {
+        "field": "company_id",
+        "operator": "equals",
+        "value": "18001"
+      },
+      {
+        "field": "distance",
+        "operator": "equals",
+        "value": "Short"
+      },
+      {
+        "field": "size",
+        "operator": "equals",
+        "value": "Small"
+      },
+      {
+        "field": "opening_hour",
+        "operator": "equals",
+        "value": "14:00"
+      },
+      {
+        "field": "closing_hour",
+        "operator": "equals",
+        "value": "15:00"
+      }
+    ],
+    "actions": [
+      {
+        "type": "recommend_employees",
+        "details": "number_employees=1"
+      }
+    ],
+    "priority": "High",
+    "active": "TRUE"
+  },
+  {
+    "rule_id": "BR007b",
+    "name": "short_distance_employee_recomendation",
+    "category": "staffing",
+    "description": "Recommend employees depending on the distance based on the size of the restaurant and the opening and closing hours",
+    "summary": "Recommends 1 employee if the company ID is 18001, the distance is short, the size is small, the opening hour is 18:00 and the closing hour is 20:00",
+    "conditions": [
+      {
+        "field": "company_id",
+        "operator": "equals",
+        "value": "18001"
+      },
+      {
+        "field": "distance",
+        "operator": "equals",
+        "value": "Short"
+      },
+      {
+        "field": "size",
+        "operator": "equals",
+        "value": "Small"
+      },
+      {
+        "field": "opening_hour",
+        "operator": "equals",
+        "value": "18:00"
+      },
+      {
+        "field": "closing_hour",
+        "operator": "equals",
+        "value": "20:00"
+      }
+    ],
+    "actions": [
+      {
+        "type": "recommend_employees",
+        "details": "number_employees=1"
+      }
+    ],
+    "priority": "High",
+    "active": "TRUE"
+  },
+  {
+    "rule_id": "BR007c",
+    "name": "short_distance_employee_recomendation",
+    "category": "staffing",
+    "description": "Recommend employees depending on the distance based on the size of the restaurant and the opening and closing hours",
+    "summary": "Recommends 2 employees if company id is 18001, distance is short, the size is small, opening hour is 21:00 and closing hour is 22:00.",
+    "conditions": [
+      {
+        "field": "company_id",
+        "operator": "equals",
+        "value": "18001"
+      },
+      {
+        "field": "distance",
+        "operator": "equals",
+        "value": "Short"
+      },
+      {
+        "field": "size",
+        "operator": "equals",
+        "value": "Small"
+      },
+      {
+        "field": "opening_hour",
+        "operator": "equals",
+        "value": "21:00"
+      },
+      {
+        "field": "closing_hour",
+        "operator": "equals",
+        "value": "22:00"
+      }
+    ],
+    "actions": [
+      {
+        "type": "recommend_employees",
+        "details": "number_employees=2"
+      }
+    ],
+    "priority": "High",
+    "active": "TRUE"
+  },
+  {
+    "rule_id": "BR007d",
+    "name": "short_distance_employee_recomendation",
+    "category": "staffing",
+    "description": "Recommend employees depending on the distance based on the size of the restaurant and the opening and closing hours",
+    "summary": "Recommends 1 employee if the company ID is 25002, the distance is short, the size is small, the opening hour is 14:00 and the closing hour is 15:00.",
+    "conditions": [
+      {
+        "field": "company_id",
+        "operator": "equals",
+        "value": "25002"
+      },
+      {
+        "field": "distance",
+        "operator": "equals",
+        "value": "Short"
+      },
+      {
+        "field": "size",
+        "operator": "equals",
+        "value": "Small"
+      },
+      {
+        "field": "opening_hour",
+        "operator": "equals",
+        "value": "14:00"
+      },
+      {
+        "field": "closing_hour",
+        "operator": "equals",
+        "value": "15:00"
+      }
+    ],
+    "actions": [
+      {
+        "type": "recommend_employees",
+        "details": "number_employees=1"
+      }
+    ],
+    "priority": "High",
+    "active": "TRUE"
+  },
+  {
+    "rule_id": "BR007e",
+    "name": "short_distance_employee_recomendation",
+    "category": "staffing",
+    "description": "Recommend employees depending on the distance based on the size of the restaurant and the opening and closing hours",
+    "summary": "Recommends 1 employee if the company ID is 25002, the distance is short, the size is small, the opening hour is 18:00 and the closing hour is 20:00.",
+    "conditions": [
+      {
+        "field": "company_id",
+        "operator": "equals",
+        "value": "25002"
+      },
+      {
+        "field": "distance",
+        "operator": "equals",
+        "value": "Short"
+      },
+      {
+        "field": "size",
+        "operator": "equals",
+        "value": "Small"
+      },
+      {
+        "field": "opening_hour",
+        "operator": "equals",
+        "value": "18:00"
+      },
+      {
+        "field": "closing_hour",
+        "operator": "equals",
+        "value": "20:00"
+      }
+    ],
+    "actions": [
+      {
+        "type": "recommend_employees",
+        "details": "number_employees=1"
+      }
+    ],
+    "priority": "High",
+    "active": "TRUE"
+  },
+  {
+    "rule_id": "BR007f",
+    "name": "short_distance_employee_recomendation",
+    "category": "staffing",
+    "description": "Recommend employees depending on the distance based on the size of the restaurant and the opening and closing hours",
+    "summary": "Recommends 1 employee if the company ID is 25002, the distance is short, the size is small, the opening hour is 21:00 and the closing hour is 22:00.",
+    "conditions": [
+      {
+        "field": "company_id",
+        "operator": "equals",
+        "value": "25002"
+      },
+      {
+        "field": "distance",
+        "operator": "equals",
+        "value": "Short"
+      },
+      {
+        "field": "size",
+        "operator": "equals",
+        "value": "Small"
+      },
+      {
+        "field": "opening_hour",
+        "operator": "equals",
+        "value": "21:00"
+      },
+      {
+        "field": "closing_hour",
+        "operator": "equals",
+        "value": "22:00"
+      }
+    ],
+    "actions": [
+      {
+        "type": "recommend_employees",
+        "details": "number_employees=1"
+      }
+    ],
+    "priority": "High",
+    "active": "TRUE"
+  },
+  {
+    "rule_id": "BR007g",
+    "name": "short_distance_employee_recomendation",
+    "category": "staffing",
+    "description": "Recommend employees depending on the distance based on the size of the restaurant and the opening and closing hours",
+    "summary": "Recommends employees based on distance, restaurant size, and opening/closing hours.",
+    "conditions": [
+      {
+        "field": "company_id",
+        "operator": "equals",
+        "value": "18001"
+      },
+      {
+        "field": "distance",
+        "operator": "equals",
+        "value": "Short"
+      },
+      {
+        "field": "size",
+        "operator": "equals",
+        "value": "Medium"
+      },
+      {
+        "field": "opening_hour",
+        "operator": "equals",
+        "value": "14:00"
+      },
+      {
+        "field": "closing_hour",
+        "operator": "equals",
+        "value": "15:00"
+      }
+    ],
+    "actions": [
+      {
+        "type": "number_employees",
+        "details": "1"
+      }
+    ],
+    "priority": "High",
+    "active": "TRUE"
+  },
+  {
+    "rule_id": "BR007h",
+    "name": "short_distance_employee_recomendation",
+    "category": "staffing",
+    "description": "Recommend employees depending on the distance based on the size of the restaurant and the opening and closing hours",
+    "summary": "Recommends employees based on distance, restaurant size, and opening/closing hours.",
+    "conditions": [
+      {
+        "field": "company_id",
+        "operator": "equals",
+        "value": "18001"
+      },
+      {
+        "field": "distance",
+        "operator": "equals",
+        "value": "Short"
+      },
+      {
+        "field": "size",
+        "operator": "equals",
+        "value": "Medium"
+      },
+      {
+        "field": "opening_hour",
+        "operator": "equals",
+        "value": "18:00"
+      },
+      {
+        "field": "closing_hour",
+        "operator": "equals",
+        "value": "20:00"
+      }
+    ],
+    "actions": [
+      {
+        "type": "number_employees",
+        "details": "2"
+      }
+    ],
+    "priority": "High",
+    "active": "TRUE"
+  },
+  {
+    "rule_id": "BR007i",
+    "name": "short_distance_employee_recomendation",
+    "category": "staffing",
+    "description": "Recommend employees depending on the distance based on the size of the restaurant and the opening and closing hours",
+    "summary": "Recommends employees based on distance, restaurant size, and opening/closing hours.",
+    "conditions": [
+      {
+        "field": "company_id",
+        "operator": "equals",
+        "value": "18001"
+      },
+      {
+        "field": "distance",
+        "operator": "equals",
+        "value": "Short"
+      },
+      {
+        "field": "size",
+        "operator": "equals",
+        "value": "Medium"
+      },
+      {
+        "field": "opening_hour",
+        "operator": "equals",
+        "value": "21:00"
+      },
+      {
+        "field": "closing_hour",
+        "operator": "equals",
+        "value": "22:00"
+      }
+    ],
+    "actions": [
+      {
+        "type": "number_employees",
+        "details": "2"
+      }
+    ],
+    "priority": "High",
+    "active": "TRUE"
+  },
+  {
+    "rule_id": "BR007j",
+    "name": "short_distance_employee_recomendation",
+    "category": "staffing",
+    "description": "Recommend employees depending on the distance based on the size of the restaurant and the opening and closing hours",
+    "summary": "Recommends employees based on distance, restaurant size, and opening/closing hours.",
+    "conditions": [
+      {
+        "field": "company_id",
+        "operator": "equals",
+        "value": "25002"
+      },
+      {
+        "field": "distance",
+        "operator": "equals",
+        "value": "Short"
+      },
+      {
+        "field": "size",
+        "operator": "equals",
+        "value": "Medium"
+      },
+      {
+        "field": "opening_hour",
+        "operator": "equals",
+        "value": "14:00"
+      },
+      {
+        "field": "closing_hour",
+        "operator": "equals",
+        "value": "15:00"
+      }
+    ],
+    "actions": [
+      {
+        "type": "number_employees",
+        "details": "2"
+      }
+    ],
+    "priority": "High",
+    "active": "TRUE"
+  },
+  {
+    "rule_id": "BR007k",
+    "name": "short_distance_employee_recomendation",
+    "category": "staffing",
+    "description": "Recommend employees depending on the distance based on the size of the restaurant and the opening and closing hours",
+    "summary": "Recommends employees based on distance, restaurant size, and opening/closing hours.",
+    "conditions": [
+      {
+        "field": "company_id",
+        "operator": "equals",
+        "value": "25002"
+      },
+      {
+        "field": "distance",
+        "operator": "equals",
+        "value": "Short"
+      },
+      {
+        "field": "size",
+        "operator": "equals",
+        "value": "Medium"
+      },
+      {
+        "field": "opening_hour",
+        "operator": "equals",
+        "value": "18:00"
+      },
+      {
+        "field": "closing_hour",
+        "operator": "equals",
+        "value": "20:00"
+      }
+    ],
+    "actions": [
+      {
+        "type": "number_employees",
+        "details": "2"
+      }
+    ],
+    "priority": "High",
+    "active": "TRUE"
+  },
+  {
+    "rule_id": "BR007l",
+    "name": "short_distance_employee_recomendation",
+    "category": "staffing",
+    "description": "Recommend employees depending on the distance based on the size of the restaurant and the opening and closing hours",
+    "summary": "Recommends employees based on distance, restaurant size, and opening/closing hours.",
+    "conditions": [
+      {
+        "field": "company_id",
+        "operator": "equals",
+        "value": "25002"
+      },
+      {
+        "field": "distance",
+        "operator": "equals",
+        "value": "Short"
+      },
+      {
+        "field": "size",
+        "operator": "equals",
+        "value": "Medium"
+      },
+      {
+        "field": "opening_hour",
+        "operator": "equals",
+        "value": "21:00"
+      },
+      {
+        "field": "closing_hour",
+        "operator": "equals",
+        "value": "22:00"
+      }
+    ],
+    "actions": [
+      {
+        "type": "number_employees",
+        "details": "2"
+      }
+    ],
+    "priority": "High",
+    "active": "TRUE"
+  },
+  {
+    "rule_id": "BR007m",
+    "name": "short_distance_employee_recomendation",
+    "category": "staffing",
+    "description": "Recommend employees depending on the distance based on the size of the restaurant and the opening and closing hours",
+    "summary": "Recommends employees based on distance, restaurant size, and opening/closing hours.",
+    "conditions": [
+      {
+        "field": "company_id",
+        "operator": "equals",
+        "value": "18001"
+      },
+      {
+        "field": "distance",
+        "operator": "equals",
+        "value": "Short"
+      },
+      {
+        "field": "size",
+        "operator": "equals",
+        "value": "Large"
+      },
+      {
+        "field": "opening_hour",
+        "operator": "equals",
+        "value": "14:00"
+      },
+      {
+        "field": "closing_hour",
+        "operator": "equals",
+        "value": "15:00"
+      }
+    ],
+    "actions": [
+      {
+        "type": "number_employees",
+        "details": "2"
+      }
+    ],
+    "priority": "High",
+    "active": "TRUE"
+  },
+  {
+    "rule_id": "BR007n",
+    "name": "short_distance_employee_recomendation",
+    "category": "staffing",
+    "description": "Recommend employees depending on the distance based on the size of the restaurant and the opening and closing hours",
+    "summary": "Recommends employees based on distance, restaurant size, and opening/closing hours.",
+    "conditions": [
+      {
+        "field": "company_id",
+        "operator": "equals",
+        "value": "18001"
+      },
+      {
+        "field": "distance",
+        "operator": "equals",
+        "value": "Short"
+      },
+      {
+        "field": "size",
+        "operator": "equals",
+        "value": "Large"
+      },
+      {
+        "field": "opening_hour",
+        "operator": "equals",
+        "value": "18:00"
+      },
+      {
+        "field": "closing_hour",
+        "operator": "equals",
+        "value": "20:00"
+      }
+    ],
+    "actions": [
+      {
+        "type": "number_employees",
+        "details": "3"
+      }
+    ],
+    "priority": "High",
+    "active": "TRUE"
+  },
+  {
+    "rule_id": "BR007o",
+    "name": "short_distance_employee_recomendation",
+    "category": "staffing",
+    "description": "Recommend employees depending on the distance based on the size of the restaurant and the opening and closing hours",
+    "summary": "Recommends employees based on distance, restaurant size, and opening/closing hours.",
+    "conditions": [
+      {
+        "field": "company_id",
+        "operator": "equals",
+        "value": "18001"
+      },
+      {
+        "field": "distance",
+        "operator": "equals",
+        "value": "Short"
+      },
+      {
+        "field": "size",
+        "operator": "equals",
+        "value": "Large"
+      },
+      {
+        "field": "opening_hour",
+        "operator": "equals",
+        "value": "21:00"
+      },
+      {
+        "field": "closing_hour",
+        "operator": "equals",
+        "value": "22:00"
+      }
+    ],
+    "actions": [
+      {
+        "type": "number_employees",
+        "details": "3"
+      }
+    ],
+    "priority": "High",
+    "active": "TRUE"
+  },
+  {
+    "rule_id": "BR007p",
+    "name": "short_distance_employee_recomendation",
+    "category": "staffing",
+    "description": "Recommend employees depending on the distance based on the size of the restaurant and the opening and closing hours",
+    "summary": "Recommends employees based on distance, restaurant size, and opening/closing hours.",
+    "conditions": [
+      {
+        "field": "company_id",
+        "operator": "equals",
+        "value": "25002"
+      },
+      {
+        "field": "distance",
+        "operator": "equals",
+        "value": "Short"
+      },
+      {
+        "field": "size",
+        "operator": "equals",
+        "value": "Large"
+      },
+      {
+        "field": "opening_hour",
+        "operator": "equals",
+        "value": "14:00"
+      },
+      {
+        "field": "closing_hour",
+        "operator": "equals",
+        "value": "15:00"
+      }
+    ],
+    "actions": [
+      {
+        "type": "number_employees",
+        "details": "2"
+      }
+    ],
+    "priority": "High",
+    "active": "TRUE"
+  },
+  {
+    "rule_id": "BR007q",
+    "name": "short_distance_employee_recomendation",
+    "category": "staffing",
+    "description": "Recommend employees depending on the distance based on the size of the restaurant and the opening and closing hours",
+    "summary": "Recommends employees based on distance, restaurant size, and opening/closing hours.",
+    "conditions": [
+      {
+        "field": "company_id",
+        "operator": "equals",
+        "value": "25002"
+      },
+      {
+        "field": "distance",
+        "operator": "equals",
+        "value": "Short"
+      },
+      {
+        "field": "size",
+        "operator": "equals",
+        "value": "Large"
+      },
+      {
+        "field": "opening_hour",
+        "operator": "equals",
+        "value": "18:00"
+      },
+      {
+        "field": "closing_hour",
+        "operator": "equals",
+        "value": "20:00"
+      }
+    ],
+    "actions": [
+      {
+        "type": "number_employees",
+        "details": "2"
+      }
+    ],
+    "priority": "High",
+    "active": "TRUE"
+  },
+  {
+    "rule_id": "BR007r",
+    "name": "short_distance_employee_recomendation",
+    "category": "staffing",
+    "description": "Recommend employees depending on the distance based on the size of the restaurant and the opening and closing hours",
+    "summary": "Recommends employees based on distance, restaurant size, and opening/closing hours.",
+    "conditions": [
+      {
+        "field": "company_id",
+        "operator": "equals",
+        "value": "25002"
+      },
+      {
+        "field": "distance",
+        "operator": "equals",
+        "value": "Short"
+      },
+      {
+        "field": "size",
+        "operator": "equals",
+        "value": "Large"
+      },
+      {
+        "field": "opening_hour",
+        "operator": "equals",
+        "value": "21:00"
+      },
+      {
+        "field": "closing_hour",
+        "operator": "equals",
+        "value": "22:00"
+      }
+    ],
+    "actions": [
+      {
+        "type": "number_employees",
+        "details": "2"
+      }
+    ],
+    "priority": "High",
+    "active": "TRUE"
+  },
+  {
+    "rule_id": "BR008a",
+    "name": "closing_shift_employee_recommendation",
+    "category": "closing",
+    "description": "Recommend employees for closing shifts based on hours before closing",
+    "summary": "Recommends employees for closing shifts based on the time remaining until closing.",
+    "conditions": [
+      {
+        "field": "hours_until_closing",
+        "operator": "greater_than",
+        "value": "3"
+      },
+      {
+        "field": "hours_until_closing",
+        "operator": "less_than_equals",
+        "value": "2.5"
+      }
+    ],
+    "actions": [
+      {
+        "type": "number_employees",
+        "details": "1"
+      }
+    ],
+    "priority": "High",
+    "active": "TRUE"
+  },
+  {
+    "rule_id": "BR008b",
+    "name": "closing_shift_employee_recommendation",
+    "category": "closing",
+    "description": "Recommend employees for closing shifts based on hours before closing",
+    "summary": "Recommends employees for closing shifts based on the time remaining until closing.",
+    "conditions": [
+      {
+        "field": "hours_until_closing",
+        "operator": "greater_than",
+        "value": "2.5"
+      },
+      {
+        "field": "hours_until_closing",
+        "operator": "less_than_equals",
+        "value": "2"
+      }
+    ],
+    "actions": [
+      {
+        "type": "number_employees",
+        "details": "1"
+      }
+    ],
+    "priority": "High",
+    "active": "TRUE"
+  },
+  {
+    "rule_id": "BR008c",
+    "name": "closing_shift_employee_recommendation",
+    "category": "closing",
+    "description": "Recommend employees for closing shifts based on hours before closing",
+    "summary": "Recommends employees for closing shifts based on the time remaining until closing.",
+    "conditions": [
+      {
+        "field": "hours_until_closing",
+        "operator": "greater_than",
+        "value": "2"
+      },
+      {
+        "field": "hours_until_closing",
+        "operator": "less_than_equals",
+        "value": "1.5"
+      }
+    ],
+    "actions": [
+      {
+        "type": "number_employees",
+        "details": "2"
+      }
+    ],
+    "priority": "High",
+    "active": "TRUE"
+  },
+  {
+    "rule_id": "BR008d",
+    "name": "closing_shift_employee_recommendation",
+    "category": "closing",
+    "description": "Recommend employees for closing shifts based on hours before closing",
+    "summary": "Recommends employees for closing shifts based on the time remaining until closing.",
+    "conditions": [
+      {
+        "field": "hours_until_closing",
+        "operator": "greater_than",
+        "value": "1.5"
+      },
+      {
+        "field": "hours_until_closing",
+        "operator": "less_than_equals",
+        "value": "1"
+      }
+    ],
+    "actions": [
+      {
+        "type": "number_employees",
+        "details": "2"
+      }
+    ],
+    "priority": "High",
+    "active": "TRUE"
+  },
+  {
+    "rule_id": "BR008e",
+    "name": "closing_shift_employee_recommendation",
+    "category": "closing",
+    "description": "Recommend employees for closing shifts based on hours before closing",
+    "summary": "Recommends employees for closing shifts based on the time remaining until closing.",
+    "conditions": [
+      {
+        "field": "hours_until_closing",
+        "operator": "greater_than",
+        "value": "1"
+      },
+      {
+        "field": "hours_until_closing",
+        "operator": "less_than_equals",
+        "value": "0.5"
+      }
+    ],
+    "actions": [
+      {
+        "type": "number_employees",
+        "details": "3"
+      }
+    ],
+    "priority": "High",
+    "active": "TRUE"
+  },
+  {
+    "rule_id": "BR008f",
+    "name": "closing_shift_employee_recommendation",
+    "category": "closing",
+    "description": "Recommend employees for closing shifts based on hours before closing",
+    "summary": "Recommends employees for closing shifts based on the time remaining until closing.",
+    "conditions": [
+      {
+        "field": "hours_until_closing",
+        "operator": "greater_than",
+        "value": "0.5"
+      },
+      {
+        "field": "hours_until_closing",
+        "operator": "less_than_equals",
+        "value": "0"
+      }
+    ],
+    "actions": [
+      {
+        "type": "number_employees",
+        "details": "3"
+      }
+    ],
+    "priority": "High",
+    "active": "TRUE"
   }
 ]
