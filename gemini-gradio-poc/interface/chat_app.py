@@ -452,6 +452,7 @@ def save_current_config(agent1_prompt, agent2_prompt, agent3_prompt, model, gene
             "agent3_settings": {
                 "industry": industry,
                 "enabled": True
+
             },
             "ui_settings": {
                 "default_tab": "Chat & Rule Summary"
@@ -712,6 +713,7 @@ def create_gradio_interface():
     gdst_file = gr.File(label="Download GDST", visible=False)  # Hidden in Enhanced Agent 3 mode
     status_box = gr.Markdown("Click 'Analyze Impact' to see rule analysis summary.")
 
+
     # --- State for RAG DataFrame (must be defined before use) ---
     state_rag_df = gr.State(pd.DataFrame())
 
@@ -865,7 +867,7 @@ def create_gradio_interface():
                             
                             # Always use Enhanced Agent 3 mode
                             response = chat_with_agent3(user_input, history, rag_state_df, industry)
-                            
+
                             # Extract rule information for summary display
                             if 'rule_response' in globals() and rule_response:
                                 name = rule_response.get('name', 'Name will appear here after input.')
@@ -1061,6 +1063,7 @@ def create_gradio_interface():
             return response, name, summary, rag_state_df
         chat_interface.fn = chat_and_update
         chat_interface.additional_inputs = [state_rag_df, industry_selector]
+
         chat_interface.additional_outputs = [name_display, summary_display, state_rag_df]
 
         # Fixed button behavior for Enhanced Agent 3 mode only
@@ -1073,9 +1076,7 @@ def create_gradio_interface():
             outputs=[status_box, drl_file, gdst_file]
         )
         
-        # Since we're always in Enhanced Agent 3 mode, no UI updates needed
-        # Components are visible by default
-        
+
         chat_interface.chatbot.change(
             update_rule_summary,
             outputs=[name_display, summary_display]

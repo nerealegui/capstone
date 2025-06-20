@@ -9,7 +9,7 @@ def extract_rules_from_csv(csv_file_path: str) -> List[Dict[str, Any]]:
     """
     Extract business rules from a CSV file and convert them to structured JSON format.
     Uses a single API call to process all rules at once, with automatic batching for large files.
-    
+
     Args:
         csv_file_path (str): Path to the CSV file containing business rules
         
@@ -18,6 +18,7 @@ def extract_rules_from_csv(csv_file_path: str) -> List[Dict[str, Any]]:
     """
     try:
         # Read CSV file with proper handling of different delimiters
+
         try:
             df = pd.read_csv(csv_file_path)
         except Exception as csv_error:
@@ -30,6 +31,7 @@ def extract_rules_from_csv(csv_file_path: str) -> List[Dict[str, Any]]:
         print(f"Found {len(csv_rules)} rules in CSV file")
         
         # Use LLM to convert all CSV rows to structured JSON format
+
         # For larger files, processing is automatically handled in batches
         max_batch_size = 30
         if len(csv_rules) > max_batch_size:
@@ -46,6 +48,7 @@ def extract_rules_from_csv(csv_file_path: str) -> List[Dict[str, Any]]:
             return all_rules
         else:
             # Process in a single batch if small enough
+
             return _convert_all_csv_rules_to_json(csv_rules)
             structured_rule = _convert_csv_rule_to_json(rule)
             if structured_rule:
