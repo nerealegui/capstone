@@ -856,15 +856,16 @@ def create_gradio_interface():
                     # Left panel: Extracted Rules & RAG Integration
                     with gr.Column(scale=1):
                         gr.Markdown("### Extracted Rules")
-                        # Show extracted rules as a list (name, description)
+                        # Show extracted rules as a list (rule_id, name, description)
                         extracted_rules_list = gr.Dataframe(
-                            headers=["Name", "Description"],
-                            datatype=["str", "str"],
+                            headers=["ID", "Name", "Description"],
+                            datatype=["str", "str", "str"],
                             label="Extracted Rules List",
                             interactive=False,
                             visible=True,
                             row_count=5,
-                            col_count=2
+                            col_count=3,
+                            column_widths=["150px", "300px", "auto"]
                         )
                         # Hidden textbox to store the JSON for KB integration
                         extracted_rules_display = gr.Textbox(
@@ -1079,7 +1080,7 @@ def create_gradio_interface():
                         flat_rules.extend(r)
                     else:
                         flat_rules.append(r)
-                rules_list = [[r.get('name', ''), r.get('description', '')] for r in flat_rules]
+                rules_list = [[r.get('rule_id', ''), r.get('name', ''), r.get('description', '')] for r in flat_rules]
                 rules_json = json.dumps(flat_rules, indent=2)
             except Exception as e:
                 print(f"[DEBUG] Error parsing rules_json: {e}, rules_json: {rules_json}")
