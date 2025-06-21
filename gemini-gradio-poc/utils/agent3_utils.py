@@ -17,11 +17,50 @@ from config.agent_config import (
 )
 from utils.rag_utils import initialize_gemini_client, rag_generate
 from utils.rule_extractor import validate_rule_conflicts
-from utils.rule_versioning import (
-    get_rule_version_history, 
-    get_rule_version_summary, 
-    update_rule_version
-)
+
+# Local replacements for rule_versioning functions
+def get_rule_version_summary(rule_id: str) -> dict:
+    """
+    Stub function to replace rule_versioning.get_rule_version_summary.
+    Returns a default summary with minimal information.
+    """
+    return {
+        "total_versions": 1, 
+        "current_version": "1.0",
+        "created_at": "2025-06-21T00:00:00",
+        "last_modified": "2025-06-21T00:00:00",
+        "change_history": [
+            {
+                "version": "1.0",
+                "change_summary": "Initial version",
+                "drl_generated": False,
+                "timestamp": "2025-06-21T00:00:00"
+            }
+        ]
+    }
+
+def get_rule_version_history(rule_id: str) -> list:
+    """
+    Stub function to replace rule_versioning.get_rule_version_history.
+    Returns a minimal history list.
+    """
+    return [
+        {
+            "version": "1.0",
+            "change_type": "creation",
+            "change_summary": "Initial version",
+            "timestamp": "2025-06-21T00:00:00",
+            "drl_generated": False
+        }
+    ]
+
+def update_rule_version(rule_data: dict, change_type: str = None, 
+                        change_summary: str = None, **kwargs) -> dict:
+    """
+    Stub function to replace rule_versioning.update_rule_version.
+    Simply returns the rule_data without any version updates.
+    """
+    return rule_data
 
 
 def analyze_rule_conflicts(

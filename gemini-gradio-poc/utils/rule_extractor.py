@@ -253,15 +253,10 @@ def save_extracted_rules(rules: List[Dict[str, Any]], output_path: str, update_e
                     for new_rule in rules:
                         rule_id = new_rule.get("rule_id")
                         if rule_id in existing_map:
-                            # Update existing rule with versioning
-                            updated_rule = update_rule_version(
-                                new_rule,
-                                change_type="update",
-                                change_summary="Rule updated via CSV upload"
-                            )
-                            existing_map[rule_id] = updated_rule
+                            # Update existing rule (versioning removed)
+                            existing_map[rule_id] = new_rule
                         else:
-                            # Add new rule (should already have versioning from extraction)
+                            # Add new rule
                             existing_map[rule_id] = new_rule
                     
                     rules_to_save = list(existing_map.values())
