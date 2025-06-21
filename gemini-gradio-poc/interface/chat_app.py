@@ -35,38 +35,50 @@ from utils.config_manager import (
 # New function to build_knowledge_base_process, which calls functions in rag_utils.
 def build_knowledge_base_process(
     uploaded_files: list, 
-    chunk_size: int, 
-    chunk_overlap: int, 
     rag_state_df: pd.DataFrame
 ):
     """
-    Gradio generator for building the knowledge base. Handles UI status updates and delegates core logic to kb_utils.core_build_knowledge_base.
+    Enhanced Gradio generator for building the knowledge base with progress indicators.
+    Handles UI status updates and delegates core logic to kb_utils.core_build_knowledge_base.
     Args:
         uploaded_files (list): List of uploaded file-like objects (must have .name attribute).
-        chunk_size (int): Size of each text chunk.
-        chunk_overlap (int): Overlap between chunks.
         rag_state_df (pd.DataFrame): Existing RAG state DataFrame.
     Yields:
         Tuple[str, pd.DataFrame]: Status message and updated RAG DataFrame.
     """
-    # --- Gradio generator logic ---
-    yield "Processing...", rag_state_df
+    # --- Enhanced Gradio generator logic with progress indicators ---
+    yield "Starting knowledge base build process...", rag_state_df
+    
     if not uploaded_files:
-        yield "Please upload documents first.", rag_state_df if rag_state_df is not None else pd.DataFrame()
+        yield "Please upload documents first to build the knowledge base.", rag_state_df if rag_state_df is not None else pd.DataFrame()
         return
-    if chunk_size is None or chunk_size <= 0 or chunk_overlap is None or chunk_overlap < 0 or chunk_overlap >= chunk_size:
-        yield "Invalid chunk size or overlap. Chunk size > 0, overlap >= 0, overlap < chunk size.", rag_state_df
-        return
+        
     file_paths = [f.name for f in uploaded_files if f and hasattr(f, 'name') and f.name]
     if not file_paths:
-        yield "No valid file paths from upload.", rag_state_df if rag_state_df is not None else pd.DataFrame()
+        yield "No valid file paths found from upload.", rag_state_df if rag_state_df is not None else pd.DataFrame()
         return
-    yield "Reading documents...", rag_state_df
-    yield "Chunking text...", rag_state_df
-    yield f"Embedding chunks...", rag_state_df
+    
+    yield f"Processing {len(file_paths)} document(s)...", rag_state_df
+    yield f"Reading documents and extracting text content...", rag_state_df
+    yield f"Generating embeddings for enhanced search capabilities...", rag_state_df
+    
+    # Use default chunk size and overlap
+    chunk_size = 500
+    chunk_overlap = 50
+    
     # Pass the existing KB DataFrame for merging
     status_message, result_df = core_build_knowledge_base(file_paths, chunk_size, chunk_overlap, existing_kb_df=rag_state_df)
-    yield status_message, result_df
+    
+    # Enhanced status message with timestamp
+    from datetime import datetime
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    
+    if "successfully" in status_message.lower():
+        final_status = f"✓ {status_message}\nLast updated: {timestamp}\nTotal chunks in knowledge base: {len(result_df)}"
+    else:
+        final_status = f"✗ {status_message}\nAttempted at: {timestamp}"
+    
+    yield final_status, result_df
 
 
 def chat_with_rag(user_input: str, history: list, rag_state_df: pd.DataFrame):
@@ -300,7 +312,7 @@ def update_rule_summary():
 
 def extract_rules_from_uploaded_csv(csv_file):
     """
-    Process uploaded CSV file to extract business rules.
+    Enhanced process uploaded CSV file to extract business rules with better status feedback.
     
     Args:
         csv_file: Gradio file upload object
@@ -309,14 +321,14 @@ def extract_rules_from_uploaded_csv(csv_file):
         Tuple[str, str]: Status message and extracted rules JSON as string
     """
     if not csv_file:
-        return "Please upload a CSV file first.", ""
+        return "Please upload a CSV file first to begin rule extraction.", ""
     
     try:
         # Extract rules from CSV
         rules = extract_rules_from_csv(csv_file.name)
         
         if not rules:
-            return "No rules found in the CSV file.", ""
+            return "No business rules found in the CSV file. Please check the file format and content.", ""
         
         # Save extracted rules
         output_path = "extracted_rules.json"
@@ -324,25 +336,25 @@ def extract_rules_from_uploaded_csv(csv_file):
         
         if success:
             rules_json = json.dumps(rules, indent=2)
-            return f"Successfully extracted {len(rules)} rules from CSV.", rules_json
+            return f"✓ Successfully extracted {len(rules)} business rule(s) from CSV file.\nRules saved to: {output_path}\nReview the extracted rules below before adding to knowledge base.", rules_json
         else:
-            return "Error saving extracted rules.", ""
+            return "✗ Error saving extracted rules to file. Please check file permissions.", ""
             
     except Exception as e:
-        return f"Error processing CSV file: {str(e)}", ""
+        return f"✗ Error processing CSV file: {str(e)}\nPlease ensure the CSV file contains valid business rule data.", ""
 
 def validate_new_rule(rule_json_str: str):
     """
-    Validate a new rule against existing rules.
+    Enhanced validation of a new rule against existing rules with detailed feedback.
     
     Args:
         rule_json_str (str): JSON string of the new rule
         
     Returns:
-        str: Validation results
+        str: Validation results with enhanced formatting
     """
     if not rule_json_str.strip():
-        return "Please provide a rule in JSON format."
+        return "Please provide a rule in JSON format to validate.\nUse the templates below for quick rule creation."
     
     try:
         new_rule = json.loads(rule_json_str)
@@ -359,17 +371,21 @@ def validate_new_rule(rule_json_str: str):
         conflicts = validate_rule_conflicts(new_rule, existing_rules)
         
         if conflicts:
-            conflict_messages = []
+            conflict_messages = ["Validation Analysis Results:\n"]
             for conflict in conflicts:
-                conflict_messages.append(f"⚠️ {conflict['type']}: {conflict['message']}")
-            return "Validation Issues Found:\n" + "\n".join(conflict_messages)
+                conflict_messages.append(f"⚠ {conflict['type']}: {conflict['message']}")
+            
+            conflict_messages.append(f"\nSummary: Found {len(conflicts)} potential issue(s) with the proposed rule.")
+            conflict_messages.append("Recommendation: Review and modify the rule to resolve conflicts before implementation.")
+            
+            return "\n".join(conflict_messages)
         else:
-            return ""
+            return f"✓ Validation Successful!\n\nRule Name: {new_rule.get('name', 'Unnamed Rule')}\nCategory: {new_rule.get('category', 'Unknown')}\n\nNo conflicts detected with existing rules.\nThis rule is ready for implementation."
             
     except json.JSONDecodeError as e:
-        return f"❌ Invalid JSON format: {str(e)}"
+        return f"✗ Invalid JSON Format\n\nError Details: {str(e)}\n\nTips:\n- Check for missing quotes, brackets, or commas\n- Use the template buttons below for proper formatting\n- Ensure all strings are properly quoted"
     except Exception as e:
-        return f"❌ Validation error: {str(e)}"
+        return f"✗ Validation Error: {str(e)}\n\nPlease try again or contact support if the issue persists."
 
 def add_rules_to_knowledge_base(rules_json_str: str, rag_state_df: pd.DataFrame):
     """
@@ -383,13 +399,17 @@ def add_rules_to_knowledge_base(rules_json_str: str, rag_state_df: pd.DataFrame)
         Tuple[str, pd.DataFrame]: Status message and updated RAG DataFrame
     """
     if not rules_json_str.strip():
-        return "No rules to add to knowledge base.", rag_state_df
+        return "No rules available to add to knowledge base. Please extract rules first.", rag_state_df
     
     try:
         rules = json.loads(rules_json_str)
         # Defensive: if rules is a list of lists (from DataFrame), error out
         if rules and isinstance(rules, list) and isinstance(rules[0], list):
-            return ("❌ Error: Please use the extracted rules JSON, not the table, for KB integration.", rag_state_df)
+            return ("✗ Error: Please use the extracted rules JSON, not the table, for KB integration.\nMake sure to extract rules from CSV first.", rag_state_df)
+        
+        if not rules:
+            return "No rules found in the provided data.", rag_state_df
+            
         # Convert rules to text for RAG indexing
         rule_texts = []
         for rule in rules:
@@ -405,16 +425,16 @@ Active: {rule.get('active', True)}
         temp_file = "temp_rules.txt"
         with open(temp_file, 'w') as f:
             f.write("\n".join(rule_texts))
-        status_message, result_df = core_build_knowledge_base([temp_file], 300, 50)
+        status_message, result_df = core_build_knowledge_base([temp_file], existing_kb_df=rag_state_df)
         try:
             os.remove(temp_file)
         except:
             pass
-        return f"Successfully added {len(rules)} rules to knowledge base. {status_message}", result_df
+        return f"✓ Successfully added {len(rules)} rule(s) to knowledge base!\nIntegration Status: {status_message}\nRules are now available for enhanced analysis and querying.", result_df
     except json.JSONDecodeError as e:
-        return f"Invalid JSON format: {str(e)}", rag_state_df
+        return f"✗ Invalid JSON format: {str(e)}\nPlease check the rule format and try again.", rag_state_df
     except Exception as e:
-        return f"Error adding rules to knowledge base: {str(e)}", rag_state_df
+        return f"✗ Error adding rules to knowledge base: {str(e)}\nPlease try again or check the system logs.", rag_state_df
 
 # Configuration management functions
 def get_current_config_summary():
@@ -725,68 +745,260 @@ def create_gradio_interface():
     # --- State for RAG DataFrame (must be defined before use) ---
     state_rag_df = gr.State(pd.DataFrame())
 
-    with gr.Blocks(theme=gr.themes.Base(), css="""
-        /* Hide footer and labels */
+    with gr.Blocks(theme=gr.themes.Soft(), css="""
+        /* Enhanced UI Styling */
         footer {visibility: hidden}
-        label[data-testid='block-label'] {visibility: hidden}
+        
+        /* Main container improvements */
+        .gradio-container {
+            max-width: 1400px !important;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* Section styling with cards */
+        .config-section {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        .kb-section {
+            background: linear-gradient(135deg, #fefbff 0%, #f8f4ff 100%);
+            border: 1px solid #e9d5ff;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(139, 92, 246, 0.1);
+        }
+        
+        .rules-section {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        /* Section headers */
+        .section-header {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        /* Button improvements */
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+            border: none !important;
+            color: white !important;
+            font-weight: 500 !important;
+            padding: 12px 24px !important;
+            border-radius: 8px !important;
+            transition: all 0.2s ease !important;
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2) !important;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-1px) !important;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3) !important;
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%) !important;
+            border: none !important;
+            color: white !important;
+            font-weight: 500 !important;
+            padding: 12px 24px !important;
+            border-radius: 8px !important;
+            transition: all 0.2s ease !important;
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+            border: none !important;
+            color: white !important;
+            font-weight: 500 !important;
+            padding: 12px 24px !important;
+            border-radius: 8px !important;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+            border: none !important;
+            color: white !important;
+            font-weight: 500 !important;
+            padding: 12px 24px !important;
+            border-radius: 8px !important;
+        }
+        
+        /* File upload styling */
+        .file-upload {
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.2s ease;
+            background: #f8fafc;
+        }
+        
+        .file-upload:hover {
+            border-color: #3b82f6;
+            background: #f0f9ff;
+        }
+        
+        /* Status indicators */
+        .status-success {
+            color: #059669;
+            background: #d1fae5;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border-left: 4px solid #10b981;
+        }
+        
+        .status-warning {
+            color: #d97706;
+            background: #fef3c7;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border-left: 4px solid #f59e0b;
+        }
+        
+        .status-error {
+            color: #dc2626;
+            background: #fee2e2;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border-left: 4px solid #ef4444;
+        }
+        
+        /* Accordion styling */
+        .gradio-accordion {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+        
+        /* Progress indicators */
+        .progress-container {
+            background: #f1f5f9;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        
+        /* Textbox improvements */
+        .gradio-textbox {
+            border-radius: 8px !important;
+            border: 1px solid #e2e8f0 !important;
+        }
+        
+        .gradio-textbox:focus {
+            border-color: #3b82f6 !important;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+        }
+        
+        /* Code/JSON textbox styling */
+        .code-textbox {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace !important;
+            background: #1e293b !important;
+            color: #e2e8f0 !important;
+            border-radius: 8px !important;
+        }
+        
+        /* Tab styling */
+        .gradio-tab {
+            border-radius: 8px 8px 0 0;
+            padding: 12px 24px;
+            font-weight: 500;
+        }
+        
+        /* Dividers */
+        .section-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #e2e8f0, transparent);
+            margin: 24px 0;
+        }
     """) as demo:
         # --- UI Definition ---
         with gr.Tabs():
             # Tab 1: Configuration
             with gr.Tab("Configuration"):
+                gr.Markdown("""
+                # Business Rules Engine Configuration
+                Configure your knowledge base, upload business rules, and customize agent behavior for optimal rule extraction and analysis.
+                """)
+                
                 with gr.Row():
                     # Knowledge Base Setup Column
-                    with gr.Column(elem_classes=["equal-col", "column-box"], scale=1, min_width=300):
-                        gr.Markdown("### Knowledge Base Setup")
+                    with gr.Column(elem_classes=["kb-section"], scale=1, min_width=300):
+                        gr.HTML('<div class="section-header">Knowledge Base Setup</div>')
+                        
                         with gr.Accordion("Upload Documents & Configure RAG", open=True):
                             document_upload = gr.File(
                                 label="Upload Documents (.docx, .pdf)",
                                 file_count="multiple",
                                 file_types=['.docx', '.pdf'],
-                                height=150
+                                height=120,
+                                elem_classes=["file-upload"]
                             )
-                            chunk_size_input = gr.Number(label="Chunk Size", value=500, precision=0, interactive=True)
-                            chunk_overlap_input = gr.Number(label="Chunk Overlap", value=50, precision=0, interactive=True)
-                            build_kb_button = gr.Button("Build Knowledge Base", variant="primary")
+                            
+                            build_kb_button = gr.Button("Build Knowledge Base", variant="primary", elem_classes=["btn-primary"])
+                            
                             rag_status_display = gr.Textbox(
                                 label="Knowledge Base Status",
-                                value="Knowledge base not built yet.",
-                                interactive=False
+                                value="Knowledge base not built yet. Upload documents and click 'Build Knowledge Base' to get started.",
+                                interactive=False,
+                                lines=2
                             )
                         
-                        gr.Markdown("### Business Rule Upload & Extraction")
+                        gr.HTML('<div class="section-divider"></div>')
+                        
+                        gr.HTML('<div class="section-header">Business Rule Upload & Extraction</div>')
                         with gr.Accordion("Upload Business Rules CSV", open=True):
                             csv_upload = gr.File(
                                 label="Upload Business Rules CSV",
                                 file_types=['.csv'],
-                                height=100
+                                height=100,
+                                elem_classes=["file-upload"]
                             )
-                            extract_button = gr.Button("Extract Rules from CSV", variant="primary")
+                            extract_button = gr.Button("Extract Rules from CSV", variant="primary", elem_classes=["btn-primary"])
                             extraction_status = gr.Textbox(
                                 label="Extraction Status",
-                                value="Upload a CSV file and click 'Extract Rules' to begin.",
-                                interactive=False
+                                value="Upload a CSV file and click 'Extract Rules' to begin automated rule extraction.",
+                                interactive=False,
+                                lines=2
                             )
                     
                     # Agent Config Variables Column
-                    with gr.Column(scale=1):
-                        gr.Markdown("### Agent Configuration")
+                    with gr.Column(elem_classes=["config-section"], scale=1):
+                        gr.HTML('<div class="section-header">Agent Configuration</div>')
                         
                         # Configuration Summary
                         with gr.Accordion("Configuration Summary", open=False):
-                            config_summary = gr.Markdown("Click 'Apply Configuration' to see current settings summary.")
+                            gr.Markdown("View current configuration settings and status.")
+                            config_summary = gr.Markdown("Click 'Show Configuration Summary' to see current settings.")
                             
-                            summary_btn = gr.Button("🔍 Show Configuration Summary", variant="secondary")
+                            summary_btn = gr.Button("Show Configuration Summary", variant="secondary", elem_classes=["btn-secondary"])
                             summary_btn.click(
                                 get_current_config_summary,
                                 outputs=[config_summary]
                             )
                         
                         with gr.Accordion("Configuration Controls", open=True):
+                            gr.Markdown("Save, apply, or reset your configuration changes.")
                             with gr.Row():
-                                save_config_btn = gr.Button("💾 Save Configuration", variant="primary", scale=1)
-                                apply_config_btn = gr.Button("⚡ Apply Configuration", variant="secondary", scale=1)
-                                reset_config_btn = gr.Button("🔄 Reset to Defaults", variant="stop", scale=1)
+                                save_config_btn = gr.Button("Save Changes", variant="primary", elem_classes=["btn-primary"], scale=1)
+                                apply_config_btn = gr.Button("Apply Config", variant="secondary", elem_classes=["btn-secondary"], scale=1)
+                                reset_config_btn = gr.Button("Reset to Defaults", variant="stop", elem_classes=["btn-danger"], scale=1)
                             
                             config_status = gr.Textbox(
                                 label="Configuration Status",
@@ -795,13 +1007,38 @@ def create_gradio_interface():
                                 lines=3
                             )
                         
-                        agent1_prompt_box = gr.Textbox(value=startup_agent1_prompt, label="Agent 1 Prompt", lines=8)
-                        agent2_prompt_box = gr.Textbox(value=startup_agent2_prompt, label="Agent 2 Prompt", lines=4)
+                        gr.HTML('<div class="section-divider"></div>')
                         
-                        # Agent 3 Configuration Section
-                        gr.Markdown("### Agent 3 (Business Rules Management)")
-                        with gr.Accordion("Agent 3 Configuration", open=True):
-                            agent3_prompt_box = gr.Textbox(value=startup_agent3_prompt, label="Agent 3 Prompt", lines=6)
+                        # Agent Prompts with collapsible sections
+                        with gr.Accordion("Agent 1 Prompt (Rule Extraction)", open=False):
+                            gr.Markdown("Configure the prompt for the rule extraction agent.")
+                            agent1_prompt_box = gr.Textbox(
+                                value=startup_agent1_prompt, 
+                                label="Agent 1 Prompt", 
+                                lines=8,
+                                elem_classes=["code-textbox"],
+                                info="This agent extracts business rules from documents"
+                            )
+                        
+                        with gr.Accordion("Agent 2 Prompt (Rule Validation)", open=False):
+                            gr.Markdown("Configure the prompt for the rule validation agent.")
+                            agent2_prompt_box = gr.Textbox(
+                                value=startup_agent2_prompt, 
+                                label="Agent 2 Prompt", 
+                                lines=4,
+                                elem_classes=["code-textbox"],
+                                info="This agent validates and checks rule consistency"
+                            )
+                        
+                        with gr.Accordion("Agent 3 Prompt (Business Rules Management)", open=False):
+                            gr.Markdown("Configure the prompt for the business rules management agent.")
+                            agent3_prompt_box = gr.Textbox(
+                                value=startup_agent3_prompt, 
+                                label="Agent 3 Prompt", 
+                                lines=6,
+                                elem_classes=["code-textbox"],
+                                info="This agent manages business rules and generates Drools files"
+                            )
                             
                             # Industry Selection for Agent 3
                             industry_selector = gr.Dropdown(
@@ -811,15 +1048,34 @@ def create_gradio_interface():
                                 info="Select industry for specialized rule analysis"
                             )
                         
-                        default_model_box = gr.Textbox(value=startup_model, label="Default Model")
-                        generation_config_box = gr.Textbox(value=startup_generation_config, label="Generation Config (JSON)", lines=6)
+                        with gr.Accordion("Model Configuration", open=False):
+                            gr.Markdown("Configure the AI model and generation settings.")
+                            default_model_box = gr.Textbox(
+                                value=startup_model, 
+                                label="Default Model",
+                                info="Specify the AI model to use for processing"
+                            )
+                            generation_config_box = gr.Textbox(
+                                value=startup_generation_config, 
+                                label="Generation Config (JSON)", 
+                                lines=6,
+                                elem_classes=["code-textbox"],
+                                info="JSON configuration for AI model generation parameters"
+                            )
 
             # Tab 2: Business Rules Management
             with gr.Tab("Business Rules"):
+                gr.Markdown("""
+                # Business Rules Management
+                View extracted rules, integrate them into your knowledge base, and validate new business rules.
+                """)
+                
                 with gr.Row():
                     # Left panel: Extracted Rules & RAG Integration
-                    with gr.Column(scale=1):
-                        gr.Markdown("### Extracted Rules")
+                    with gr.Column(elem_classes=["rules-section"], scale=1):
+                        gr.HTML('<div class="section-header">Extracted Rules</div>')
+                        gr.Markdown("View and manage rules extracted from your uploaded CSV files.")
+                        
                         # Show extracted rules as a list (rule_id, name, description)
                         extracted_rules_list = gr.Dataframe(
                             headers=["ID", "Name", "Description"],
@@ -831,6 +1087,7 @@ def create_gradio_interface():
                             col_count=3,
                             column_widths=["150px", "300px", "auto"]
                         )
+                        
                         # Hidden textbox to store the JSON for KB integration
                         extracted_rules_display = gr.Textbox(
                             label="Extracted Rules (JSON)",
@@ -839,36 +1096,27 @@ def create_gradio_interface():
                             interactive=False,
                             visible=False
                         )
-                        add_to_kb_button = gr.Button("Add Rules to Knowledge Base", variant="primary")
+                        
+                        add_to_kb_button = gr.Button("Add Rules to Knowledge Base", variant="primary", elem_classes=["btn-success"])
                         kb_integration_status = gr.Textbox(
                             label="Knowledge Base Integration Status",
-                            interactive=False
+                            value="Extract rules first, then add them to the knowledge base for enhanced analysis.",
+                            interactive=False,
+                            lines=2
                         )
-
+                    
             # Tab 3: Chat & Rule Summary
             with gr.Tab("Chat & Rule Summary"):
+                gr.Markdown("""
+                # Interactive Business Rules Assistant
+                Chat with your AI assistant to create, analyze, and manage business rules with intelligent conflict detection and impact analysis.
+                """)
+                
                 with gr.Row():
                     # Left panel: Chat
-                    with gr.Column(scale=1):
-                        gr.Markdown("# Business Rules Management Assistant")
+                    with gr.Column(elem_classes=["config-section"], scale=1):
+                        gr.HTML('<div class="section-header">Business Rules Management Assistant</div>')
                         gr.Markdown("*Enhanced with conversational interaction, conflict detection, and impact analysis*")
-                        
-                        # Agent 3 Capabilities - always visible in Enhanced mode
-                        agent3_capabilities_accordion = gr.Accordion("Agent Capabilities", open=False, visible=True)
-                        with agent3_capabilities_accordion:
-                            gr.Markdown("""
-                            **What the agent can help you with:**
-                            - 🔍 **Rule Creation**: "Create a rule for 10% discount on orders over $100"
-                            - ⚠️ **Conflict Detection**: "Check for conflicts with this rule"
-                            - 📊 **Impact Analysis**: "What's the impact of changing our pricing rule?"
-                            - 🤝 **Conversational Support**: Ask questions in natural language
-                            - 🏭 **Industry Adaptation**: Specialized analysis for different industries
-                            
-                            **Example queries:**
-                            - "What happens if I modify the employee scheduling rule?"
-                            - "Are there any conflicts with my new discount policy?"
-                            - "Create a rule for restaurant peak hour staffing"
-                            """)
                         
                         def chat_and_update_agent3(user_input, history, rag_state_df, industry):
                             global rule_response
@@ -898,33 +1146,37 @@ def create_gradio_interface():
                         )
                     
                     # Right panel: Rule Summary with Agent 3 enhancements
-                    with gr.Column(scale=1):
-                        gr.Markdown("# Rule Summary & Generation")
+                    with gr.Column(elem_classes=["rules-section"], scale=1):
+                        gr.HTML('<div class="section-header">📊 Rule Summary & Generation</div>')
                         name_display.render()
                         summary_display.render()
                         
                         # Fixed button for Enhanced Agent 3 mode only
-                        action_button = gr.Button("Analyze Impact", variant="primary")
+                        action_button = gr.Button("📈 Analyze Impact", variant="primary", elem_classes=["btn-primary"])
                         
                         status_box.render()
                         drl_file.render()
                         gdst_file.render()
                         
                         # Agent 3 Decision Support - always visible in Enhanced mode
-                        decision_support_accordion = gr.Accordion("Decision Support", open=False, visible=True)
+                        decision_support_accordion = gr.Accordion("🎯 Decision Support", open=False, visible=True)
                         with decision_support_accordion:
+                            gr.Markdown("Make decisions about rule generation and processing.")
                             decision_input = gr.Textbox(
-                                label="Your Decision",
+                                label="💭 Your Decision",
                                 placeholder="Type 'proceed', 'modify', or 'cancel'",
-                                interactive=True
+                                interactive=True,
+                                info="Enter your decision to proceed with rule processing"
                             )
-                            decision_button = gr.Button("Submit Decision", variant="secondary")
+                            decision_button = gr.Button("📤 Submit Decision", variant="secondary", elem_classes=["btn-secondary"])
                             decision_output = gr.Textbox(
-                                label="Orchestration Result",
-                                interactive=False
+                                label="🔄 Orchestration Result",
+                                value="Make a decision above to see orchestration results.",
+                                interactive=False,
+                                lines=3
                             )
-                            decision_drl_file = gr.File(label="Download Generated DRL")
-                            decision_gdst_file = gr.File(label="Download Generated GDST")
+                            decision_drl_file = gr.File(label="📄 Download Generated DRL")
+                            decision_gdst_file = gr.File(label="📊 Download Generated GDST")
                             
                             def handle_decision(decision, industry):
                                 """
@@ -1015,7 +1267,7 @@ def create_gradio_interface():
         # --- Event Actions (must be inside Blocks context) ---
         build_kb_button.click(
             build_knowledge_base_process,
-            inputs=[document_upload, chunk_size_input, chunk_overlap_input, state_rag_df],
+            inputs=[document_upload, state_rag_df],
             outputs=[rag_status_display, state_rag_df]
         )
 
