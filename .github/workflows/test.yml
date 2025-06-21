@@ -27,34 +27,57 @@ jobs:
         pip install -r requirements.txt
         pip install pytest
     
-    - name: Run individual tests
-      id: run_tests
+    - name: Run test_agent2.py
+      id: test_agent2
+      continue-on-error: true
       run: |
         cd gemini-gradio-poc
-        
-        echo "::group::Running test_agent2.py"
-        python -m pytest tests/test_agent2.py -v || echo "test_agent2=failed" >> $GITHUB_OUTPUT
-        echo "::endgroup::"
-        
-        echo "::group::Running test_agent3.py"
-        python -m pytest tests/test_agent3.py -v || echo "test_agent3=failed" >> $GITHUB_OUTPUT
-        echo "::endgroup::"
-        
-        echo "::group::Running test_build_kb.py"
-        python -m pytest tests/test_build_kb.py -v || echo "test_build_kb=failed" >> $GITHUB_OUTPUT
-        echo "::endgroup::"
-        
-        echo "::group::Running test_config_manager.py"
-        python -m pytest tests/test_config_manager.py -v || echo "test_config_manager=failed" >> $GITHUB_OUTPUT
-        echo "::endgroup::"
-        
-        echo "::group::Running test_json_response_handler.py"
-        python -m pytest tests/test_json_response_handler.py -v || echo "test_json_response_handler=failed" >> $GITHUB_OUTPUT
-        echo "::endgroup::"
-        
-        echo "::group::Running test_rule_extractor.py"
-        python -m pytest tests/test_rule_extractor.py -v || echo "test_rule_extractor=failed" >> $GITHUB_OUTPUT
-        echo "::endgroup::"
+        python -m pytest tests/test_agent2.py -v
+      env:
+        GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+    
+    - name: Run test_agent3.py  
+      id: test_agent3
+      continue-on-error: true
+      run: |
+        cd gemini-gradio-poc
+        python -m pytest tests/test_agent3.py -v
+      env:
+        GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+    
+    - name: Run test_build_kb.py
+      id: test_build_kb
+      continue-on-error: true
+      run: |
+        cd gemini-gradio-poc
+        python -m pytest tests/test_build_kb.py -v
+      env:
+        GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+    
+    - name: Run test_config_manager.py
+      id: test_config_manager
+      continue-on-error: true
+      run: |
+        cd gemini-gradio-poc
+        python -m pytest tests/test_config_manager.py -v
+      env:
+        GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+    
+    - name: Run test_json_response_handler.py
+      id: test_json_response_handler
+      continue-on-error: true
+      run: |
+        cd gemini-gradio-poc
+        python -m pytest tests/test_json_response_handler.py -v
+      env:
+        GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+    
+    - name: Run test_rule_extractor.py
+      id: test_rule_extractor
+      continue-on-error: true
+      run: |
+        cd gemini-gradio-poc
+        python -m pytest tests/test_rule_extractor.py -v
       env:
         GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
     
@@ -70,14 +93,15 @@ jobs:
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         script: |
+          // Initialize array to track failing tests
           const failing = [];
           
-          if ('${{ steps.run_tests.outputs.test_agent2 }}' === 'failed') failing.push('test_agent2.py');
-          if ('${{ steps.run_tests.outputs.test_agent3 }}' === 'failed') failing.push('test_agent3.py');
-          if ('${{ steps.run_tests.outputs.test_build_kb }}' === 'failed') failing.push('test_build_kb.py');
-          if ('${{ steps.run_tests.outputs.test_config_manager }}' === 'failed') failing.push('test_config_manager.py');
-          if ('${{ steps.run_tests.outputs.test_json_response_handler }}' === 'failed') failing.push('test_json_response_handler.py');
-          if ('${{ steps.run_tests.outputs.test_rule_extractor }}' === 'failed') failing.push('test_rule_extractor.py');
+          if ('${{ steps.test_agent2.outcome }}' !== 'success') failing.push('test_agent2.py');
+          if ('${{ steps.test_agent3.outcome }}' !== 'success') failing.push('test_agent3.py');
+          if ('${{ steps.test_build_kb.outcome }}' !== 'success') failing.push('test_build_kb.py');
+          if ('${{ steps.test_config_manager.outcome }}' !== 'success') failing.push('test_config_manager.py');
+          if ('${{ steps.test_json_response_handler.outcome }}' !== 'success') failing.push('test_json_response_handler.py');
+          if ('${{ steps.test_rule_extractor.outcome }}' !== 'success') failing.push('test_rule_extractor.py');
           
           let body = '';
           
