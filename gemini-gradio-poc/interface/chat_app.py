@@ -795,137 +795,18 @@ def create_gradio_interface():
             gap: 8px;
         }
         
-        /* Button improvements */
-        .btn-primary {
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
-            border: none !important;
-            color: white !important;
-            font-weight: 500 !important;
-            padding: 12px 24px !important;
-            border-radius: 8px !important;
-            transition: all 0.2s ease !important;
-            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2) !important;
+        /* Octicon styling */
+        .octicon {
+            width: 20px;
+            height: 20px;
         }
-        
-        .btn-primary:hover {
-            transform: translateY(-1px) !important;
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3) !important;
+
+        /* Blue Color Palette */
+        .blue-4 .octicon {
+            fill: #218bff !important;
         }
-        
-        .btn-secondary {
-            background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%) !important;
-            border: none !important;
-            color: white !important;
-            font-weight: 500 !important;
-            padding: 12px 24px !important;
-            border-radius: 8px !important;
-            transition: all 0.2s ease !important;
-        }
-        
-        .btn-success {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
-            border: none !important;
-            color: white !important;
-            font-weight: 500 !important;
-            padding: 12px 24px !important;
-            border-radius: 8px !important;
-        }
-        
-        .btn-danger {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
-            border: none !important;
-            color: white !important;
-            font-weight: 500 !important;
-            padding: 12px 24px !important;
-            border-radius: 8px !important;
-        }
-        
-        /* File upload styling */
-        .file-upload {
-            border: 2px dashed #cbd5e1;
-            border-radius: 12px;
-            padding: 20px;
-            text-align: center;
-            transition: all 0.2s ease;
-            background: #f8fafc;
-        }
-        
-        .file-upload:hover {
-            border-color: #3b82f6;
-            background: #f0f9ff;
-        }
-        
-        /* Status indicators */
-        .status-success {
-            color: #059669;
-            background: #d1fae5;
-            padding: 8px 12px;
-            border-radius: 6px;
-            border-left: 4px solid #10b981;
-        }
-        
-        .status-warning {
-            color: #d97706;
-            background: #fef3c7;
-            padding: 8px 12px;
-            border-radius: 6px;
-            border-left: 4px solid #f59e0b;
-        }
-        
-        .status-error {
-            color: #dc2626;
-            background: #fee2e2;
-            padding: 8px 12px;
-            border-radius: 6px;
-            border-left: 4px solid #ef4444;
-        }
-        
-        /* Accordion styling */
-        .gradio-accordion {
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            margin-bottom: 16px;
-        }
-        
-        /* Progress indicators */
-        .progress-container {
-            background: #f1f5f9;
-            border-radius: 8px;
-            padding: 16px;
-            margin: 16px 0;
-        }
-        
-        /* Textbox improvements */
-        .gradio-textbox {
-            border-radius: 8px !important;
-            border: 1px solid #e2e8f0 !important;
-        }
-        
-        .gradio-textbox:focus {
-            border-color: #3b82f6 !important;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
-        }
-        
-        /* Code/JSON textbox styling */
-        .code-textbox {
-            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace !important;
-            background: #1e293b !important;
-            color: #e2e8f0 !important;
-            border-radius: 8px !important;
-        }
-        
-        /* Tab styling */
-        .gradio-tab {
-            border-radius: 8px 8px 0 0;
-            padding: 12px 24px;
-            font-weight: 500;
-        }
-        
-        /* Dividers */
-        .section-divider {
-            height: 1px;
-            background: linear-gradient(90deg, transparent, #e2e8f0, transparent);
-            margin: 24px 0;
+        .blue-5 .octicon {
+            fill: #0969da !important;
         }
     """) as demo:
         # --- UI Definition ---
@@ -940,7 +821,7 @@ def create_gradio_interface():
                 with gr.Row():
                     # Knowledge Base Setup Column
                     with gr.Column(elem_classes=["kb-section"], scale=1, min_width=300):
-                        gr.HTML('<div class="section-header">Knowledge Base Setup</div>')
+                        gr.HTML('<div class="section-header blue-4"><svg class="octicon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M8 0a8 8 0 1 0 8 8A8 8 0 0 0 8 0zm0 15A7 7 0 1 1 15 8a7 7 0 0 1-7 7z"></path><path d="M8 4a1 1 0 1 0 1 1 1 1 0 0 0-1-1zm1 3H7v4h2z"></path></svg> Knowledge Base Setup</div>')
                         
                         with gr.Accordion("Upload Documents & Configure RAG", open=True):
                             document_upload = gr.File(
@@ -962,7 +843,7 @@ def create_gradio_interface():
                         
                         gr.HTML('<div class="section-divider"></div>')
                         
-                        gr.HTML('<div class="section-header">Business Rule Upload & Extraction</div>')
+                        gr.HTML('<div class="section-header blue-5"><svg class="octicon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M8 0a8 8 0 1 0 8 8A8 8 0 0 0 8 0zm0 15A7 7 0 1 1 15 8a7 7 0 0 1-7 7z"></path><path d="M8 4a1 1 0 1 0 1 1 1 1 0 0 0-1-1zm1 3H7v4h2z"></path></svg> Business Rule Upload & Extraction</div>')
                         with gr.Accordion("Upload Business Rules CSV", open=True):
                             csv_upload = gr.File(
                                 label="Upload Business Rules CSV",
@@ -1147,12 +1028,12 @@ def create_gradio_interface():
                     
                     # Right panel: Rule Summary with Agent 3 enhancements
                     with gr.Column(elem_classes=["rules-section"], scale=1):
-                        gr.HTML('<div class="section-header">📊 Rule Summary & Generation</div>')
+                        gr.HTML('<div class="section-header">Rule Summary & Generation</div>')
                         name_display.render()
                         summary_display.render()
                         
                         # Fixed button for Enhanced Agent 3 mode only
-                        action_button = gr.Button("📈 Analyze Impact", variant="primary", elem_classes=["btn-primary"])
+                        action_button = gr.Button("Analyze Impact", variant="primary", elem_classes=["btn-primary"])
                         
                         status_box.render()
                         drl_file.render()
