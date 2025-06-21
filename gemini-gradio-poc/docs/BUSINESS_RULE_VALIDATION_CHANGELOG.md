@@ -10,7 +10,7 @@ Implementation of business rule validation improvements as requested in issue #1
   - Added 10 sample business rules covering various categories (Discount, Promotion, Pricing, Shipping, Validation, Restriction)
   - Includes fields: rule_id, rule_name, category, description, condition, action, priority, active
 
-- **File**: `data/sample_rules.json`
+- **File**: `extracted_rules.json`
   - Added structured JSON format examples for 3 business rules
   - Shows the target format for rule extraction and processing
 
@@ -85,7 +85,7 @@ Implementation of business rule validation improvements as requested in issue #1
 
 ## Files Modified/Added
 - ✅ `data/sample_business_rules.csv` (NEW)
-- ✅ `data/sample_rules.json` (NEW)  
+- ✅ `extracted_rules.json` (NEW)  
 - ✅ `utils/rule_extractor.py` (NEW)
 - ✅ `tests/test_rule_extractor.py` (NEW)
 - ✅ `interface/chat_app.py` (MODIFIED)

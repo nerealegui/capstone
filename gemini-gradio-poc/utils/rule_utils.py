@@ -7,7 +7,7 @@ from utils.rag_utils import initialize_gemini_client
 from utils.rule_versioning import update_rule_version
 import re  # Add the regex module
 
-def json_to_drl_gdst(json_data, update_rule_version_info=True, rule_storage_path="data/rules"):
+def json_to_drl_gdst(json_data,update_rule_version_info=True, rule_storage_path="data/rules"):
     """
     Uses Google Gen AI to translate JSON to DRL and GDST file contents.
     Updates the original JSON rule with versioning information when DRL/GDST is generated.

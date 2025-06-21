@@ -362,7 +362,7 @@ def validate_new_rule(rule_json_str: str):
         # Load existing rules (from sample data for now)
         existing_rules = []
         try:
-            with open("data/sample_rules.json", 'r') as f:
+            with open("extracted_rules.json", 'r') as f:
                 existing_rules = json.load(f)
         except FileNotFoundError:
             pass
@@ -536,7 +536,7 @@ def analyze_impact_only(industry: str = "generic"):
         # Get existing rules for validation
         existing_rules = []
         try:
-            with open("data/sample_rules.json", 'r') as f:
+            with open("extracted_rules.json", 'r') as f:
                 existing_rules = json.load(f)
         except FileNotFoundError:
             pass
@@ -594,7 +594,7 @@ def preview_apply_rule_with_agent3(industry: str = "generic"):
         # Get existing rules for validation
         existing_rules = []
         try:
-            with open("data/sample_rules.json", 'r') as f:
+            with open("extracted_rules.json", 'r') as f:
                 existing_rules = json.load(f)
         except FileNotFoundError:
             pass
@@ -958,7 +958,7 @@ def create_gradio_interface():
                                 # Get existing rules for validation
                                 existing_rules = []
                                 try:
-                                    with open("data/sample_rules.json", 'r') as f:
+                                    with open("extracted_rules.json", 'r') as f:
                                         existing_rules = json.load(f)
                                 except FileNotFoundError:
                                     pass
