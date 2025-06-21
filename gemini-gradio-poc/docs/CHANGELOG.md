@@ -2,6 +2,22 @@
 
 # Changelog
 
+## [2025-06-21] - Removed Rule Versioning References
+
+### Removed
+- **Rule Versioning References**: Removed all references to rule versioning module from rule_utils.py, agent3_utils.py, and rule_extractor.py
+- **Simplified JSON to DRL/GDST Generation**: Modified json_to_drl_gdst function to remove dependency on versioning system
+- **Removed Helper Functions**: Removed _update_rule_json_with_drl_generation, _update_rule_in_file, and load_rule_with_version_info functions
+
+### Added
+- **Stub Functions**: Added local stub implementations of versioning functions in agent3_utils.py to maintain API compatibility
+
+### Technical Details
+- Removed imports of rule_versioning module across multiple files
+- Simplified function parameters and removed versioning-related code blocks
+- Streamlined rule generation process without version tracking
+- Fixed ModuleNotFoundError caused by missing rule_versioning module
+
 ## [2025-06-15] - Added Audio Guide and Documentation Updates
 
 ### Added

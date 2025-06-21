@@ -24,6 +24,7 @@ from utils.agent3_utils import (
 )
 from utils.config_manager import (
     get_default_config,
+    reload_prompts_from_defaults,
     save_config,
     load_config,
     apply_config_to_runtime,
@@ -361,7 +362,7 @@ def validate_new_rule(rule_json_str: str):
         # Load existing rules (from sample data for now)
         existing_rules = []
         try:
-            with open("data/sample_rules.json", 'r') as f:
+            with open("extracted_rules.json", 'r') as f:
                 existing_rules = json.load(f)
         except FileNotFoundError:
             pass
@@ -375,7 +376,7 @@ def validate_new_rule(rule_json_str: str):
                 conflict_messages.append(f"⚠️ {conflict['type']}: {conflict['message']}")
             return "Validation Issues Found:\n" + "\n".join(conflict_messages)
         else:
-            return "✅ Rule validation passed. No conflicts detected."
+            return ""
             
     except json.JSONDecodeError as e:
         return f"❌ Invalid JSON format: {str(e)}"
@@ -436,7 +437,7 @@ def get_current_config_summary():
     except Exception as e:
         return f"Error loading configuration: {str(e)}"
 
-def save_current_config(agent1_prompt, agent2_prompt, agent3_prompt, model, generation_config_str, industry, chat_mode, agent3_enabled):
+def save_current_config(agent1_prompt, agent2_prompt, agent3_prompt, model, generation_config_str, industry):
     """Save the current configuration values."""
     try:
         # Parse generation config
@@ -458,8 +459,7 @@ def save_current_config(agent1_prompt, agent2_prompt, agent3_prompt, model, gene
             },
             "agent3_settings": {
                 "industry": industry,
-                "chat_mode": chat_mode,
-                "enabled": agent3_enabled
+                "enabled":True
             },
             "ui_settings": {
                 "default_tab": "Chat & Rule Summary"
@@ -486,8 +486,6 @@ def apply_saved_config():
             config["model_config"]["default_model"],
             json.dumps(config["model_config"]["generation_config"], indent=2),
             config["agent3_settings"]["industry"],
-            config["agent3_settings"]["chat_mode"],
-            config["agent3_settings"]["enabled"],
             "✅ Configuration applied successfully!"
         )
     except Exception as e:
@@ -500,8 +498,6 @@ def apply_saved_config():
             default_config["model_config"]["default_model"],
             json.dumps(default_config["model_config"]["generation_config"], indent=2),
             default_config["agent3_settings"]["industry"],
-            default_config["agent3_settings"]["chat_mode"],
-            default_config["agent3_settings"]["enabled"],
             f"❌ Error applying configuration: {str(e)}"
         )
 
@@ -513,20 +509,18 @@ def reset_configuration():
             default_config = get_default_config()
             apply_config_to_runtime(default_config)
             return (
-                f"✅ Configuration reset to defaults! {message}",
                 default_config["agent_prompts"]["agent1"],
                 default_config["agent_prompts"]["agent2"],
                 default_config["agent_prompts"]["agent3"],
                 default_config["model_config"]["default_model"],
                 json.dumps(default_config["model_config"]["generation_config"], indent=2),
                 default_config["agent3_settings"]["industry"],
-                default_config["agent3_settings"]["chat_mode"],
-                default_config["agent3_settings"]["enabled"]
+                f"✅ Configuration reset to defaults! {message}"
             )
         else:
-            return f"❌ Failed to reset configuration: {message}", "", "", "", "", "", "", "", False
+            return f"❌ Failed to reset configuration: {message}", "", "", "", "", ""
     except Exception as e:
-        return f"❌ Error resetting configuration: {str(e)}", "", "", "", "", "", "", "", False
+        return f"❌ Error resetting configuration: {str(e)}", "", "", "", "", ""
 
 def analyze_impact_only(industry: str = "generic"):
     """
@@ -542,7 +536,7 @@ def analyze_impact_only(industry: str = "generic"):
         # Get existing rules for validation
         existing_rules = []
         try:
-            with open("data/sample_rules.json", 'r') as f:
+            with open("extracted_rules.json", 'r') as f:
                 existing_rules = json.load(f)
         except FileNotFoundError:
             pass
@@ -576,8 +570,7 @@ def analyze_impact_only(industry: str = "generic"):
 
         # If no conflicts, show positive impact analysis
         success_message = (
-            "✅ No Conflicts Detected by Agent 3!\n\n" +
-            f"📊 Impact Analysis Summary:\n{json.dumps(impact_analysis, indent=2)}\n\n" +
+            ##f"📊 Impact Analysis Summary:\n{json.dumps(impact_analysis, indent=2)}\n\n" +
             f"📈 Detailed Analysis:\n{conflict_analysis}\n\n" +
             "Rule is ready for implementation. Use the Decision Support section below to proceed."
         )
@@ -601,7 +594,7 @@ def preview_apply_rule_with_agent3(industry: str = "generic"):
         # Get existing rules for validation
         existing_rules = []
         try:
-            with open("data/sample_rules.json", 'r') as f:
+            with open("extracted_rules.json", 'r') as f:
                 existing_rules = json.load(f)
         except FileNotFoundError:
             pass
@@ -708,6 +701,16 @@ def initialize_gemini_client():
 def create_gradio_interface():
     """Create and return the Gradio interface for the Gemini Chat Application with two tabs: Configuration and Chat/Rule Summary."""
 
+    # Reload prompts from defaults on startup
+    try:
+        success, reload_msg = reload_prompts_from_defaults()
+        if success:
+            print(f"Prompts reloaded successfully: {reload_msg}")
+        else:
+            print(f"Warning: Failed to reload prompts: {reload_msg}")
+    except Exception as e:
+        print(f"Error reloading prompts on startup: {e}")
+    
     # Load saved configuration on startup
     try:
         startup_config, startup_msg = load_config()
@@ -723,14 +726,12 @@ def create_gradio_interface():
     startup_model = startup_config["model_config"]["default_model"]
     startup_generation_config = json.dumps(startup_config["model_config"]["generation_config"], indent=2)
     startup_industry = startup_config["agent3_settings"]["industry"]
-    startup_chat_mode = startup_config["agent3_settings"]["chat_mode"]
-    startup_agent3_enabled = startup_config["agent3_settings"]["enabled"]
 
     # Shared components
     name_display = gr.Textbox(value="Name will appear here after input.", label="Name")
     summary_display = gr.Textbox(value="Summary will appear here after input.", label="Summary")
-    drl_file = gr.File(label="Download DRL", visible=True)
-    gdst_file = gr.File(label="Download GDST", visible=True)
+    drl_file = gr.File(label="Download DRL", visible=False)  # Hidden in Enhanced Agent 3 mode
+    gdst_file = gr.File(label="Download GDST", visible=False)  # Hidden in Enhanced Agent 3 mode
     status_box = gr.Textbox(label="Status")
 
     # --- State for RAG DataFrame (must be defined before use) ---
@@ -781,7 +782,7 @@ def create_gradio_interface():
                     
                     # Agent Config Variables Column
                     with gr.Column(scale=1):
-                        gr.Markdown("# Agent Configuration")
+                        gr.Markdown("### Agent Configuration")
                         
                         # Configuration Summary
                         with gr.Accordion("Configuration Summary", open=False):
@@ -821,21 +822,6 @@ def create_gradio_interface():
                                 label="Industry Context",
                                 info="Select industry for specialized rule analysis"
                             )
-                            
-                            # Agent 3 Mode Toggle
-                            agent3_mode = gr.Radio(
-                                choices=["Standard Chat", "Enhanced Agent 3"],
-                                value=startup_chat_mode,
-                                label="Chat Mode",
-                                info="Enhanced mode includes conflict detection and impact analysis"
-                            )
-                            
-                            # Agent 3 Enabled Toggle
-                            agent3_enabled = gr.Checkbox(
-                                value=startup_agent3_enabled,
-                                label="Enable Agent 3 Features",
-                                info="Toggle Agent 3 enhanced capabilities"
-                            )
                         
                         default_model_box = gr.Textbox(value=startup_model, label="Default Model")
                         generation_config_box = gr.Textbox(value=startup_generation_config, label="Generation Config (JSON)", lines=6)
@@ -846,15 +832,16 @@ def create_gradio_interface():
                     # Left panel: Extracted Rules & RAG Integration
                     with gr.Column(scale=1):
                         gr.Markdown("### Extracted Rules")
-                        # Show extracted rules as a list (name, description)
+                        # Show extracted rules as a list (rule_id, name, description)
                         extracted_rules_list = gr.Dataframe(
-                            headers=["Name", "Description"],
-                            datatype=["str", "str"],
+                            headers=["ID", "Name", "Description"],
+                            datatype=["str", "str", "str"],
                             label="Extracted Rules List",
                             interactive=False,
                             visible=True,
                             row_count=5,
-                            col_count=2
+                            col_count=3,
+                            column_widths=["150px", "300px", "auto"]
                         )
                         # Hidden textbox to store the JSON for KB integration
                         extracted_rules_display = gr.Textbox(
@@ -875,14 +862,14 @@ def create_gradio_interface():
                 with gr.Row():
                     # Left panel: Chat
                     with gr.Column(scale=1):
-                        gr.Markdown("# Agent 3 - Business Rules Management Assistant")
+                        gr.Markdown("# Business Rules Management Assistant")
                         gr.Markdown("*Enhanced with conversational interaction, conflict detection, and impact analysis*")
                         
-                        # Agent 3 Capabilities - conditionally visible
-                        agent3_capabilities_accordion = gr.Accordion("Agent 3 Capabilities", open=False, visible=False)
+                        # Agent 3 Capabilities - always visible in Enhanced mode
+                        agent3_capabilities_accordion = gr.Accordion("Agent Capabilities", open=False, visible=True)
                         with agent3_capabilities_accordion:
                             gr.Markdown("""
-                            **What Agent 3 can help you with:**
+                            **What the agent can help you with:**
                             - 🔍 **Rule Creation**: "Create a rule for 10% discount on orders over $100"
                             - ⚠️ **Conflict Detection**: "Check for conflicts with this rule"
                             - 📊 **Impact Analysis**: "What's the impact of changing our pricing rule?"
@@ -895,14 +882,12 @@ def create_gradio_interface():
                             - "Create a rule for restaurant peak hour staffing"
                             """)
                         
-                        def chat_and_update_agent3(user_input, history, rag_state_df, mode, industry):
+                        def chat_and_update_agent3(user_input, history, rag_state_df, industry):
                             global rule_response
                             
-                            if mode == "Enhanced Agent 3":
-                                response = chat_with_agent3(user_input, history, rag_state_df, industry)
-                            else:
-                                response = chat_with_rag(user_input, history, rag_state_df)
-                            
+                            # Always use Enhanced Agent 3 mode
+                            response = chat_with_agent3(user_input, history, rag_state_df, industry)
+
                             # Extract rule information for summary display
                             if 'rule_response' in globals() and rule_response:
                                 name = rule_response.get('name', 'Name will appear here after input.')
@@ -921,33 +906,25 @@ def create_gradio_interface():
                                 scale=7
                             ),
                             additional_outputs=[name_display, summary_display, state_rag_df],
-                            additional_inputs=[state_rag_df, agent3_mode, industry_selector],
+                            additional_inputs=[state_rag_df, industry_selector],
                         )
                     
                     # Right panel: Rule Summary with Agent 3 enhancements
                     with gr.Column(scale=1):
-                        gr.Markdown("# Rule Summary & Orchestration")
+                        gr.Markdown("# Rule Summary & Generation")
                         name_display.render()
                         summary_display.render()
                         
-                        # Conditional button - changes based on Agent 3 mode
-                        def get_button_text_and_function(mode):
-                            if mode == "Enhanced Agent 3":
-                                return "Analyze Impact", analyze_impact_only
-                            else:
-                                return "Generate Drools Files", preview_apply_rule_with_agent3
-                        
-                        # Dynamic button that changes based on mode
+                        # Fixed button for Enhanced Agent 3 mode only
                         action_button = gr.Button("Analyze Impact", variant="primary")
                         
                         status_box.render()
                         drl_file.render()
                         gdst_file.render()
                         
-                        # Agent 3 Decision Support - conditionally visible
-                        decision_support_accordion = gr.Accordion("Decision Support", open=False, visible=False)
+                        # Agent 3 Decision Support - always visible in Enhanced mode
+                        decision_support_accordion = gr.Accordion("Decision Support", open=False, visible=True)
                         with decision_support_accordion:
-                            gr.Markdown("### Agent 3 Orchestration")
                             decision_input = gr.Textbox(
                                 label="Your Decision",
                                 placeholder="Type 'proceed', 'modify', or 'cancel'",
@@ -981,7 +958,7 @@ def create_gradio_interface():
                                 # Get existing rules for validation
                                 existing_rules = []
                                 try:
-                                    with open("data/sample_rules.json", 'r') as f:
+                                    with open("extracted_rules.json", 'r') as f:
                                         existing_rules = json.load(f)
                                 except FileNotFoundError:
                                     pass
@@ -1069,7 +1046,7 @@ def create_gradio_interface():
                         flat_rules.extend(r)
                     else:
                         flat_rules.append(r)
-                rules_list = [[r.get('name', ''), r.get('description', '')] for r in flat_rules]
+                rules_list = [[r.get('rule_id', ''), r.get('name', ''), r.get('description', '')] for r in flat_rules]
                 rules_json = json.dumps(flat_rules, indent=2)
             except Exception as e:
                 print(f"[DEBUG] Error parsing rules_json: {e}, rules_json: {rules_json}")
@@ -1102,60 +1079,19 @@ def create_gradio_interface():
             summary = rule_response.get('summary', 'Summary will appear here after input.')
             return response, name, summary, rag_state_df
         chat_interface.fn = chat_and_update
-        chat_interface.additional_inputs = [state_rag_df, agent3_mode, industry_selector]  # Keep all inputs
+        chat_interface.additional_inputs = [state_rag_df, industry_selector] 
         chat_interface.additional_outputs = [name_display, summary_display, state_rag_df]
 
-        # Conditional button behavior based on Agent 3 mode
-        def handle_action_button(mode, industry):
-            if mode == "Enhanced Agent 3":
-                return analyze_impact_only(industry)
-            else:
-                return generate_drools_files_direct(industry)
+        # Fixed button behavior for Enhanced Agent 3 mode only
+        def handle_action_button(industry):
+            return analyze_impact_only(industry)
         
         action_button.click(
             handle_action_button,
-            inputs=[agent3_mode, industry_selector],
+            inputs=[industry_selector],
             outputs=[status_box, drl_file, gdst_file]
         )
         
-        # Update component visibility and button text based on Agent 3 mode
-        def update_ui_based_on_mode(mode, enabled):
-            # Agent 3 Capabilities accordion visibility - ONLY show when Enhanced Agent 3 mode AND enabled
-            capabilities_visible = enabled and mode == "Enhanced Agent 3"
-            
-            # Decision Support accordion visibility - ONLY show when Enhanced Agent 3 mode AND enabled  
-            decision_visible = enabled and mode == "Enhanced Agent 3"
-            
-            # File download visibility - hide when Agent 3 is enabled
-            files_visible = not (enabled and mode == "Enhanced Agent 3")
-            
-            # Button text based on mode
-            if enabled and mode == "Enhanced Agent 3":
-                button_text = "Analyze Impact"
-            else:
-                button_text = "Generate Drools Files"
-            
-            return (
-                gr.update(visible=capabilities_visible),  # agent3_capabilities_accordion
-                gr.update(visible=decision_visible),      # decision_support_accordion
-                gr.update(value=button_text),            # action_button
-                gr.update(visible=files_visible),        # drl_file
-                gr.update(visible=files_visible)         # gdst_file
-            )
-        
-        # Update UI when mode or enabled status changes
-        agent3_mode.change(
-            update_ui_based_on_mode,
-            inputs=[agent3_mode, agent3_enabled],
-            outputs=[agent3_capabilities_accordion, decision_support_accordion, action_button, drl_file, gdst_file]
-        )
-        
-        agent3_enabled.change(
-            update_ui_based_on_mode,
-            inputs=[agent3_mode, agent3_enabled],
-            outputs=[agent3_capabilities_accordion, decision_support_accordion, action_button, drl_file, gdst_file]
-        )
-
         chat_interface.chatbot.change(
             update_rule_summary,
             outputs=[name_display, summary_display]
@@ -1166,8 +1102,7 @@ def create_gradio_interface():
             save_current_config,
             inputs=[
                 agent1_prompt_box, agent2_prompt_box, agent3_prompt_box, 
-                default_model_box, generation_config_box, industry_selector,
-                agent3_mode, agent3_enabled
+                default_model_box, generation_config_box, industry_selector
             ],
             outputs=[config_status]
         )
@@ -1177,7 +1112,7 @@ def create_gradio_interface():
             outputs=[
                 agent1_prompt_box, agent2_prompt_box, agent3_prompt_box,
                 default_model_box, generation_config_box, industry_selector,
-                agent3_mode, agent3_enabled, config_status
+                config_status
             ]
         )
         
@@ -1186,7 +1121,7 @@ def create_gradio_interface():
             outputs=[
                 agent1_prompt_box, agent2_prompt_box, agent3_prompt_box,
                 default_model_box, generation_config_box, industry_selector,
-                agent3_mode, agent3_enabled, config_status
+                config_status
             ]
         )
     return demo

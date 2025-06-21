@@ -1,5 +1,5 @@
-import csv
 import json
+import os
 import pandas as pd
 from typing import List, Dict, Any
 from google.genai import types
@@ -10,7 +10,8 @@ import time
 def extract_rules_from_csv(csv_file_path: str) -> List[Dict[str, Any]]:
     """
     Extract business rules from a CSV file and convert them to structured JSON format.
-    
+    Uses a single API call to process all rules at once, with automatic batching for large files.
+
     Args:
         csv_file_path (str): Path to the CSV file containing business rules
         
@@ -18,21 +19,52 @@ def extract_rules_from_csv(csv_file_path: str) -> List[Dict[str, Any]]:
         List[Dict[str, Any]]: List of structured business rules in JSON format
     """
     try:
-        # Read CSV file
-        df = pd.read_csv(csv_file_path)
+        # Read CSV file with proper handling of different delimitersAdd commentMore actions
+        try:
+            df = pd.read_csv(csv_file_path)
+        except Exception as csv_error:
+            print(f"Error reading CSV with default delimiter, trying semicolon: {csv_error}")
+            df = pd.read_csv(csv_file_path, sep=';')
         
         # Convert DataFrame to list of dictionaries
         csv_rules = df.to_dict('records')
         
-        # Use LLM to convert each CSV row to structured JSON format
-        structured_rules = []
+        print(f"Found {len(csv_rules)} rules in CSV file")
         
-        for rule in csv_rules:
+        # Use LLM to convert all CSV rows to structured JSON formatAdd commentMore actions
+        # For larger files, processing is automatically handled in batches
+        max_batch_size = 30
+        if len(csv_rules) > max_batch_size:
+            print(f"Processing {len(csv_rules)} rules in multiple batches of {max_batch_size}")
+            all_rules = []
+            
+            # Process in batches to avoid context length issues
+            for i in range(0, len(csv_rules), max_batch_size):
+                batch = csv_rules[i:i+max_batch_size]
+                print(f"Processing batch {i//max_batch_size + 1} with {len(batch)} rules")
+                batch_rules = _convert_all_csv_rules_to_json(batch)
+                all_rules.extend(batch_rules)
+            
+            return all_rules
+        else:
+            # Process in a single batch if small enoughAdd commentMore actions
+            return _convert_all_csv_rules_to_json(csv_rules)
             structured_rule = _convert_csv_rule_to_json(rule)
-            if structured_rule:
-                structured_rules.append(structured_rule)
-                # Add a delay between requests (adjust the delay as needed)
-                time.sleep(2.5)  # At least 2 seconds, add a buffer
+            if structured_rule and isinstance(structured_rule, dict):  # Validate it's a dictionary
+                # Add versioning metadata to the extracted rule
+                versioned_rule = create_versioned_rule(
+                    rule_data=structured_rule,  # Add explicit parameter name
+                    change_type="create",
+                    change_summary="Rule extracted from CSV upload"
+                )
+                if isinstance(versioned_rule, dict):  # Verify versioned rule is also a dictionary
+                    structured_rules.append(versioned_rule)
+                else:
+                    print(f"Warning: Versioning returned invalid format: {type(versioned_rule)}")
+            else:
+                print(f"Warning: Skipping invalid rule format: {type(structured_rule)}")
+            # Add a delay between requests (adjust the delay as needed)
+            time.sleep(2.5)  # At least 2 seconds, add a buffer
         return structured_rules
         
     except Exception as e:
@@ -81,7 +113,7 @@ Convert to this JSON structure:
   "active": "active status from CSV"
 }}
 
-Return only valid JSON, no additional text.
+Return a single JSON object only (not a list).
 """
         
         contents = [
@@ -112,7 +144,13 @@ Return only valid JSON, no additional text.
         
         # Parse JSON response
         structured_rule = json.loads(response_text)
+        #return structured_rule
+        # Ensure the result is a dictionary
+        if not isinstance(structured_rule, dict):
+            raise ValueError(f"Expected a dictionary, but got {type(structured_rule)}")
+        
         return structured_rule
+       
         
     except Exception as e:
         print(f"Error converting CSV rule to JSON: {e}")
@@ -184,22 +222,185 @@ def validate_rule_conflicts(new_rule: Dict[str, Any], existing_rules: List[Dict[
             })
     
     return conflicts
+   
 
-def save_extracted_rules(rules: List[Dict[str, Any]], output_path: str) -> bool:
+def save_extracted_rules(rules: List[Dict[str, Any]], output_path: str, update_existing: bool = False) -> bool:
     """
-    Save extracted rules to a JSON file.
+    Save extracted rules to a JSON file with versioning support.
     
     Args:
         rules (List[Dict[str, Any]]): List of structured rules
         output_path (str): Path to save the JSON file
+        update_existing (bool): Whether to update existing rules or overwrite
         
     Returns:
         bool: True if successful, False otherwise
     """
     try:
+        rules_to_save = rules.copy()
+        
+        # If updating existing, merge with current rules
+        if update_existing and os.path.exists(output_path):
+            try:
+                with open(output_path, 'r') as f:
+                    existing_rules = json.load(f)
+                
+                if isinstance(existing_rules, list):
+                    # Create a map of existing rules by rule_id
+                    existing_map = {rule.get("rule_id"): rule for rule in existing_rules}
+                    
+                    # Update or add rules
+                    for new_rule in rules:
+                        rule_id = new_rule.get("rule_id")
+                        if rule_id in existing_map:
+                            # Update existing rule (versioning removed)
+                            existing_map[rule_id] = new_rule
+                        else:
+                            # Add new rule
+                            existing_map[rule_id] = new_rule
+                    
+                    rules_to_save = list(existing_map.values())
+                
+            except Exception as e:
+                print(f"Warning: Could not merge with existing rules: {e}")
+        
         with open(output_path, 'w') as f:
-            json.dump(rules, f, indent=2)
+            json.dump(rules_to_save, f, indent=2)
         return True
     except Exception as e:
         print(f"Error saving rules: {e}")
         return False
+
+def _convert_all_csv_rules_to_json(csv_rules: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """
+    Convert multiple CSV rule rows to structured JSON format using a single LLM API call.
+    
+    Args:
+        csv_rules (List[Dict[str, Any]]): List of rules from CSV as dictionaries
+        
+    Returns:
+        List[Dict[str, Any]]: List of structured rules in JSON format
+    """
+    try:
+        client = initialize_gemini_client()
+        
+        # Print debug info if there are many rules
+        num_rules = len(csv_rules)
+        print(f"Processing {num_rules} rules in batch")
+        
+        # Limit the number of rules to avoid exceeding context length
+        max_rules_per_batch = 30
+        if num_rules > max_rules_per_batch:
+            print(f"Warning: Large number of rules detected ({num_rules}). Processing only first {max_rules_per_batch} rules in this batch.")
+            csv_rules = csv_rules[:max_rules_per_batch]
+        
+        prompt = f"""
+Convert these business rules from CSV format to structured JSON format.
+Return an array of JSON objects, one for each rule.
+
+CSV Rules:
+{json.dumps(csv_rules, indent=2)}
+
+Convert each rule to this JSON structure:
+{{
+  "rule_id": "rule_id from CSV",
+  "name": "rule_name from CSV", 
+  "category": "category from CSV",
+  "description": "description from CSV",
+  "summary": "Generate a brief summary of what this rule does",
+  "conditions": [
+    {{
+      "field": "Extract field from condition text",
+      "operator": "Extract operator (equals, greater_than, less_than, etc.)",
+      "value": "Extract value from condition"
+    }}
+  ],
+  "actions": [
+    {{
+      "type": "Extract action type from action text",
+      "details": "Extract action details"
+    }}
+  ],
+  "priority": "priority from CSV",
+  "active": "active status from CSV"
+}}
+
+IMPORTANT: Return only a valid JSON array containing all converted rules, no additional text.
+Make sure the output is properly formatted as valid JSON without any markdown formatting or code blocks.
+"""
+        
+        contents = [
+            types.Content(
+                role="user",
+                parts=[types.Part.from_text(text=prompt)]
+            )
+        ]
+        
+        generate_content_config = types.GenerateContentConfig(
+            response_mime_type="application/json"
+        )
+        
+        response = client.models.generate_content(
+            model=DEFAULT_MODEL,
+            contents=contents,
+            config=generate_content_config,
+        )
+        
+        if hasattr(response, "text"):
+            response_text = response.text
+        elif hasattr(response, "parts") and len(response.parts) > 0:
+            response_text = response.parts[0].text
+        elif hasattr(response, "candidates") and len(response.candidates) > 0:
+            response_text = response.candidates[0].content.parts[0].text
+        else:
+            raise ValueError("Could not extract text from response")
+        
+        # Clean the response text to ensure it's valid JSON
+        # Remove any markdown code block indicators and leading/trailing whitespace
+        response_text = response_text.strip()
+        if response_text.startswith("```json"):
+            response_text = response_text[7:]
+        if response_text.startswith("```"):
+            response_text = response_text[3:]
+        if response_text.endswith("```"):
+            response_text = response_text[:-3]
+        response_text = response_text.strip()
+        
+        try:
+            # Parse JSON response
+            structured_rules = json.loads(response_text)
+            if not isinstance(structured_rules, list):
+                print(f"Warning: Response is not a list. Got type: {type(structured_rules)}")
+                # If we got a single object, wrap it in a list
+                if isinstance(structured_rules, dict):
+                    structured_rules = [structured_rules]
+                else:
+                    raise ValueError(f"Response is not a list or dictionary: {type(structured_rules)}")
+                
+        except json.JSONDecodeError as json_error:
+            print(f"JSON parsing error: {json_error}")
+            # Log a small sample of the problematic response for debugging
+            print(f"Response excerpt (first 100 chars): {response_text[:100]}...")
+            print(f"Response excerpt (char position around error): {response_text[max(0, json_error.pos-50):min(len(response_text), json_error.pos+50)]}")
+            raise
+            
+        return structured_rules
+        
+    except Exception as e:
+        print(f"Error converting CSV rules to JSON: {e}")
+        # Fallback to processing in smaller batches if we have many rules
+        if len(csv_rules) > 10:
+            print("Attempting to process in smaller batches...")
+            mid = len(csv_rules) // 2
+            try:
+                first_half = _convert_all_csv_rules_to_json(csv_rules[:mid])
+                second_half = _convert_all_csv_rules_to_json(csv_rules[mid:])
+                return first_half + second_half
+            except Exception as batch_error:
+                print(f"Error processing in smaller batches: {batch_error}")
+                # Fall back to basic conversion
+                pass
+        
+        # Final fallback to basic conversion if all else fails
+        print("Falling back to basic conversion...")
+        return [_basic_csv_to_json_conversion(rule) for rule in csv_rules]
