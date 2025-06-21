@@ -2,13 +2,13 @@ import pandas as pd
 from utils.rag_utils import read_documents_from_paths, chunk_text, embed_texts
 from typing import List, Tuple
 
-def core_build_knowledge_base(file_paths: List[str], chunk_size: int, chunk_overlap: int, existing_kb_df: pd.DataFrame = None) -> Tuple[str, pd.DataFrame]:
+def core_build_knowledge_base(file_paths: List[str], chunk_size: int = 500, chunk_overlap: int = 50, existing_kb_df: pd.DataFrame = None) -> Tuple[str, pd.DataFrame]:
     """
     Core logic for building the knowledge base, separated for testability.
     Args:
         file_paths (list): List of file paths.
-        chunk_size (int): Chunk size.
-        chunk_overlap (int): Chunk overlap.
+        chunk_size (int, optional): Chunk size. Defaults to 500.
+        chunk_overlap (int, optional): Chunk overlap. Defaults to 50.
         existing_kb_df (pd.DataFrame, optional): Existing KB DataFrame to merge with. Defaults to None.
     Returns:
         Tuple[str, pd.DataFrame]: Status message and resulting DataFrame.
@@ -63,8 +63,8 @@ def core_build_knowledge_base(file_paths: List[str], chunk_size: int, chunk_over
             merged_kb = pd.concat([existing_kb_df, rag_index_df_new], ignore_index=True)
             # Deduplicate based on 'chunk' content (and optionally 'filename')
             merged_kb = merged_kb.drop_duplicates(subset=['filename', 'chunk'], keep='last').reset_index(drop=True)
-            return f"✅ Knowledge base merged successfully with {len(merged_kb)} chunks.", merged_kb
+            return f"Knowledge base merged successfully with {len(merged_kb)} chunks.", merged_kb
         else:
-            return f"✅ Knowledge base built successfully with {len(rag_index_df_new)} chunks.", rag_index_df_new
+            return f"Knowledge base built successfully with {len(rag_index_df_new)} chunks.", rag_index_df_new
     except Exception as e:
         return f"An error occurred creating the index: {e}", existing_kb_df if existing_kb_df is not None else pd.DataFrame()

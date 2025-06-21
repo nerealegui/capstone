@@ -303,3 +303,7 @@ def verify_drools_execution(drl_content, gdst_content):
     return True
 
 
+
+
+
+

@@ -277,8 +277,7 @@ class TestAgent3Integration:
         
         assert isinstance(existing_rules, list)
         # Should find rules based on keywords
-        rule_count = len([rule for rule in existing_rules if "rule" in rule.get("name", "").lower()])
-        assert rule_count >= 0  # May vary based on keyword detection
+        assert len(existing_rules) == 2  # Should find exactly 2 rules that match our criteria
     
     def test_extract_existing_rules_empty_kb(self):
         """Test extraction from empty knowledge base."""

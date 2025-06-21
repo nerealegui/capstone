@@ -226,7 +226,7 @@ def validate_rule_conflicts(new_rule: Dict[str, Any], existing_rules: List[Dict[
 
 def save_extracted_rules(rules: List[Dict[str, Any]], output_path: str, update_existing: bool = False) -> bool:
     """
-    Save extracted rules to a JSON file with versioning support.
+    Save extracted rules to a JSON file.
     
     Args:
         rules (List[Dict[str, Any]]): List of structured rules
@@ -404,3 +404,4 @@ Make sure the output is properly formatted as valid JSON without any markdown fo
         # Final fallback to basic conversion if all else fails
         print("Falling back to basic conversion...")
         return [_basic_csv_to_json_conversion(rule) for rule in csv_rules]
+
