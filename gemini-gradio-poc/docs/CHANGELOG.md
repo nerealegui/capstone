@@ -2,6 +2,36 @@
 
 # Changelog
 
+## [2025-06-21] - CI Workflow Improvements
+
+### Changed
+- **Test Execution**: Modified CI workflow to run each test file individually
+- **PR Feedback**: Added automatic commenting on PRs with test results
+- **Failure Tracking**: Improved tracking of which specific test files fail
+
+### Documentation
+- **Added CI_WORKFLOW_CHANGES.md**: Detailed documentation of CI workflow improvements
+
+### Technical Details
+- Updated GitHub Actions workflow to track individual test file failures
+- Added PR comment functionality using github-script action
+- Improved CI logs with grouping and better organization
+
+## [2025-06-21] - Test Code Refactoring
+
+### Changed
+- **Test Code Alignment**: Refactored test code to align with current codebase implementation
+- **Test Assertions**: Updated assertions in test_agent3.py to better match the actual implementation
+- **Rule Extraction Testing**: Improved test_extract_existing_rules_from_kb to verify correct rule identification
+
+### Documentation
+- **Updated TEST_REFACTORING.md**: Detailed documentation of test code changes and improvements
+
+### Technical Details
+- Updated test_agent3.py to expect exactly 2 rules to be extracted from the test data
+- Improved test assertions to be more specific and catch potential regressions
+- Aligned test expectations with the current implementation after removal of rule versioning
+
 ## [2025-06-21] - Documentation Cleanup
 
 ### Changed

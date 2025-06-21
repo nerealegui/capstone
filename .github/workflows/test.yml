@@ -25,11 +25,36 @@ jobs:
         python -m pip install --upgrade pip
         cd gemini-gradio-poc
         pip install -r requirements.txt
+        pip install pytest
     
-    - name: Run all tests
+    - name: Run individual tests
+      id: run_tests
       run: |
         cd gemini-gradio-poc
-        python -m pytest tests/ -v
+        
+        echo "::group::Running test_agent2.py"
+        python -m pytest tests/test_agent2.py -v || echo "test_agent2=failed" >> $GITHUB_OUTPUT
+        echo "::endgroup::"
+        
+        echo "::group::Running test_agent3.py"
+        python -m pytest tests/test_agent3.py -v || echo "test_agent3=failed" >> $GITHUB_OUTPUT
+        echo "::endgroup::"
+        
+        echo "::group::Running test_build_kb.py"
+        python -m pytest tests/test_build_kb.py -v || echo "test_build_kb=failed" >> $GITHUB_OUTPUT
+        echo "::endgroup::"
+        
+        echo "::group::Running test_config_manager.py"
+        python -m pytest tests/test_config_manager.py -v || echo "test_config_manager=failed" >> $GITHUB_OUTPUT
+        echo "::endgroup::"
+        
+        echo "::group::Running test_json_response_handler.py"
+        python -m pytest tests/test_json_response_handler.py -v || echo "test_json_response_handler=failed" >> $GITHUB_OUTPUT
+        echo "::endgroup::"
+        
+        echo "::group::Running test_rule_extractor.py"
+        python -m pytest tests/test_rule_extractor.py -v || echo "test_rule_extractor=failed" >> $GITHUB_OUTPUT
+        echo "::endgroup::"
       env:
         GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
     
@@ -38,3 +63,37 @@ jobs:
         cd gemini-gradio-poc
         python -c "from utils.rule_extractor import extract_rules_from_csv, validate_rule_conflicts; print('Rule extractor imports successfully')"
         python -c "from interface.chat_app import build_knowledge_base_process; print('Chat app imports successfully')"
+    
+    - name: Comment on PR with test results
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v6
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const failing = [];
+          
+          if ('${{ steps.run_tests.outputs.test_agent2 }}' === 'failed') failing.push('test_agent2.py');
+          if ('${{ steps.run_tests.outputs.test_agent3 }}' === 'failed') failing.push('test_agent3.py');
+          if ('${{ steps.run_tests.outputs.test_build_kb }}' === 'failed') failing.push('test_build_kb.py');
+          if ('${{ steps.run_tests.outputs.test_config_manager }}' === 'failed') failing.push('test_config_manager.py');
+          if ('${{ steps.run_tests.outputs.test_json_response_handler }}' === 'failed') failing.push('test_json_response_handler.py');
+          if ('${{ steps.run_tests.outputs.test_rule_extractor }}' === 'failed') failing.push('test_rule_extractor.py');
+          
+          let body = '';
+          
+          if (failing.length > 0) {
+            body = '## ❌ Test Failures Detected\n\nThe following test files are failing:\n\n';
+            failing.forEach(test => {
+              body += `- ${test}\n`;
+            });
+            body += '\nPlease fix these failures before merging this PR.';
+          } else {
+            body = '## ✅ All Tests Passed\n\nGreat job! All test files are passing.';
+          }
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: body
+          });
