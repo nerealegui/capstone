@@ -2,6 +2,17 @@
 
 # Changelog
 
+## [2025-06-21] - Documentation Cleanup
+
+### Changed
+- **Simplified Documentation Structure**: Reduced documentation to essential files referenced in README.md
+- **Removed Obsolete Documentation**: Deleted all unused documentation files
+
+### Technical Details
+- Kept only essential documentation: README.md, BUSINESS.md, ARCHITECTURE.md, Capstone_Demo_Flow.md, and CHANGELOG.md
+- Removed 16+ obsolete documentation files from gemini-gradio-poc/docs/
+- Centralized all project documentation in the main files referenced in README.md
+
 ## [2025-06-21] - Complete Removal of Rule Versioning
 
 ### Removed
