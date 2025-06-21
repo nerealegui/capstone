@@ -10,7 +10,6 @@ from config.agent_config import AGENT1_PROMPT, AGENT2_PROMPT, AGENT3_PROMPT, DEF
 from typing import Dict, List, Any
 from utils.json_response_handler import JsonResponseHandler
 
-#initialize initialize_gemini function from rag_utils 
 from utils.rag_utils import read_documents_from_paths, embed_texts, retrieve, rag_generate, initialize_gemini_client
 from utils.kb_utils import core_build_knowledge_base
 from utils.rule_utils import json_to_drl_gdst, verify_drools_execution
@@ -32,17 +31,6 @@ from utils.config_manager import (
     get_config_summary,
     reset_config_to_defaults
 )
-
-# Commented out initialize_gemini function because it will live in rag_utils.py
-# def initialize_gemini():
-#     api_key = os.environ.get('GOOGLE_API_KEY')
-#     if not api_key:
-#         raise ValueError("Google API key not found in environment variables. Please check your .env file.")
-
-#     client = genai.Client(
-#         api_key=api_key
-#     )
-#     return client
 
 # New function to build_knowledge_base_process, which calls functions in rag_utils.
 def build_knowledge_base_process(
