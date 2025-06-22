@@ -15,3 +15,6 @@ env/
 dist/
 build/
 *.so
+
+# Conversation storage data (local user data)
+gemini-gradio-poc/data/local_storage/

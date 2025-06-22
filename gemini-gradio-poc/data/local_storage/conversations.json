@@ -1,1 +1,20 @@
-{}
+{
+  "conv_a316b789": {
+    "id": "conv_a316b789",
+    "title": "Create a business rule for employee scheduling",
+    "history": [
+      [
+        "User message",
+        "Assistant response"
+      ]
+    ],
+    "rag_state": {},
+    "metadata": {
+      "industry": "restaurant",
+      "mode": "Enhanced Agent 3"
+    },
+    "created_at": "2025-06-22T14:26:17.484908",
+    "updated_at": "2025-06-22T14:26:17.484913",
+    "message_count": 1
+  }
+}

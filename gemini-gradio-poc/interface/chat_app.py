@@ -1120,8 +1120,7 @@ def create_gradio_interface():
                             label="Previous Conversations",
                             interactive=False,
                             row_count=8,
-                            column_widths=["60%", "20%", "20%"],
-                            height=300
+                            column_widths=["60%", "20%", "20%"]
                         )
                         
                         # Conversation actions

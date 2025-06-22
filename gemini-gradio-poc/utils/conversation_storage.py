@@ -366,17 +366,36 @@ class ConversationStorage:
             rules_data = self._load_json(self.rules_file)
             metadata = self._load_json(self.metadata_file)
             
+            # Handle both dict and list formats for rules_data
+            if isinstance(rules_data, list):
+                rules_count = len(rules_data)
+            else:
+                rules_count = rules_data.get("rule_count", 0) if rules_data else 0
+            
+            # Handle both dict and int formats for kb_data
+            if isinstance(kb_data, dict):
+                kb_entries = kb_data.get("entry_count", 0)
+            else:
+                kb_entries = 0
+            
             return {
-                "conversation_count": len(conversations),
-                "knowledge_base_entries": kb_data.get("entry_count", 0),
-                "rules_count": rules_data.get("rule_count", 0),
-                "storage_created": metadata.get("created_at"),
-                "last_updated": metadata.get("updated_at"),
-                "last_conversation": metadata.get("last_conversation_id")
+                "conversation_count": len(conversations) if conversations else 0,
+                "knowledge_base_entries": kb_entries,
+                "rules_count": rules_count,
+                "storage_created": metadata.get("created_at") if metadata else None,
+                "last_updated": metadata.get("updated_at") if metadata else None,
+                "last_conversation": metadata.get("last_conversation_id") if metadata else None
             }
         except Exception as e:
             print(f"Error getting storage stats: {e}")
-            return {}
+            return {
+                "conversation_count": 0,
+                "knowledge_base_entries": 0,
+                "rules_count": 0,
+                "storage_created": None,
+                "last_updated": None,
+                "last_conversation": None
+            }
 
 
 # Global storage instance
