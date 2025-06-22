@@ -13,7 +13,7 @@ from utils.json_response_handler import JsonResponseHandler
 from utils.rag_utils import read_documents_from_paths, embed_texts, retrieve, rag_generate, initialize_gemini_client
 from utils.kb_utils import core_build_knowledge_base
 from utils.rule_utils import json_to_drl_gdst, verify_drools_execution
-from utils.rule_extractor import extract_rules_from_csv, validate_rule_conflicts, save_extracted_rules
+from utils.rule_extractor import extract_rules_from_csv, save_extracted_rules
 from utils.agent3_utils import (
     analyze_rule_conflicts, 
     assess_rule_impact, 
@@ -289,10 +289,6 @@ def chat_with_agent3(user_input: str, history: list, rag_state_df: pd.DataFrame,
         return f"I apologize, but I encountered an error processing your request: {str(e)}"
 
 
-
-
-
-# New separate function to update the rule summary components
 def update_rule_summary():
     """Extract rule information from the global rule_response and return for UI update."""
     global rule_response
@@ -380,51 +376,6 @@ Active: {rule.get('active', True)}
     except Exception as e:
         return f"✗ Error processing CSV file: {str(e)}\nPlease ensure the CSV file contains valid business rule data.", "", rag_state_df
 
-def validate_new_rule(rule_json_str: str):
-    """
-    Enhanced validation of a new rule against existing rules with detailed feedback.
-    
-    Args:
-        rule_json_str (str): JSON string of the new rule
-        
-    Returns:
-        str: Validation results with enhanced formatting
-    """
-    if not rule_json_str.strip():
-        return "Please provide a rule in JSON format to validate.\nUse the templates below for quick rule creation."
-    
-    try:
-        new_rule = json.loads(rule_json_str)
-        
-        # Load existing rules (from sample data for now)
-        existing_rules = []
-        try:
-            with open("extracted_rules.json", 'r') as f:
-                existing_rules = json.load(f)
-        except FileNotFoundError:
-            pass
-        
-        # Check for conflicts
-        conflicts = validate_rule_conflicts(new_rule, existing_rules)
-        
-        if conflicts:
-            conflict_messages = ["Validation Analysis Results:\n"]
-            for conflict in conflicts:
-                conflict_messages.append(f"⚠ {conflict['type']}: {conflict['message']}")
-            
-            conflict_messages.append(f"\nSummary: Found {len(conflicts)} potential issue(s) with the proposed rule.")
-            conflict_messages.append("Recommendation: Review and modify the rule to resolve conflicts before implementation.")
-            
-            return "\n".join(conflict_messages)
-        else:
-            return f"✓  Validation Successful!\n\nRule Name: {new_rule.get('name', 'Unnamed Rule')}\nCategory: {new_rule.get('category', 'Unknown')}\n\nNo conflicts detected with existing rules.\nThis rule is ready for implementation."
-            
-    except json.JSONDecodeError as e:
-        return f"✗ Invalid JSON Format\n\nError Details: {str(e)}\n\nTips:\n- Check for missing quotes, brackets, or commas\n- Use the template buttons below for proper formatting\n- Ensure all strings are properly quoted"
-    except Exception as e:
-        return f"✗ Validation Error: {str(e)}\n\nPlease try again or contact support if the issue persists."
-
-# Function removed - functionality merged into extract_rules_from_uploaded_csv
 
 # Configuration management functions
 def get_current_config_summary():
@@ -531,113 +482,6 @@ def analyze_impact_only(industry: str = "generic"):
             
     except Exception as e:
         return (f"Agent 3 Analysis Error: {str(e)}", None, None)
-
-def preview_apply_rule_with_agent3(industry: str = "generic"):
-    """
-    Enhanced preview and apply function using Agent 3 for orchestration and conflict analysis.
-    Returns:
-        Tuple[str, str, str]: Status message, DRL file path, GDST file path
-    """
-    global rule_response
-    try:
-        if 'rule_response' not in globals() or not rule_response:
-            return "No rule to apply. Please interact with the chat first.", None, None
-
-        # Get existing rules for validation
-        existing_rules = []
-        try:
-            with open("extracted_rules.json", 'r') as f:
-                existing_rules = json.load(f)
-        except FileNotFoundError:
-            pass
-
-        # Use Agent 3 for enhanced conflict detection and impact analysis
-        conflicts, conflict_analysis = analyze_rule_conflicts(
-            rule_response, existing_rules, industry
-        )
-        
-        impact_analysis = assess_rule_impact(
-            rule_response, existing_rules, industry
-        )
-
-        if conflicts:
-            conflict_messages = []
-            for conflict in conflicts:
-                impact_info = conflict.get('industry_impact', 'No impact analysis available')
-                conflict_messages.append(
-                    f"⚠️ {conflict['type']}: {conflict['message']}\n"
-                    f"   Industry Impact: {impact_info}"
-                )
-            
-            detailed_message = (
-                "⚠️ Conflicts Detected by Agent 3:\n\n" + 
-                "\n\n".join(conflict_messages) + 
-                f"\n\n📊 Detailed Analysis:\n{conflict_analysis}\n\n" +
-                f"📈 Impact Assessment:\n{json.dumps(impact_analysis, indent=2)}\n\n" +
-                "Please resolve these conflicts before proceeding."
-            )
-            return (detailed_message, None, None)
-
-        # If no conflicts, orchestrate with Agent 2
-        should_proceed, status_msg, orchestration_result = orchestrate_rule_generation(
-            "proceed", rule_response, conflicts
-        )
-        
-        if should_proceed:
-            # Generate DRL and GDST using Agent 2
-            drl, gdst = json_to_drl_gdst(rule_response)
-            verified = verify_drools_execution(drl, gdst)
-            
-            if verified:
-                # Save files for download
-                drl_path = "generated_rule.drl"
-                gdst_path = "generated_table.gdst"
-                with open(drl_path, "w") as f:
-                    f.write(drl)
-                with open(gdst_path, "w") as f:
-                    f.write(gdst)
-                
-                success_message = (
-                    "✓ Rule Successfully Applied by Agent 3!\n\n" +
-                    f"📊 Impact Analysis Summary:\n{json.dumps(impact_analysis, indent=2)}\n\n" +
-                    "Your DRL and GDST files are ready for download."
-                )
-                return (success_message, drl_path, gdst_path)
-            else:
-                return ("Verification failed during Agent 2 processing.", None, None)
-        else:
-            return (status_msg, None, None)
-            
-    except Exception as e:
-        return (f"Agent 3 Error: {str(e)}", None, None)
-
-
-def generate_drools_files_direct(industry: str = "generic"):
-    """
-    Direct drools file generation without impact analysis - for Standard Chat mode.
-    Returns:
-        Tuple[str, str, str]: Status message, DRL file path, GDST file path
-    """
-    global rule_response
-    try:
-        if 'rule_response' not in globals() or not rule_response:
-            return "No rule to generate files from. Please interact with the chat first.", None, None
-
-        # Generate DRL and GDST using Agent 2 directly
-        drl, gdst = json_to_drl_gdst(rule_response)
-        
-        # Save files for download
-        drl_path = "generated_rule.drl"
-        gdst_path = "generated_table.gdst"
-        with open(drl_path, "w") as f:
-            f.write(drl)
-        with open(gdst_path, "w") as f:
-            f.write(gdst)
-        
-        return ("Files generated successfully.", drl_path, gdst_path)
-            
-    except Exception as e:
-        return (f"Error: {str(e)}", None, None)
 
 # New function to initialize_gemini_client, moved from rag_utils
 def initialize_gemini_client():
@@ -751,6 +595,21 @@ def create_gradio_interface():
         }
         .blue-5 .octicon {
             fill: #0969da !important;
+        }
+        
+        /* File generation status styling */
+        .file-status {
+            background-color: #f0f9ff;
+            border-left: 4px solid #0284c7;
+            padding: 12px 16px;
+            margin: 16px 0;
+            border-radius: 4px;
+            font-size: 0.95rem;
+        }
+        
+        .file-status p {
+            margin: 0;
+            line-height: 1.5;
         }
     """) as demo:
         # --- UI Definition ---
@@ -967,43 +826,26 @@ def create_gradio_interface():
                         drl_file.render()
                         gdst_file.render()
                         
-                        # Agent 3 Decision Support - always visible in Enhanced mode
-                        decision_support_accordion = gr.Accordion("🎯 Decision Support", open=False, visible=True)
+                        decision_support_accordion = gr.Accordion("File Generation", open=False, visible=True)
                         with decision_support_accordion:
-                            gr.Markdown("Make decisions about rule generation and processing.")
-                            decision_input = gr.Textbox(
-                                label="💭 Your Decision",
-                                placeholder="Type 'proceed', 'modify', or 'cancel'",
-                                interactive=True,
-                                info="Enter your decision to proceed with rule processing"
-                            )
-                            decision_button = gr.Button("📤 Submit Decision", variant="secondary", elem_classes=["btn-secondary"])
-                            decision_output = gr.Textbox(
-                                label="🔄 Orchestration Result",
-                                value="Make a decision above to see orchestration results.",
-                                interactive=False,
-                                lines=3
-                            )
-                            decision_drl_file = gr.File(label="📄 Download Generated DRL")
-                            decision_gdst_file = gr.File(label="📊 Download Generated GDST")
                             
-                            def handle_decision(decision, industry):
+                            decision_button = gr.Button("Generate Files", variant="secondary", elem_classes=["btn-secondary"])
+                            file_generation_status = gr.Markdown(
+                                "File generation status will appear here after you click 'Generate Files'.",
+                                label="Status",
+                                elem_classes=["file-status"]
+                            )
+                            decision_drl_file = gr.File(label="Download Generated DRL")
+                            decision_gdst_file = gr.File(label="Download Generated GDST")
+                            
+                            def handle_generation(industry):
                                 """
-                                Process user's decision about rule generation and orchestrate the next steps.
-                                Handles the orchestration result and triggers Agent 2 when appropriate.
-                                
                                 Args:
-                                    decision (str): User's decision (proceed, modify, cancel)
                                     industry (str): Selected industry context
                                 
                                 Returns:
                                     Tuple: (status_message, drl_file, gdst_file)
                                 """
-                                global rule_response
-                                
-                                if 'rule_response' not in globals() or not rule_response:
-                                    return "No rule available for decision processing.", None, None
-                                
                                 # Get existing rules for validation
                                 existing_rules = []
                                 try:
@@ -1011,26 +853,19 @@ def create_gradio_interface():
                                         existing_rules = json.load(f)
                                 except FileNotFoundError:
                                     pass
-                                
                                 # Check for conflicts first
                                 conflicts, conflict_analysis = analyze_rule_conflicts(
                                     rule_response, existing_rules, industry
                                 )
-                                
-                                # Call orchestrate_rule_generation with the user's decision
-                                should_proceed, status_msg, orchestration_result_json = orchestrate_rule_generation(
-                                    decision, rule_response, conflicts
-                                )
-                                
-                                # Early return if we shouldn't proceed
-                                if not should_proceed:
-                                    return status_msg, None, None
+                                should_proceed, status_msg, orchestration_result_json = orchestrate_rule_generation(rule_response, conflicts)
                                 
                                 # Parse the orchestration result
                                 try:
-                                    orchestration_result = json.loads(orchestration_result_json)
+                                    if orchestration_result_json:
+                                        orchestration_result = json.loads(orchestration_result_json)
+                                    else:
+                                        orchestration_result = None
                                     
-                                    # Check if Agent 2 should be triggered
                                     if orchestration_result.get("agent2_trigger", False):
                                         # Get the rule data from the orchestration result
                                         rule_data = orchestration_result.get("rule_data", {})
@@ -1049,28 +884,28 @@ def create_gradio_interface():
                                                 f.write(gdst)
                                             
                                             message = (
-                                                f"✓ Rule generation successful!\n\n"
-                                                f"Rule: {rule_data.get('name', 'Unnamed Rule')}\n\n"
-                                                f"Files have been created:\n"
-                                                f"- DRL: {drl_path}\n"
-                                                f"- GDST: {gdst_path}\n\n"
-                                                f"You can download them below."
+                                                f"### ✓ Rule Generation Successful\n\n"
+                                                f"**Rule:** {rule_data.get('name', 'Unnamed Rule')}\n\n"
+                                                f"**Files have been created:**\n"
+                                                f"- **DRL**: {drl_path}\n"
+                                                f"- **GDST**: {gdst_path}\n\n"
+                                                f"You can download the files below."
                                             )
                                             return message, drl_path, gdst_path
                                         else:
-                                            return "⚠️ Rule syntax verified, but execution verification failed.", None, None
+                                            return "### ⚠️ Generation Issue\n\nRule syntax verified, but execution verification failed.", None, None
                                     
-                                    return f"{status_msg} {orchestration_result.get('action', '')}", None, None
+                                    return f"### ℹ️ Status Update\n\n{status_msg} {orchestration_result.get('action', '')}", None, None
                                     
                                 except json.JSONDecodeError:
-                                    return f"Error processing orchestration result. {status_msg}", None, None
+                                    return f"### ⚠️ Processing Error\n\nError processing orchestration result.\n\n{status_msg}", None, None
                                 except Exception as e:
-                                    return f"Error during rule generation: {str(e)}", None, None
+                                    return f"### ❌ Generation Error\n\nAn error occurred during rule generation:\n\n```\n{str(e)}\n```", None, None
                             
                             decision_button.click(
-                                handle_decision,
-                                inputs=[decision_input, industry_selector],
-                                outputs=[decision_output, decision_drl_file, decision_gdst_file]
+                                handle_generation,
+                                inputs=[industry_selector],
+                                outputs=[file_generation_status, decision_drl_file, decision_gdst_file]
                             )
 
         # --- Event Actions (must be inside Blocks context) ---

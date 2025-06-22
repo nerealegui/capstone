@@ -125,15 +125,13 @@ def generate_conversational_response(
 
 
 def orchestrate_rule_generation(
-    user_decision: str, 
     proposed_rule: Dict[str, Any],
     conflicts: List[Dict[str, Any]]
 ) -> Tuple[bool, str, Optional[str]]:
     """
-    Orchestrate the rule generation process after user confirmation.
+    Orchestrate the rule generation process without a proceed flag.
     
     Args:
-        user_decision: User's decision (proceed, modify, cancel)
         proposed_rule: The rule to be processed
         conflicts: Any identified conflicts
     
@@ -142,48 +140,36 @@ def orchestrate_rule_generation(
     """
     import datetime
     import os
-    
-    # Normalize the decision for consistent handling
-    decision = user_decision.lower().strip()
-    
+
     # Log the orchestration request
-    print(f"[Agent3] Orchestration request: decision='{decision}', rule='{proposed_rule.get('name', 'Unnamed')}', conflicts={len(conflicts)}")
-    
-    if decision in ['proceed', 'yes', 'confirm', 'apply']:
-        if conflicts:
-            print(f"[Agent3] Orchestration blocked due to {len(conflicts)} conflicts")
-            return False, "Cannot proceed with conflicts. Please resolve them first.", None
-        
-        # Signal to trigger Agent 2 for DRL/GDST generation
-        orchestration_result = {
-            "action": "generate_drl_gdst",
-            "rule_data": proposed_rule,
-            "agent2_trigger": True,
-            "timestamp": datetime.datetime.now().isoformat(),
-            "requester": "agent3"
-        }
-        
-        # Create a log entry for the orchestration
-        try:
-            os.makedirs("logs", exist_ok=True)
-            log_file = os.path.join("logs", "orchestration.log")
-            
-            with open(log_file, "a") as f:
-                f.write(f"{orchestration_result['timestamp']} - Orchestrating rule: {proposed_rule.get('name')}\n")
-                
-            print(f"[Agent3] Orchestration successful for '{proposed_rule.get('name', 'Unnamed')}'")
-        except Exception as e:
-            print(f"[Agent3] Warning: Could not log orchestration: {e}")
-        
-        return True, "Proceeding with rule generation...", json.dumps(orchestration_result)
-    
-    elif decision in ['modify', 'edit', 'change']:
-        print(f"[Agent3] Modification requested for '{proposed_rule.get('name', 'Unnamed')}'")
-        return False, "Please provide the modifications you'd like to make.", None
-    
-    else:  # cancel, no, stop
-        print(f"[Agent3] Cancellation requested for '{proposed_rule.get('name', 'Unnamed')}'")
-        return False, "Rule generation cancelled.", None
+    print(f"[Agent3] Orchestration request: rule='{proposed_rule.get('name', 'Unnamed')}', conflicts={len(conflicts)}")
+
+    if conflicts:
+        print(f"[Agent3] Orchestration blocked due to {len(conflicts)} conflicts")
+        return False, "Cannot proceed with conflicts. Please resolve them first.", None
+
+    # Signal to trigger Agent 2 for DRL/GDST generation
+    orchestration_result = {
+        "action": "generate_drl_gdst",
+        "rule_data": proposed_rule,
+        "agent2_trigger": True,
+        "timestamp": datetime.datetime.now().isoformat(),
+        "requester": "agent3"
+    }
+
+    # Create a log entry for the orchestration
+    try:
+        os.makedirs("logs", exist_ok=True)
+        log_file = os.path.join("logs", "orchestration.log")
+
+        with open(log_file, "a") as f:
+            f.write(f"{orchestration_result['timestamp']} - Orchestrating rule: {proposed_rule.get('name')}\n")
+
+        print(f"[Agent3] Orchestration successful for '{proposed_rule.get('name', 'Unnamed')}'")
+    except Exception as e:
+        print(f"[Agent3] Warning: Could not log orchestration: {e}")
+
+    return True, "Proceeding with rule generation...", json.dumps(orchestration_result)
 
 
 def _assess_industry_impact(conflict: Dict[str, Any], industry_config: Dict[str, Any]) -> str:
