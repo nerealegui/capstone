@@ -8,8 +8,4 @@
     - Step 1: [Description of step 1]
     - Step 2: [Description of step 2]
     - ...
-- Always document the code that you write in an additional document file, if it doesn't already exist create a changelog. The documentation should be in markdown format and should include:
-  - A brief description of the code
-  - How to use the code
-  - Any dependencies or requirements
-  - Examples of usage
+- Use the following styling for the UI: https://primer.style/css/storybook/?path=/docs/introduction--docs
