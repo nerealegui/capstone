@@ -112,7 +112,7 @@ jobs:
             });
             body += '\nPlease fix these failures before merging this PR.';
           } else {
-            body = '## ✅ All Tests Passed\n\nGreat job! All test files are passing.';
+            body = '## ✓ All Tests Passed\n\nGreat job! All test files are passing.';
           }
           
           github.rest.issues.createComment({

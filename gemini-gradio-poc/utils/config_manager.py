@@ -221,21 +221,10 @@ def get_config_summary(config: Dict[str, Any]) -> str:
     """
     try:
         summary_lines = [
-            "📋 **Configuration Summary**",
-            "",
-            f"🤖 **Model**: {config['model_config']['default_model']}",
-            f"🏭 **Industry**: {config['agent3_settings']['industry'].title()}",
-            f"💬 **Chat Mode**: Enhanced Agent 3 (Simplified)",
-            f"✅ **Agent 3 Enabled**: {config['agent3_settings']['enabled']}",
-            "",
-            "📝 **Agent Prompts**:",
-            f"- Agent 1: {len(config['agent_prompts']['agent1'])} characters",
-            f"- Agent 2: {len(config['agent_prompts']['agent2'])} characters", 
-            f"- Agent 3: {len(config['agent_prompts']['agent3'])} characters",
-            "",
-            "⚙️ **Generation Config**:",
-            f"- Response Format: {config['model_config']['generation_config'].get('response_mime_type', 'N/A')}",
-            f"- Temperature: {config['model_config'].get('agent3_generation_config', {}).get('temperature', 'N/A')}"
+            f"**Model**: {config['model_config']['default_model']}<br>",
+            f"**Industry**: {config['agent3_settings']['industry'].title()}<br>",
+            f"**Response Format**: {config['model_config']['generation_config'].get('response_mime_type', 'N/A')}<br>",
+            f"**Temperature**: {config['model_config'].get('agent3_generation_config', {}).get('temperature', 'N/A')}<br>"
         ]
         
         return "\n".join(summary_lines)

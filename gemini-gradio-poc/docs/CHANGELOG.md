@@ -2,18 +2,33 @@
 
 # Changelog
 
+## [2025-06-22] - Unified Save and Apply Configuration
+
+### ✨ Removed - Old Methods
+- **Removed Methods**: Deleted `save_current_config` and `apply_saved_config` methods from `chat_app.py`.
+
+### ✨ Added - Save & Apply Button
+- **Unified Configuration Actions**: Replaced "Save Changes" button with a single "Save & Apply" button.
+- **Simplified Workflow**: Users can now save and apply configurations with one click.
+- **Error Handling**: Enhanced error messages for save/apply operations.
+- **Status Feedback**: Clear success and failure messages displayed after operation.
+
+### 🚀 Technical Implementation
+- **Gradio Interface Update**: Modified the interface to include the new button and removed the old ones.
+- **Improved User Experience**: Streamlined configuration management workflow.
+
 ## [2025-06-21] - Professional UI Enhancement with GitHub-Style Design
 
 ### ✨ Added - Complete UI Modernization
 - **Professional Visual Design**: Implemented a complete visual redesign following GitHub's design principles with minimal, tasteful iconography
 - **Clean Typography**: Enhanced readability with professional styling and clear visual hierarchy
-- **GitHub-Inspired Styling**: Applied GitHub's design philosophy with subtle use of symbols (✓, ✗, ⚠) instead of heavy emoji usage
+- **GitHub-Inspired Styling**: Applied GitHub's design philosophy with subtle use of symbols (✓ , ✗, ⚠) instead of heavy emoji usage
 - **Card-Based Architecture**: Organized interface into themed sections with professional gradient backgrounds
 
 ### 🎨 Enhanced Visual Components
 
 #### Professional Status Indicators
-- **Success States**: Clean checkmarks (✓) with green styling for completed actions
+- **Success States**: Clean checkmarks (✓ ) with green styling for completed actions
 - **Error States**: Professional X symbols (✗) with red styling for failures  
 - **Warning States**: Warning symbols (⚠) with yellow styling for attention
 - **Minimal Iconography**: Following GitHub's restrained approach to visual elements

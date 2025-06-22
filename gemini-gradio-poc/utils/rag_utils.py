@@ -28,7 +28,7 @@ def initialize_gemini_client():
             # Basic check to see if client works (optional but helpful)
             # print("Listing models to verify client...")
             # list(client.models.list()) # This might be slow, keep commented unless needed for debug
-            print("✅ Gemini client (google.genai) initialized successfully.")
+            print("✓ Gemini client (google.genai) initialized successfully.")
         except Exception as e:
             print(f"❌ Failed to initialize Gemini client (google.genai): {e}")
             print("Please double-check your GOOGLE_API_KEY and internet connection.")
@@ -83,14 +83,14 @@ def read_documents_from_paths(file_paths):
                     text = read_docx(file_path)
                     if text is not None and text.strip():
                         documents.append({'filename': filename, 'text': text})
-                        print(f"    ✅ Read {filename}")
+                        print(f"    ✓ Read {filename}")
                     else:
                          print(f"    ⚠️  {filename} is empty or could not be read successfully.")
                 elif filename.lower().endswith(".pdf"):
                     text = read_pdf(file_path)
                     if text is not None and text.strip():
                         documents.append({'filename': filename, 'text': text})
-                        print(f"    ✅ Read {filename}")
+                        print(f"    ✓ Read {filename}")
                     else:
                         print(f"    ⚠️  {filename} is empty or could not be read successfully.")
                 elif filename.lower().endswith(".txt"):
@@ -98,7 +98,7 @@ def read_documents_from_paths(file_paths):
                         text = f.read()
                     if text is not None and text.strip():
                         documents.append({'filename': filename, 'text': text})
-                        print(f"    ✅ Read {filename}")
+                        print(f"    ✓ Read {filename}")
                     else:
                         print(f"    ⚠️  {filename} is empty or could not be read successfully.")
                 else:

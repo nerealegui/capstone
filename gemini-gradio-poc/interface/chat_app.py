@@ -27,9 +27,7 @@ from utils.config_manager import (
     save_config,
     load_config,
     apply_config_to_runtime,
-    validate_config,
-    get_config_summary,
-    reset_config_to_defaults
+    get_config_summary
 )
 
 # New function to build_knowledge_base_process, which calls functions in rag_utils.
@@ -74,7 +72,7 @@ def build_knowledge_base_process(
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     
     if "successfully" in status_message.lower():
-        final_status = f"✓ {status_message}\nLast updated: {timestamp}\nTotal chunks in knowledge base: {len(result_df)}"
+        final_status = f"✓  {status_message}\nLast updated: {timestamp}\nTotal chunks in knowledge base: {len(result_df)}"
     else:
         final_status = f"✗ {status_message}\nAttempted at: {timestamp}"
     
@@ -336,7 +334,7 @@ def extract_rules_from_uploaded_csv(csv_file):
         
         if success:
             rules_json = json.dumps(rules, indent=2)
-            return f"✓ Successfully extracted {len(rules)} business rule(s) from CSV file.\nRules saved to: {output_path}\nReview the extracted rules below before adding to knowledge base.", rules_json
+            return f"✓  Successfully extracted {len(rules)} business rule(s) from CSV file.\nRules saved to: {output_path}\nReview the extracted rules below before adding to knowledge base.", rules_json
         else:
             return "✗ Error saving extracted rules to file. Please check file permissions.", ""
             
@@ -380,7 +378,7 @@ def validate_new_rule(rule_json_str: str):
             
             return "\n".join(conflict_messages)
         else:
-            return f"✓ Validation Successful!\n\nRule Name: {new_rule.get('name', 'Unnamed Rule')}\nCategory: {new_rule.get('category', 'Unknown')}\n\nNo conflicts detected with existing rules.\nThis rule is ready for implementation."
+            return f"✓  Validation Successful!\n\nRule Name: {new_rule.get('name', 'Unnamed Rule')}\nCategory: {new_rule.get('category', 'Unknown')}\n\nNo conflicts detected with existing rules.\nThis rule is ready for implementation."
             
     except json.JSONDecodeError as e:
         return f"✗ Invalid JSON Format\n\nError Details: {str(e)}\n\nTips:\n- Check for missing quotes, brackets, or commas\n- Use the template buttons below for proper formatting\n- Ensure all strings are properly quoted"
@@ -430,7 +428,7 @@ Active: {rule.get('active', True)}
             os.remove(temp_file)
         except:
             pass
-        return f"✓ Successfully added {len(rules)} rule(s) to knowledge base!\nIntegration Status: {status_message}\nRules are now available for enhanced analysis and querying.", result_df
+        return f"✓  Successfully added {len(rules)} rule(s) to knowledge base!\nIntegration Status: {status_message}\nRules are now available for enhanced analysis and querying.", result_df
     except json.JSONDecodeError as e:
         return f"✗ Invalid JSON format: {str(e)}\nPlease check the rule format and try again.", rag_state_df
     except Exception as e:
@@ -445,15 +443,15 @@ def get_current_config_summary():
     except Exception as e:
         return f"Error loading configuration: {str(e)}"
 
-def save_current_config(agent1_prompt, agent2_prompt, agent3_prompt, model, generation_config_str, industry):
-    """Save the current configuration values."""
+def save_and_apply_config(agent1_prompt, agent2_prompt, agent3_prompt, model, generation_config_str, industry):
+    """Save and apply the current configuration values."""
     try:
         # Parse generation config
         try:
             generation_config = json.loads(generation_config_str)
         except json.JSONDecodeError:
-            return "Invalid JSON in generation config."
-        
+            return "Invalid JSON in generation config.", False
+
         config = {
             "agent_prompts": {
                 "agent1": agent1_prompt,
@@ -467,68 +465,22 @@ def save_current_config(agent1_prompt, agent2_prompt, agent3_prompt, model, gene
             },
             "agent3_settings": {
                 "industry": industry,
-                "enabled":True
+                "enabled": True
             },
             "ui_settings": {
                 "default_tab": "Chat & Rule Summary"
             }
         }
-        
-        success, message = save_config(config)
+
+        success = save_config(config)
         if success:
             apply_config_to_runtime(config)
-            return f"✅ Configuration saved successfully! {message}"
+            return f"✓ Configuration saved and applied successfully!", True
         else:
-            return f"❌ Failed to save configuration: {message}"
+            return f"❌ Failed to save configuration.", False
     except Exception as e:
-        return f"❌ Error saving configuration: {str(e)}"
+        return f"❌ Error saving and applying configuration: {str(e)}", False
 
-def apply_saved_config():
-    """Apply the saved configuration to the UI components."""
-    try:
-        config, _ = load_config()
-        return (
-            config["agent_prompts"]["agent1"],
-            config["agent_prompts"]["agent2"], 
-            config["agent_prompts"]["agent3"],
-            config["model_config"]["default_model"],
-            json.dumps(config["model_config"]["generation_config"], indent=2),
-            config["agent3_settings"]["industry"],
-            "✅ Configuration applied successfully!"
-        )
-    except Exception as e:
-        print(f"Error applying saved config: {e}")
-        default_config = get_default_config()
-        return (
-            default_config["agent_prompts"]["agent1"],
-            default_config["agent_prompts"]["agent2"],
-            default_config["agent_prompts"]["agent3"], 
-            default_config["model_config"]["default_model"],
-            json.dumps(default_config["model_config"]["generation_config"], indent=2),
-            default_config["agent3_settings"]["industry"],
-            f"❌ Error applying configuration: {str(e)}"
-        )
-
-def reset_configuration():
-    """Reset configuration to defaults."""
-    try:
-        success, message = reset_config_to_defaults()
-        if success:
-            default_config = get_default_config()
-            apply_config_to_runtime(default_config)
-            return (
-                default_config["agent_prompts"]["agent1"],
-                default_config["agent_prompts"]["agent2"],
-                default_config["agent_prompts"]["agent3"],
-                default_config["model_config"]["default_model"],
-                json.dumps(default_config["model_config"]["generation_config"], indent=2),
-                default_config["agent3_settings"]["industry"],
-                f"✅ Configuration reset to defaults! {message}"
-            )
-        else:
-            return f"❌ Failed to reset configuration: {message}", "", "", "", "", ""
-    except Exception as e:
-        return f"❌ Error resetting configuration: {str(e)}", "", "", "", "", ""
 
 def analyze_impact_only(industry: str = "generic"):
     """
@@ -654,7 +606,7 @@ def preview_apply_rule_with_agent3(industry: str = "generic"):
                     f.write(gdst)
                 
                 success_message = (
-                    "✅ Rule Successfully Applied by Agent 3!\n\n" +
+                    "✓ Rule Successfully Applied by Agent 3!\n\n" +
                     f"📊 Impact Analysis Summary:\n{json.dumps(impact_analysis, indent=2)}\n\n" +
                     "Your DRL and GDST files are ready for download."
                 )
@@ -864,29 +816,11 @@ def create_gradio_interface():
                         gr.HTML('<div class="section-header">Agent Configuration</div>')
                         
                         # Configuration Summary
-                        with gr.Accordion("Configuration Summary", open=False):
-                            gr.Markdown("View current configuration settings and status.")
-                            config_summary = gr.Markdown("Click 'Show Configuration Summary' to see current settings.")
+                        with gr.Accordion("Configuration Summary", open=True):
+                            # Render the configuration summary at app load
+                            config_summary = gr.Markdown(get_current_config_summary())
                             
-                            summary_btn = gr.Button("Show Configuration Summary", variant="secondary", elem_classes=["btn-secondary"])
-                            summary_btn.click(
-                                get_current_config_summary,
-                                outputs=[config_summary]
-                            )
                         
-                        with gr.Accordion("Configuration Controls", open=True):
-                            gr.Markdown("Save, apply, or reset your configuration changes.")
-                            with gr.Row():
-                                save_config_btn = gr.Button("Save Changes", variant="primary", elem_classes=["btn-primary"], scale=1)
-                                apply_config_btn = gr.Button("Apply Config", variant="secondary", elem_classes=["btn-secondary"], scale=1)
-                                reset_config_btn = gr.Button("Reset to Defaults", variant="stop", elem_classes=["btn-danger"], scale=1)
-                            
-                            config_status = gr.Textbox(
-                                label="Configuration Status",
-                                value="Ready to save or apply configuration changes.",
-                                interactive=False,
-                                lines=3
-                            )
                         
                         gr.HTML('<div class="section-divider"></div>')
                         
@@ -942,6 +876,18 @@ def create_gradio_interface():
                                 lines=6,
                                 elem_classes=["code-textbox"],
                                 info="JSON configuration for AI model generation parameters"
+                            )
+
+
+                        with gr.Row():
+                            save_apply_button = gr.Button("Save", variant="primary", elem_classes=["btn-primary"], scale=1)
+
+                        with gr.Row():
+                            config_status = gr.Textbox(
+                                label="Configuration Status",
+                                value="Ready to save or apply configuration changes.",
+                                interactive=False,
+                                lines=3
                             )
 
             # Tab 2: Business Rules Management
@@ -1121,7 +1067,7 @@ def create_gradio_interface():
                                                 f.write(gdst)
                                             
                                             message = (
-                                                f"✅ Rule generation successful!\n\n"
+                                                f"✓ Rule generation successful!\n\n"
                                                 f"Rule: {rule_data.get('name', 'Unnamed Rule')}\n\n"
                                                 f"Files have been created:\n"
                                                 f"- DRL: {drl_path}\n"
@@ -1219,31 +1165,26 @@ def create_gradio_interface():
         )
         
         # Configuration save/apply event handlers
-        save_config_btn.click(
-            save_current_config,
+        def save_config_and_refresh_summary(agent1_prompt, agent2_prompt, agent3_prompt, model, generation_config, industry):
+            status_message, success = save_and_apply_config(agent1_prompt, agent2_prompt, agent3_prompt, model, generation_config, industry)
+            
+            # Only refresh the summary if save was successful
+            if success:
+                updated_summary = get_current_config_summary()
+                return status_message, updated_summary
+            else:
+                # Return the status message but don't update summary
+                return status_message, gr.update()
+                
+        save_apply_button.click(
+            save_config_and_refresh_summary,
             inputs=[
                 agent1_prompt_box, agent2_prompt_box, agent3_prompt_box, 
                 default_model_box, generation_config_box, industry_selector
             ],
-            outputs=[config_status]
+            outputs=[config_status, config_summary]
         )
         
-        apply_config_btn.click(
-            apply_saved_config,
-            outputs=[
-                agent1_prompt_box, agent2_prompt_box, agent3_prompt_box,
-                default_model_box, generation_config_box, industry_selector,
-                config_status
-            ]
-        )
-        
-        reset_config_btn.click(
-            reset_configuration,
-            outputs=[
-                agent1_prompt_box, agent2_prompt_box, agent3_prompt_box,
-                default_model_box, generation_config_box, industry_selector,
-                config_status
-            ]
-        )
+  
     return demo
 
