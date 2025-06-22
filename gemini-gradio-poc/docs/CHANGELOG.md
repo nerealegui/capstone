@@ -2,6 +2,48 @@
 
 # Changelog
 
+## [2025-01-23] - Conversation Persistence and Management
+
+### Added - Local Storage Conversation Persistence
+- **Conversation Storage System**: Complete localStorage-like functionality using JSON files for conversation persistence
+- **Conversation History UI**: New sidebar panel in Chat tab with conversation list, management controls, and statistics
+- **Auto-Save Functionality**: Conversations automatically saved after each chat interaction
+- **Conversation Management**: Load, delete, rename conversations with intuitive UI controls
+- **Knowledge Base Persistence**: Automatic saving and loading of RAG knowledge base across sessions
+- **Rules Persistence**: Storage and retrieval of business rules data
+- **Storage Statistics**: Real-time display of storage usage and conversation counts
+
+### Technical Implementation
+- **ConversationStorage Class**: New `utils/conversation_storage.py` with comprehensive storage management
+- **JSON File Storage**: Uses data/local_storage directory for persistent storage simulation
+- **Auto-Save Integration**: Integrated with chat functions for seamless conversation saving
+- **Error Handling**: Robust error handling with graceful degradation when storage unavailable
+- **Test Suite**: Comprehensive tests for all conversation storage functionality
+
+### UI Improvements
+- **Three-Column Layout**: Conversation history sidebar, chat interface, and rule summary panels
+- **Conversation Controls**: New conversation, refresh, load, delete, and rename functionality
+- **Storage Info Panel**: Displays storage statistics and conversation metadata
+- **Enhanced Chat Experience**: Persistent conversation state across application restarts
+
+### How to Use
+- Conversations are automatically saved as you chat
+- Use "➕ New Chat" to start fresh conversations
+- Click conversations in the history list and use "📂 Load" to resume
+- Rename conversations with the expandable rename panel
+- Delete unwanted conversations with "🗑️ Delete" button
+- View storage statistics in the "Storage Info" accordion
+
+### Dependencies
+- Added `utils/conversation_storage.py` for storage management
+- No additional external dependencies required
+- Uses existing pandas, json, and pathlib libraries
+
+### Testing
+- 13 comprehensive test cases covering all storage functionality
+- Tests for conversation CRUD operations, error handling, and data persistence
+- Automated test coverage for edge cases and error conditions
+
 ## [2025-06-21] - Removed Rule Versioning References
 
 ### Removed

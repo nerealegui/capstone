@@ -32,6 +32,12 @@ from utils.config_manager import (
     get_config_summary,
     reset_config_to_defaults
 )
+from utils.conversation_storage import get_storage
+
+# Global variables for conversation management
+current_conversation_id = None
+current_conversation_title = "New Conversation"
+rule_response = {}
 
 # Commented out initialize_gemini function because it will live in rag_utils.py
 # def initialize_gemini():
@@ -78,6 +84,16 @@ def build_knowledge_base_process(
     yield f"Embedding chunks...", rag_state_df
     # Pass the existing KB DataFrame for merging
     status_message, result_df = core_build_knowledge_base(file_paths, chunk_size, chunk_overlap, existing_kb_df=rag_state_df)
+    
+    # Auto-save knowledge base to storage
+    if result_df is not None and not result_df.empty:
+        try:
+            storage = get_storage()
+            storage.save_knowledge_base(result_df)
+            print(f"Knowledge base saved to storage with {len(result_df)} entries")
+        except Exception as e:
+            print(f"Warning: Could not save knowledge base to storage: {e}")
+    
     yield status_message, result_df
 
 
@@ -698,6 +714,196 @@ def initialize_gemini_client():
     )
     return client
 
+# Conversation Management Functions
+def get_conversation_list():
+    """Get formatted list of conversations for display."""
+    storage = get_storage()
+    conversations = storage.list_conversations()
+    
+    if not conversations:
+        return []
+    
+    # Format for Gradio DataFrame: [Title, Messages, Updated]
+    formatted_list = []
+    for conv in conversations:
+        title = conv.get("title", "Untitled")[:40]  # Limit title length
+        message_count = conv.get("message_count", 0)
+        updated = conv.get("updated_at", "").split("T")[0] if conv.get("updated_at") else ""  # Date only
+        formatted_list.append([title, message_count, updated])
+    
+    return formatted_list
+
+def refresh_conversation_list():
+    """Refresh the conversation list display."""
+    return get_conversation_list()
+
+def start_new_conversation():
+    """Start a new conversation."""
+    global current_conversation_id, current_conversation_title
+    
+    storage = get_storage()
+    current_conversation_id = storage.create_new_conversation_id()
+    current_conversation_title = "New Conversation"
+    
+    # Clear chat history and return empty state
+    return (
+        None,  # Clear chatbot history
+        current_conversation_title,  # Update current conversation display
+        get_conversation_list(),  # Refresh conversation list
+        pd.DataFrame(),  # Clear RAG state
+        "Name will appear here after input.",  # Reset name display
+        "Summary will appear here after input."  # Reset summary display
+    )
+
+def save_current_conversation(history, rag_state_df, industry):
+    """Save the current conversation to storage."""
+    global current_conversation_id, current_conversation_title
+    
+    if not current_conversation_id or not history:
+        return False
+    
+    storage = get_storage()
+    
+    # Generate title from first message if it's still "New Conversation"
+    if current_conversation_title == "New Conversation" and history:
+        first_message = history[0][0] if history[0] and len(history[0]) > 0 else ""
+        current_conversation_title = storage.generate_conversation_title(first_message)
+    
+    metadata = {
+        "industry": industry,
+        "mode": "Enhanced Agent 3"
+    }
+    
+    success = storage.save_conversation(
+        current_conversation_id,
+        current_conversation_title,
+        history,
+        rag_state_df,
+        metadata
+    )
+    
+    return success
+
+def load_selected_conversation(conversation_list_df):
+    """Load the selected conversation from the list."""
+    global current_conversation_id, current_conversation_title
+    
+    if conversation_list_df is None or len(conversation_list_df) == 0:
+        return (
+            None,
+            "No conversation selected",
+            get_conversation_list(),
+            pd.DataFrame(),
+            "Name will appear here after input.",
+            "Summary will appear here after input."
+        )
+    
+    # Get the selected conversation by title (first column)
+    storage = get_storage()
+    conversations = storage.list_conversations()
+    
+    if not conversations:
+        return start_new_conversation()
+    
+    # For now, load the first conversation in the list since Gradio doesn't support row selection easily
+    # In a more advanced implementation, we could use a different UI component
+    selected_conv = conversations[0]
+    conversation_data = storage.load_conversation(selected_conv["id"])
+    
+    if not conversation_data:
+        return start_new_conversation()
+    
+    # Update global state
+    current_conversation_id = conversation_data["id"]
+    current_conversation_title = conversation_data["title"]
+    
+    # Restore conversation state
+    history = conversation_data.get("history", [])
+    rag_state_df = conversation_data.get("rag_state_df", pd.DataFrame())
+    
+    return (
+        history,  # Restore chat history
+        current_conversation_title,  # Update current conversation display
+        get_conversation_list(),  # Refresh conversation list
+        rag_state_df,  # Restore RAG state
+        "Name will appear here after input.",  # Reset name display
+        "Summary will appear here after input."  # Reset summary display
+    )
+
+def delete_selected_conversation(conversation_list_df):
+    """Delete the selected conversation."""
+    if conversation_list_df is None or len(conversation_list_df) == 0:
+        return get_conversation_list(), "No conversation selected for deletion."
+    
+    # Get the first conversation from the list (simplified selection)
+    storage = get_storage()
+    conversations = storage.list_conversations()
+    
+    if not conversations:
+        return get_conversation_list(), "No conversations to delete."
+    
+    selected_conv = conversations[0]
+    success = storage.delete_conversation(selected_conv["id"])
+    
+    if success:
+        # If we deleted the current conversation, start a new one
+        global current_conversation_id
+        if current_conversation_id == selected_conv["id"]:
+            start_new_conversation()
+        
+        return get_conversation_list(), f"Deleted conversation: {selected_conv['title']}"
+    else:
+        return get_conversation_list(), "Failed to delete conversation."
+
+def rename_selected_conversation(conversation_list_df, new_title):
+    """Rename the selected conversation."""
+    global current_conversation_title
+    
+    if not new_title or not new_title.strip():
+        return get_conversation_list(), "Please enter a new title."
+    
+    if conversation_list_df is None or len(conversation_list_df) == 0:
+        return get_conversation_list(), "No conversation selected for renaming."
+    
+    # Get the first conversation from the list (simplified selection)
+    storage = get_storage()
+    conversations = storage.list_conversations()
+    
+    if not conversations:
+        return get_conversation_list(), "No conversations to rename."
+    
+    selected_conv = conversations[0]
+    success = storage.rename_conversation(selected_conv["id"], new_title.strip())
+    
+    if success:
+        # Update current conversation title if we renamed the current conversation
+        global current_conversation_id
+        if current_conversation_id == selected_conv["id"]:
+            current_conversation_title = new_title.strip()
+        
+        return get_conversation_list(), f"Renamed conversation to: {new_title.strip()}"
+    else:
+        return get_conversation_list(), "Failed to rename conversation."
+
+def get_storage_statistics():
+    """Get storage statistics for display."""
+    storage = get_storage()
+    stats = storage.get_storage_stats()
+    
+    if not stats:
+        return "Storage statistics not available."
+    
+    stats_text = f"""
+**Storage Statistics:**
+- **Conversations:** {stats.get('conversation_count', 0)}
+- **Knowledge Base Entries:** {stats.get('knowledge_base_entries', 0)}
+- **Rules:** {stats.get('rules_count', 0)}
+- **Created:** {stats.get('storage_created', 'Unknown')[:10]}
+- **Last Updated:** {stats.get('last_updated', 'Unknown')[:10]}
+"""
+    return stats_text
+
+
 def create_gradio_interface():
     """Create and return the Gradio interface for the Gemini Chat Application with two tabs: Configuration and Chat/Rule Summary."""
 
@@ -719,6 +925,26 @@ def create_gradio_interface():
         print(f"Warning: Could not load startup configuration: {e}")
         startup_config = get_default_config()
 
+    # Load saved data from storage on startup
+    try:
+        storage = get_storage()
+        
+        # Load knowledge base
+        saved_kb_df = storage.load_knowledge_base()
+        if not saved_kb_df.empty:
+            print(f"Loaded knowledge base with {len(saved_kb_df)} entries")
+        
+        # Load rules
+        saved_rules = storage.load_rules()
+        if saved_rules:
+            print(f"Loaded {len(saved_rules)} saved rules")
+            
+        print(f"Storage stats: {storage.get_storage_stats()}")
+    except Exception as e:
+        print(f"Warning: Could not load saved data: {e}")
+        saved_kb_df = pd.DataFrame()
+        saved_rules = []
+
     # Extract startup values
     startup_agent1_prompt = startup_config["agent_prompts"]["agent1"]
     startup_agent2_prompt = startup_config["agent_prompts"]["agent2"]
@@ -735,7 +961,17 @@ def create_gradio_interface():
     status_box = gr.Textbox(label="Status")
 
     # --- State for RAG DataFrame (must be defined before use) ---
-    state_rag_df = gr.State(pd.DataFrame())
+    # Initialize with saved knowledge base if available
+    try:
+        storage = get_storage()
+        initial_kb_df = storage.load_knowledge_base()
+        if initial_kb_df.empty:
+            initial_kb_df = pd.DataFrame()
+    except Exception as e:
+        print(f"Warning: Could not load initial knowledge base: {e}")
+        initial_kb_df = pd.DataFrame()
+    
+    state_rag_df = gr.State(initial_kb_df)
 
     with gr.Blocks(theme=gr.themes.Base(), css="""
         /* Hide footer and labels */
@@ -860,8 +1096,54 @@ def create_gradio_interface():
             # Tab 3: Chat & Rule Summary
             with gr.Tab("Chat & Rule Summary"):
                 with gr.Row():
-                    # Left panel: Chat
-                    with gr.Column(scale=1):
+                    # Left panel: Conversation History
+                    with gr.Column(scale=1, min_width=250):
+                        gr.Markdown("## Conversation History")
+                        
+                        # Conversation management controls
+                        with gr.Row():
+                            new_conversation_btn = gr.Button("➕ New Chat", variant="primary", scale=1)
+                            refresh_conversations_btn = gr.Button("🔄", variant="secondary", scale=0, min_width=40)
+                        
+                        # Current conversation info
+                        current_conversation_display = gr.Textbox(
+                            label="Current Conversation",
+                            value="New Conversation",
+                            interactive=False,
+                            max_lines=1
+                        )
+                        
+                        # Conversation list
+                        conversation_list = gr.Dataframe(
+                            headers=["Title", "Messages", "Updated"],
+                            datatype=["str", "number", "str"],
+                            label="Previous Conversations",
+                            interactive=False,
+                            row_count=8,
+                            column_widths=["60%", "20%", "20%"],
+                            height=300
+                        )
+                        
+                        # Conversation actions
+                        with gr.Row():
+                            load_conversation_btn = gr.Button("📂 Load", variant="secondary", scale=1)
+                            delete_conversation_btn = gr.Button("🗑️ Delete", variant="stop", scale=1)
+                        
+                        # Rename conversation
+                        with gr.Accordion("Rename Conversation", open=False):
+                            rename_input = gr.Textbox(
+                                label="New Title",
+                                placeholder="Enter new conversation title",
+                                max_lines=1
+                            )
+                            rename_btn = gr.Button("✏️ Rename", variant="secondary")
+                        
+                        # Storage stats
+                        with gr.Accordion("Storage Info", open=False):
+                            storage_stats_display = gr.Markdown("Loading storage statistics...")
+                    
+                    # Middle panel: Chat Interface
+                    with gr.Column(scale=2):
                         gr.Markdown("# Business Rules Management Assistant")
                         gr.Markdown("*Enhanced with conversational interaction, conflict detection, and impact analysis*")
                         
@@ -883,10 +1165,22 @@ def create_gradio_interface():
                             """)
                         
                         def chat_and_update_agent3(user_input, history, rag_state_df, industry):
-                            global rule_response
+                            global rule_response, current_conversation_id, current_conversation_title
+                            
+                            # Initialize conversation if needed
+                            if not current_conversation_id:
+                                storage = get_storage()
+                                current_conversation_id = storage.create_new_conversation_id()
+                                current_conversation_title = "New Conversation"
                             
                             # Always use Enhanced Agent 3 mode
                             response = chat_with_agent3(user_input, history, rag_state_df, industry)
+
+                            # Update conversation history with the new interaction
+                            updated_history = history + [[user_input, response]]
+                            
+                            # Auto-save conversation after each interaction
+                            save_current_conversation(updated_history, rag_state_df, industry)
 
                             # Extract rule information for summary display
                             if 'rule_response' in globals() and rule_response:
@@ -1123,6 +1417,50 @@ def create_gradio_interface():
                 default_model_box, generation_config_box, industry_selector,
                 config_status
             ]
+        )
+        
+        # Conversation management event handlers
+        new_conversation_btn.click(
+            start_new_conversation,
+            outputs=[
+                chat_interface.chatbot, current_conversation_display, 
+                conversation_list, state_rag_df, name_display, summary_display
+            ]
+        )
+        
+        refresh_conversations_btn.click(
+            refresh_conversation_list,
+            outputs=[conversation_list]
+        )
+        
+        load_conversation_btn.click(
+            load_selected_conversation,
+            inputs=[conversation_list],
+            outputs=[
+                chat_interface.chatbot, current_conversation_display, 
+                conversation_list, state_rag_df, name_display, summary_display
+            ]
+        )
+        
+        delete_conversation_btn.click(
+            delete_selected_conversation,
+            inputs=[conversation_list],
+            outputs=[conversation_list, current_conversation_display]  # Use current_conversation_display for status
+        )
+        
+        rename_btn.click(
+            rename_selected_conversation,
+            inputs=[conversation_list, rename_input],
+            outputs=[conversation_list, current_conversation_display]  # Use current_conversation_display for status
+        )
+        
+        # Load storage statistics on tab open
+        def update_storage_stats():
+            return get_storage_statistics()
+        
+        demo.load(
+            fn=lambda: (get_conversation_list(), get_storage_statistics()),
+            outputs=[conversation_list, storage_stats_display]
         )
     return demo
 
