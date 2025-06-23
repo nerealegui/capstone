@@ -1197,5 +1197,20 @@ def create_gradio_interface():
             outputs=[extracted_rules_list]
         )
   
+        # Add startup initialization
+        def initialize_app():
+            """Initialize the app with conversation list and create a default conversation."""
+            global current_conversation_id
+            # Start with a new conversation if none exists
+            if current_conversation_id is None:
+                current_conversation_id = start_new_conversation("New Conversation")
+            return refresh_conversation_list()
+        
+        # Add the startup initialization to the demo
+        demo.load(
+            initialize_app,
+            outputs=[conversation_list]
+        )
+        
     return demo
 

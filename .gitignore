@@ -15,3 +15,10 @@ env/
 dist/
 build/
 *.so
+
+# Conversation storage files (user data)
+conversations/
+extracted_rules.json
+generated_rule.drl
+generated_table.gdst
+temp_rules.txt
