@@ -279,7 +279,7 @@ def chat_with_agent3(user_input: str, history: list, rag_state_df: pd.DataFrame,
             # General conversation with Agent 3
             context["intent"] = "general"
             response = generate_conversational_response(
-                user_input, context, rag_state_df, industry
+                user_input, context, rag_state_df, industry, history
             )
             
         return response

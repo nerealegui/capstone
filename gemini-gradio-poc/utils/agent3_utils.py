@@ -87,7 +87,8 @@ def generate_conversational_response(
     user_query: str, 
     context: Dict[str, Any], 
     rag_df: pd.DataFrame,
-    industry: str = "generic"
+    industry: str = "generic",
+    history: List[List[str]] = None
 ) -> str:
     """
     Generate Agent 3 conversational response with context awareness.
@@ -97,7 +98,8 @@ def generate_conversational_response(
         context: Current context including rules, conflicts, etc.
         rag_df: RAG knowledge base DataFrame
         industry: Industry context
-    
+        history: Chat history as list of [user_message, assistant_message] pairs
+        
     Returns:
         Conversational response from Agent 3
     """
@@ -105,6 +107,16 @@ def generate_conversational_response(
     
     # Build enhanced prompt with industry context
     enhanced_prompt = _build_agent3_prompt(user_query, context, industry_config)
+    
+    # Process history to maintain context
+    if history is None:
+        history = []
+    
+    # Ensure history is properly formatted
+    formatted_history = []
+    for h in history:
+        if isinstance(h, list) and len(h) == 2:
+            formatted_history.append(h)
     
     # Use RAG if knowledge base is available
     if not rag_df.empty:
@@ -114,12 +126,12 @@ def generate_conversational_response(
             agent_prompt=AGENT3_PROMPT,
             model_name=DEFAULT_MODEL,
             generation_config=AGENT3_GENERATION_CONFIG,
-            history=[],
+            history=formatted_history,  # Pass the formatted history
             top_k=3
         )
     else:
         # Direct LLM call if no RAG
-        response = _direct_agent3_call(enhanced_prompt)
+        response = _direct_agent3_call(enhanced_prompt, formatted_history)
     
     return response
 
@@ -304,12 +316,32 @@ def _build_agent3_prompt(
     return base_prompt
 
 
-def _direct_agent3_call(prompt: str) -> str:
-    """Make direct call to Agent 3 when RAG is not available."""
+def _direct_agent3_call(
+    prompt: str, 
+    history: List[List[str]] = None
+) -> str:
+    """Make a direct call to the LLM using Agent 3's configuration.
+    
+    Args:
+        prompt: The prompt to send to the model
+        history: Chat history as list of [user_message, assistant_message] pairs
+        
+    Returns:
+        Model response as string
+    """
     client = initialize_gemini_client()
     
-    full_prompt = f"{AGENT3_PROMPT}\n\n{prompt}"
-    contents = [types.Content(role="user", parts=[types.Part.from_text(text=full_prompt)])]
+    # Build contents list with history
+    contents = []
+    
+    # Add history messages first
+    if history:
+        for user_msg, assistant_msg in history:
+            contents.append(types.Content(role="user", parts=[types.Part.from_text(text=user_msg)]))
+            contents.append(types.Content(role="model", parts=[types.Part.from_text(text=assistant_msg)]))
+    
+    # Add the current prompt
+    contents.append(types.Content(role="user", parts=[types.Part.from_text(text=prompt)]))
     
     try:
         response = client.models.generate_content(
@@ -319,7 +351,7 @@ def _direct_agent3_call(prompt: str) -> str:
         )
         return response.text
     except Exception as e:
-        return f"I apologize, but I encountered an error processing your request: {str(e)}"
+        return f"Error generating response: {str(e)}"
 
 
 def _extract_existing_rules_from_kb(rag_df: pd.DataFrame) -> List[Dict[str, Any]]:
