@@ -751,6 +751,13 @@ def create_gradio_interface():
                 with gr.Row():
                     # Left panel: Extracted Rules & RAG Integration
                     with gr.Column(elem_classes=["rules-section"], scale=1): 
+                        # Add search functionality
+                        search_input = gr.Textbox(
+                            label="Search Rules",
+                            placeholder="Search by rule ID, name, or description...",
+                            show_label=True
+                        )
+                        
                         # Show extracted rules as a list (rule_id, name, description)
                         extracted_rules_list = gr.Dataframe(
                             headers=["ID", "Name", "Description"],
@@ -917,32 +924,17 @@ def create_gradio_interface():
 
         # Business Rules tab event handlers
         def extract_rules_and_list(csv_file, rag_state_df):
-            status, rules_json, updated_df = extract_rules_from_uploaded_csv(csv_file, rag_state_df)
-            # Always ensure rules_json is a valid JSON string (empty list if no rules)
-            if not rules_json or rules_json.strip() == '':
-                rules_json = '[]'
+            status_msg, rules_json, updated_df = extract_rules_from_uploaded_csv(csv_file, rag_state_df)
+            
+            # Convert rules to DataFrame for display
             try:
-                rules = json.loads(rules_json)
-                # Flatten if rules is a list of lists
-                flat_rules = []
-                for r in rules:
-                    if isinstance(r, list):
-                        flat_rules.extend(r)
-                    else:
-                        flat_rules.append(r)
-                rules_list = [[r.get('rule_id', ''), r.get('name', ''), r.get('description', '')] for r in flat_rules]
-                rules_json = json.dumps(flat_rules, indent=2)
-            except Exception as e:
-                print(f"[DEBUG] Error parsing rules_json: {e}, rules_json: {rules_json}")
-                rules_list = []
-                rules_json = '[]'
-            # Use gr.update to force refresh of the DataFrame UI
-            return (
-                status,
-                rules_json,
-                gr.update(value=rules_list, visible=True),
-                updated_df
-            )
+                rules = json.loads(rules_json) if rules_json else []
+                rules_df = pd.DataFrame([(r.get('rule_id', ''), r.get('name', ''), r.get('description', '')) 
+                                       for r in rules], columns=['ID', 'Name', 'Description'])
+            except:
+                rules_df = pd.DataFrame(columns=['ID', 'Name', 'Description'])
+            
+            return status_msg, rules_json, rules_df, updated_df
         # The extracted rules table will always be refreshed after extraction (success or fail)
         extract_button.click(
             extract_rules_and_list,
@@ -998,6 +990,20 @@ def create_gradio_interface():
             outputs=[config_status, config_summary]
         )
         
+        # Add search event handler
+        def filter_rules(query: str, rules_df):
+            if not query or not isinstance(rules_df, pd.DataFrame) or rules_df.empty:
+                return rules_df
+            
+            query = query.lower()
+            mask = rules_df.apply(lambda x: x.astype(str).str.lower().str.contains(query, na=False)).any(axis=1)
+            return rules_df[mask]
+            
+        search_input.change(
+            filter_rules,
+            inputs=[search_input, extracted_rules_list],
+            outputs=[extracted_rules_list]
+        )
   
     return demo
 
