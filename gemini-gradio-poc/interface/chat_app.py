@@ -855,7 +855,7 @@ def create_gradio_interface():
                             rename_confirm_btn = gr.Button("Rename", size="sm", scale=1)
                             rename_cancel_btn = gr.Button("Cancel", size="sm", scale=1)
                     
-                    # Middle panel: Chat
+                    # Right panel: Chat
                     with gr.Column(elem_classes=["config-section"], scale=2):
                         gr.HTML('<div class="section-header">Business Rules Management Assistant</div>')
                         gr.Markdown("*Enhanced with conversational interaction, conflict detection, and impact analysis*")
@@ -889,9 +889,10 @@ def create_gradio_interface():
                             additional_outputs=[name_display, summary_display, state_rag_df],
                             additional_inputs=[state_rag_df, industry_selector],
                         )
-                    
-                    # Right panel: Rule Summary with Agent 3 enhancements
-                    with gr.Column(elem_classes=["rules-section"], scale=1):
+                
+                # Rule Summary & Generation section moved to a row below
+                with gr.Row():
+                    with gr.Column(elem_classes=["rules-section"]):
                         gr.HTML('<div class="section-header">Rule Summary & Generation</div>')
                         name_display.render()
                         summary_display.render()
@@ -1007,11 +1008,11 @@ def create_gradio_interface():
                         
                         def load_selected_conversation(conversation_list_data):
                             """Load the first selected conversation."""
-                            if not conversation_list_data or len(conversation_list_data) == 0:
+                            if conversation_list_data is None or conversation_list_data.empty:
                                 return [], "generic", "Name will appear here after input.", "Summary will appear here after input."
                             
                             # Get the conversation ID from the first row (title matches)
-                            selected_title = conversation_list_data[0][0] if conversation_list_data[0] else ""
+                            selected_title = conversation_list_data.iloc[0, 0] if len(conversation_list_data) > 0 else ""
                             conversations = conversation_storage.list_conversations()
                             
                             for conv in conversations:
@@ -1023,10 +1024,10 @@ def create_gradio_interface():
                         
                         def delete_selected_conversation(conversation_list_data):
                             """Delete the first selected conversation."""
-                            if not conversation_list_data or len(conversation_list_data) == 0:
+                            if conversation_list_data is None or conversation_list_data.empty:
                                 return refresh_conversation_list()
                             
-                            selected_title = conversation_list_data[0][0] if conversation_list_data[0] else ""
+                            selected_title = conversation_list_data.iloc[0, 0] if len(conversation_list_data) > 0 else ""
                             conversations = conversation_storage.list_conversations()
                             
                             for conv in conversations:
