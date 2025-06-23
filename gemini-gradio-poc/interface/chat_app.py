@@ -10,11 +10,10 @@ from config.agent_config import AGENT1_PROMPT, AGENT2_PROMPT, AGENT3_PROMPT, DEF
 from typing import Dict, List, Any
 from utils.json_response_handler import JsonResponseHandler
 
-#initialize initialize_gemini function from rag_utils 
 from utils.rag_utils import read_documents_from_paths, embed_texts, retrieve, rag_generate, initialize_gemini_client
 from utils.kb_utils import core_build_knowledge_base
 from utils.rule_utils import json_to_drl_gdst, verify_drools_execution
-from utils.rule_extractor import extract_rules_from_csv, validate_rule_conflicts, save_extracted_rules
+from utils.rule_extractor import extract_rules_from_csv, save_extracted_rules
 from utils.agent3_utils import (
     analyze_rule_conflicts, 
     assess_rule_impact, 
@@ -28,57 +27,56 @@ from utils.config_manager import (
     save_config,
     load_config,
     apply_config_to_runtime,
-    validate_config,
-    get_config_summary,
-    reset_config_to_defaults
+    get_config_summary
 )
-
-# Commented out initialize_gemini function because it will live in rag_utils.py
-# def initialize_gemini():
-#     api_key = os.environ.get('GOOGLE_API_KEY')
-#     if not api_key:
-#         raise ValueError("Google API key not found in environment variables. Please check your .env file.")
-
-#     client = genai.Client(
-#         api_key=api_key
-#     )
-#     return client
 
 # New function to build_knowledge_base_process, which calls functions in rag_utils.
 def build_knowledge_base_process(
     uploaded_files: list, 
-    chunk_size: int, 
-    chunk_overlap: int, 
     rag_state_df: pd.DataFrame
 ):
     """
-    Gradio generator for building the knowledge base. Handles UI status updates and delegates core logic to kb_utils.core_build_knowledge_base.
+    Enhanced Gradio generator for building the knowledge base with progress indicators.
+    Handles UI status updates and delegates core logic to kb_utils.core_build_knowledge_base.
     Args:
         uploaded_files (list): List of uploaded file-like objects (must have .name attribute).
-        chunk_size (int): Size of each text chunk.
-        chunk_overlap (int): Overlap between chunks.
         rag_state_df (pd.DataFrame): Existing RAG state DataFrame.
     Yields:
         Tuple[str, pd.DataFrame]: Status message and updated RAG DataFrame.
     """
-    # --- Gradio generator logic ---
-    yield "Processing...", rag_state_df
+    # --- Enhanced Gradio generator logic with progress indicators ---
+    yield "Starting knowledge base build process...", rag_state_df
+    
     if not uploaded_files:
-        yield "Please upload documents first.", rag_state_df if rag_state_df is not None else pd.DataFrame()
+        yield "Please upload documents first to build the knowledge base.", rag_state_df if rag_state_df is not None else pd.DataFrame()
         return
-    if chunk_size is None or chunk_size <= 0 or chunk_overlap is None or chunk_overlap < 0 or chunk_overlap >= chunk_size:
-        yield "Invalid chunk size or overlap. Chunk size > 0, overlap >= 0, overlap < chunk size.", rag_state_df
-        return
+        
     file_paths = [f.name for f in uploaded_files if f and hasattr(f, 'name') and f.name]
     if not file_paths:
-        yield "No valid file paths from upload.", rag_state_df if rag_state_df is not None else pd.DataFrame()
+        yield "No valid file paths found from upload.", rag_state_df if rag_state_df is not None else pd.DataFrame()
         return
-    yield "Reading documents...", rag_state_df
-    yield "Chunking text...", rag_state_df
-    yield f"Embedding chunks...", rag_state_df
+    
+    yield f"Processing {len(file_paths)} document(s)...", rag_state_df
+    yield f"Reading documents and extracting text content...", rag_state_df
+    yield f"Generating embeddings for enhanced search capabilities...", rag_state_df
+    
+    # Use default chunk size and overlap
+    chunk_size = 500
+    chunk_overlap = 50
+    
     # Pass the existing KB DataFrame for merging
     status_message, result_df = core_build_knowledge_base(file_paths, chunk_size, chunk_overlap, existing_kb_df=rag_state_df)
-    yield status_message, result_df
+    
+    # Enhanced status message with timestamp
+    from datetime import datetime
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    
+    if "successfully" in status_message.lower():
+        final_status = f"✓  {status_message}\nLast updated: {timestamp}\nTotal chunks in knowledge base: {len(result_df)}"
+    else:
+        final_status = f"✗ {status_message}\nAttempted at: {timestamp}"
+    
+    yield final_status, result_df
 
 
 def chat_with_rag(user_input: str, history: list, rag_state_df: pd.DataFrame):
@@ -281,7 +279,7 @@ def chat_with_agent3(user_input: str, history: list, rag_state_df: pd.DataFrame,
             # General conversation with Agent 3
             context["intent"] = "general"
             response = generate_conversational_response(
-                user_input, context, rag_state_df, industry
+                user_input, context, rag_state_df, industry, history
             )
             
         return response
@@ -291,10 +289,6 @@ def chat_with_agent3(user_input: str, history: list, rag_state_df: pd.DataFrame,
         return f"I apologize, but I encountered an error processing your request: {str(e)}"
 
 
-
-
-
-# New separate function to update the rule summary components
 def update_rule_summary():
     """Extract rule information from the global rule_response and return for UI update."""
     global rule_response
@@ -310,98 +304,36 @@ def update_rule_summary():
         print(f"Error in update_rule_summary: {e}")
         return "Error loading rule data", "Error loading rule data"
 
-def extract_rules_from_uploaded_csv(csv_file):
+def extract_rules_from_uploaded_csv(csv_file, rag_state_df=None):
     """
-    Process uploaded CSV file to extract business rules.
+    Enhanced process for extracting business rules from CSV and automatically adding them to the knowledge base.
     
     Args:
         csv_file: Gradio file upload object
+        rag_state_df: Current RAG state DataFrame
         
     Returns:
-        Tuple[str, str]: Status message and extracted rules JSON as string
+        Tuple[str, str, pd.DataFrame]: Status message, extracted rules JSON as string, and updated RAG DataFrame
     """
     if not csv_file:
-        return "Please upload a CSV file first.", ""
+        return "Please upload a CSV file first to begin rule extraction.", "", pd.DataFrame(columns=['ID', 'Name', 'Description'])
     
     try:
         # Extract rules from CSV
         rules = extract_rules_from_csv(csv_file.name)
         
         if not rules:
-            return "No rules found in the CSV file.", ""
+            return "No business rules found in the CSV file. Please check the file format and content.", "", pd.DataFrame(columns=['ID', 'Name', 'Description'])
         
         # Save extracted rules
         output_path = "extracted_rules.json"
         success = save_extracted_rules(rules, output_path)
         
-        if success:
-            rules_json = json.dumps(rules, indent=2)
-            return f"Successfully extracted {len(rules)} rules from CSV.", rules_json
-        else:
-            return "Error saving extracted rules.", ""
-            
-    except Exception as e:
-        return f"Error processing CSV file: {str(e)}", ""
-
-def validate_new_rule(rule_json_str: str):
-    """
-    Validate a new rule against existing rules.
-    
-    Args:
-        rule_json_str (str): JSON string of the new rule
+        if not success:
+            return "✗ Error saving extracted rules to file. Please check file permissions.", "", rag_state_df
         
-    Returns:
-        str: Validation results
-    """
-    if not rule_json_str.strip():
-        return "Please provide a rule in JSON format."
-    
-    try:
-        new_rule = json.loads(rule_json_str)
+        rules_json = json.dumps(rules, indent=2)
         
-        # Load existing rules (from sample data for now)
-        existing_rules = []
-        try:
-            with open("extracted_rules.json", 'r') as f:
-                existing_rules = json.load(f)
-        except FileNotFoundError:
-            pass
-        
-        # Check for conflicts
-        conflicts = validate_rule_conflicts(new_rule, existing_rules)
-        
-        if conflicts:
-            conflict_messages = []
-            for conflict in conflicts:
-                conflict_messages.append(f"⚠️ {conflict['type']}: {conflict['message']}")
-            return "Validation Issues Found:\n" + "\n".join(conflict_messages)
-        else:
-            return ""
-            
-    except json.JSONDecodeError as e:
-        return f"❌ Invalid JSON format: {str(e)}"
-    except Exception as e:
-        return f"❌ Validation error: {str(e)}"
-
-def add_rules_to_knowledge_base(rules_json_str: str, rag_state_df: pd.DataFrame):
-    """
-    Add extracted rules to the RAG knowledge base.
-    
-    Args:
-        rules_json_str (str): JSON string of extracted rules (must be a list of dicts, not a list of lists)
-        rag_state_df (pd.DataFrame): Current RAG state
-        
-    Returns:
-        Tuple[str, pd.DataFrame]: Status message and updated RAG DataFrame
-    """
-    if not rules_json_str.strip():
-        return "No rules to add to knowledge base.", rag_state_df
-    
-    try:
-        rules = json.loads(rules_json_str)
-        # Defensive: if rules is a list of lists (from DataFrame), error out
-        if rules and isinstance(rules, list) and isinstance(rules[0], list):
-            return ("❌ Error: Please use the extracted rules JSON, not the table, for KB integration.", rag_state_df)
         # Convert rules to text for RAG indexing
         rule_texts = []
         for rule in rules:
@@ -414,19 +346,36 @@ Priority: {rule.get('priority', 'Medium')}
 Active: {rule.get('active', True)}
 """
             rule_texts.append(rule_text)
+        
+        # Prepare a temporary file for the RAG system
         temp_file = "temp_rules.txt"
         with open(temp_file, 'w') as f:
             f.write("\n".join(rule_texts))
-        status_message, result_df = core_build_knowledge_base([temp_file], 300, 50)
+        
+        # Add rules to knowledge base using the core_build_knowledge_base function
+        status_message, updated_df = core_build_knowledge_base([temp_file], existing_kb_df=rag_state_df)
+        
+        # Clean up temporary file
         try:
             os.remove(temp_file)
         except:
             pass
-        return f"Successfully added {len(rules)} rules to knowledge base. {status_message}", result_df
-    except json.JSONDecodeError as e:
-        return f"Invalid JSON format: {str(e)}", rag_state_df
+        
+        if "successfully" in status_message.lower():
+            # Include a timestamp for the successful operation
+            from datetime import datetime
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            full_status = f"✓  Successfully extracted {len(rules)} business rule(s) from CSV file and added to knowledge base.\n"\
+                          f"Last updated: {timestamp}\n"\
+                          f"Rules saved to: {output_path}\n"\
+                          f"Knowledge base now contains {len(updated_df)} chunks."
+            return full_status, rules_json, updated_df
+        else:
+            return f"✓  Rules extracted but couldn't be added to knowledge base: {status_message}", rules_json, rag_state_df
+            
     except Exception as e:
-        return f"Error adding rules to knowledge base: {str(e)}", rag_state_df
+        return f"✗ Error processing CSV file: {str(e)}\nPlease ensure the CSV file contains valid business rule data.", "", rag_state_df
+
 
 # Configuration management functions
 def get_current_config_summary():
@@ -437,15 +386,15 @@ def get_current_config_summary():
     except Exception as e:
         return f"Error loading configuration: {str(e)}"
 
-def save_current_config(agent1_prompt, agent2_prompt, agent3_prompt, model, generation_config_str, industry):
-    """Save the current configuration values."""
+def save_and_apply_config(agent1_prompt, agent2_prompt, agent3_prompt, model, generation_config_str, industry):
+    """Save and apply the current configuration values."""
     try:
         # Parse generation config
         try:
             generation_config = json.loads(generation_config_str)
         except json.JSONDecodeError:
-            return "Invalid JSON in generation config."
-        
+            return "Invalid JSON in generation config.", False
+
         config = {
             "agent_prompts": {
                 "agent1": agent1_prompt,
@@ -459,68 +408,22 @@ def save_current_config(agent1_prompt, agent2_prompt, agent3_prompt, model, gene
             },
             "agent3_settings": {
                 "industry": industry,
-                "enabled":True
+                "enabled": True
             },
             "ui_settings": {
                 "default_tab": "Chat & Rule Summary"
             }
         }
-        
-        success, message = save_config(config)
+
+        success = save_config(config)
         if success:
             apply_config_to_runtime(config)
-            return f"✅ Configuration saved successfully! {message}"
+            return f"✓ Configuration saved and applied successfully!", True
         else:
-            return f"❌ Failed to save configuration: {message}"
+            return f"❌ Failed to save configuration.", False
     except Exception as e:
-        return f"❌ Error saving configuration: {str(e)}"
+        return f"❌ Error saving and applying configuration: {str(e)}", False
 
-def apply_saved_config():
-    """Apply the saved configuration to the UI components."""
-    try:
-        config, _ = load_config()
-        return (
-            config["agent_prompts"]["agent1"],
-            config["agent_prompts"]["agent2"], 
-            config["agent_prompts"]["agent3"],
-            config["model_config"]["default_model"],
-            json.dumps(config["model_config"]["generation_config"], indent=2),
-            config["agent3_settings"]["industry"],
-            "✅ Configuration applied successfully!"
-        )
-    except Exception as e:
-        print(f"Error applying saved config: {e}")
-        default_config = get_default_config()
-        return (
-            default_config["agent_prompts"]["agent1"],
-            default_config["agent_prompts"]["agent2"],
-            default_config["agent_prompts"]["agent3"], 
-            default_config["model_config"]["default_model"],
-            json.dumps(default_config["model_config"]["generation_config"], indent=2),
-            default_config["agent3_settings"]["industry"],
-            f"❌ Error applying configuration: {str(e)}"
-        )
-
-def reset_configuration():
-    """Reset configuration to defaults."""
-    try:
-        success, message = reset_config_to_defaults()
-        if success:
-            default_config = get_default_config()
-            apply_config_to_runtime(default_config)
-            return (
-                default_config["agent_prompts"]["agent1"],
-                default_config["agent_prompts"]["agent2"],
-                default_config["agent_prompts"]["agent3"],
-                default_config["model_config"]["default_model"],
-                json.dumps(default_config["model_config"]["generation_config"], indent=2),
-                default_config["agent3_settings"]["industry"],
-                f"✅ Configuration reset to defaults! {message}"
-            )
-        else:
-            return f"❌ Failed to reset configuration: {message}", "", "", "", "", ""
-    except Exception as e:
-        return f"❌ Error resetting configuration: {str(e)}", "", "", "", "", ""
 
 def analyze_impact_only(industry: str = "generic"):
     """
@@ -580,113 +483,6 @@ def analyze_impact_only(industry: str = "generic"):
     except Exception as e:
         return (f"Agent 3 Analysis Error: {str(e)}", None, None)
 
-def preview_apply_rule_with_agent3(industry: str = "generic"):
-    """
-    Enhanced preview and apply function using Agent 3 for orchestration and conflict analysis.
-    Returns:
-        Tuple[str, str, str]: Status message, DRL file path, GDST file path
-    """
-    global rule_response
-    try:
-        if 'rule_response' not in globals() or not rule_response:
-            return "No rule to apply. Please interact with the chat first.", None, None
-
-        # Get existing rules for validation
-        existing_rules = []
-        try:
-            with open("extracted_rules.json", 'r') as f:
-                existing_rules = json.load(f)
-        except FileNotFoundError:
-            pass
-
-        # Use Agent 3 for enhanced conflict detection and impact analysis
-        conflicts, conflict_analysis = analyze_rule_conflicts(
-            rule_response, existing_rules, industry
-        )
-        
-        impact_analysis = assess_rule_impact(
-            rule_response, existing_rules, industry
-        )
-
-        if conflicts:
-            conflict_messages = []
-            for conflict in conflicts:
-                impact_info = conflict.get('industry_impact', 'No impact analysis available')
-                conflict_messages.append(
-                    f"⚠️ {conflict['type']}: {conflict['message']}\n"
-                    f"   Industry Impact: {impact_info}"
-                )
-            
-            detailed_message = (
-                "⚠️ Conflicts Detected by Agent 3:\n\n" + 
-                "\n\n".join(conflict_messages) + 
-                f"\n\n📊 Detailed Analysis:\n{conflict_analysis}\n\n" +
-                f"📈 Impact Assessment:\n{json.dumps(impact_analysis, indent=2)}\n\n" +
-                "Please resolve these conflicts before proceeding."
-            )
-            return (detailed_message, None, None)
-
-        # If no conflicts, orchestrate with Agent 2
-        should_proceed, status_msg, orchestration_result = orchestrate_rule_generation(
-            "proceed", rule_response, conflicts
-        )
-        
-        if should_proceed:
-            # Generate DRL and GDST using Agent 2
-            drl, gdst = json_to_drl_gdst(rule_response)
-            verified = verify_drools_execution(drl, gdst)
-            
-            if verified:
-                # Save files for download
-                drl_path = "generated_rule.drl"
-                gdst_path = "generated_table.gdst"
-                with open(drl_path, "w") as f:
-                    f.write(drl)
-                with open(gdst_path, "w") as f:
-                    f.write(gdst)
-                
-                success_message = (
-                    "✅ Rule Successfully Applied by Agent 3!\n\n" +
-                    f"📊 Impact Analysis Summary:\n{json.dumps(impact_analysis, indent=2)}\n\n" +
-                    "Your DRL and GDST files are ready for download."
-                )
-                return (success_message, drl_path, gdst_path)
-            else:
-                return ("Verification failed during Agent 2 processing.", None, None)
-        else:
-            return (status_msg, None, None)
-            
-    except Exception as e:
-        return (f"Agent 3 Error: {str(e)}", None, None)
-
-
-def generate_drools_files_direct(industry: str = "generic"):
-    """
-    Direct drools file generation without impact analysis - for Standard Chat mode.
-    Returns:
-        Tuple[str, str, str]: Status message, DRL file path, GDST file path
-    """
-    global rule_response
-    try:
-        if 'rule_response' not in globals() or not rule_response:
-            return "No rule to generate files from. Please interact with the chat first.", None, None
-
-        # Generate DRL and GDST using Agent 2 directly
-        drl, gdst = json_to_drl_gdst(rule_response)
-        
-        # Save files for download
-        drl_path = "generated_rule.drl"
-        gdst_path = "generated_table.gdst"
-        with open(drl_path, "w") as f:
-            f.write(drl)
-        with open(gdst_path, "w") as f:
-            f.write(gdst)
-        
-        return ("Files generated successfully.", drl_path, gdst_path)
-            
-    except Exception as e:
-        return (f"Error: {str(e)}", None, None)
-
 # New function to initialize_gemini_client, moved from rag_utils
 def initialize_gemini_client():
     api_key = os.environ.get('GOOGLE_API_KEY')
@@ -737,83 +533,178 @@ def create_gradio_interface():
     # --- State for RAG DataFrame (must be defined before use) ---
     state_rag_df = gr.State(pd.DataFrame())
 
-    with gr.Blocks(theme=gr.themes.Base(), css="""
-        /* Hide footer and labels */
+    with gr.Blocks(theme=gr.themes.Soft(), css="""
+        /* Enhanced UI Styling */
         footer {visibility: hidden}
-        label[data-testid='block-label'] {visibility: hidden}
+        
+        /* Main container improvements */
+        .gradio-container {
+            max-width: 1400px !important;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* Section styling with cards */
+        .config-section {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        .kb-section {
+            background: linear-gradient(135deg, #fefbff 0%, #f8f4ff 100%);
+            border: 1px solid #e9d5ff;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(139, 92, 246, 0.1);
+        }
+        
+        .rules-section {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        /* Section headers */
+        .section-header {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        /* Octicon styling */
+        .octicon {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Blue Color Palette */
+        .blue-4 .octicon {
+            fill: #218bff !important;
+        }
+        .blue-5 .octicon {
+            fill: #0969da !important;
+        }
+        
+        /* File generation status styling */
+        .file-status {
+            background-color: #f0f9ff;
+            border-left: 4px solid #0284c7;
+            padding: 12px 16px;
+            margin: 16px 0;
+            border-radius: 4px;
+            font-size: 0.95rem;
+        }
+        
+        .file-status p {
+            margin: 0;
+            line-height: 1.5;
+        }
     """) as demo:
         # --- UI Definition ---
         with gr.Tabs():
             # Tab 1: Configuration
             with gr.Tab("Configuration"):
+                gr.Markdown("""
+                # Business Rules Engine Configuration
+                Configure your knowledge base, upload business rules, and customize agent behavior for optimal rule extraction and analysis.
+                """)
+                
                 with gr.Row():
                     # Knowledge Base Setup Column
-                    with gr.Column(elem_classes=["equal-col", "column-box"], scale=1, min_width=300):
-                        gr.Markdown("### Knowledge Base Setup")
+                    with gr.Column(elem_classes=["kb-section"], scale=1, min_width=300):
+                        gr.HTML('<div class="section-header blue-4"><svg class="octicon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M8 0a8 8 0 1 0 8 8A8 8 0 0 0 8 0zm0 15A7 7 0 1 1 15 8a7 7 0 0 1-7 7z"></path><path d="M8 4a1 1 0 1 0 1 1 1 1 0 0 0-1-1zm1 3H7v4h2z"></path></svg> Knowledge Base Setup</div>')
+                        
                         with gr.Accordion("Upload Documents & Configure RAG", open=True):
                             document_upload = gr.File(
                                 label="Upload Documents (.docx, .pdf)",
                                 file_count="multiple",
                                 file_types=['.docx', '.pdf'],
-                                height=150
+                                height=120,
+                                elem_classes=["file-upload"]
                             )
-                            chunk_size_input = gr.Number(label="Chunk Size", value=500, precision=0, interactive=True)
-                            chunk_overlap_input = gr.Number(label="Chunk Overlap", value=50, precision=0, interactive=True)
-                            build_kb_button = gr.Button("Build Knowledge Base", variant="primary")
+                            
+                            build_kb_button = gr.Button("Build Knowledge Base", variant="primary", elem_classes=["btn-primary"])
+                            
                             rag_status_display = gr.Textbox(
                                 label="Knowledge Base Status",
-                                value="Knowledge base not built yet.",
-                                interactive=False
+                                value="Knowledge base not built yet. Upload documents and click 'Build Knowledge Base' to get started.",
+                                interactive=False,
+                                lines=2
                             )
                         
-                        gr.Markdown("### Business Rule Upload & Extraction")
+                        gr.HTML('<div class="section-divider"></div>')
+                        
+                        gr.HTML('<div class="section-header blue-5"><svg class="octicon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M8 0a8 8 0 1 0 8 8A8 8 0 0 0 8 0zm0 15A7 7 0 1 1 15 8a7 7 0 0 1-7 7z"></path><path d="M8 4a1 1 0 1 0 1 1 1 1 0 0 0-1-1zm1 3H7v4h2z"></path></svg> Business Rule Upload & Extraction</div>')
                         with gr.Accordion("Upload Business Rules CSV", open=True):
                             csv_upload = gr.File(
                                 label="Upload Business Rules CSV",
                                 file_types=['.csv'],
-                                height=100
+                                height=100,
+                                elem_classes=["file-upload"]
                             )
-                            extract_button = gr.Button("Extract Rules from CSV", variant="primary")
+                            extract_button = gr.Button("Extract Rules", variant="primary", elem_classes=["btn-primary"])
                             extraction_status = gr.Textbox(
                                 label="Extraction Status",
-                                value="Upload a CSV file and click 'Extract Rules' to begin.",
-                                interactive=False
+                                value="Upload a CSV file and click 'Extract Rules' to extract rules and add them to the knowledge base.",
+                                interactive=False,
+                                lines=2
                             )
                     
                     # Agent Config Variables Column
-                    with gr.Column(scale=1):
-                        gr.Markdown("### Agent Configuration")
+                    with gr.Column(elem_classes=["config-section"], scale=1):
+                        gr.HTML('<div class="section-header">Agent Configuration</div>')
                         
                         # Configuration Summary
-                        with gr.Accordion("Configuration Summary", open=False):
-                            config_summary = gr.Markdown("Click 'Apply Configuration' to see current settings summary.")
+                        with gr.Accordion("Configuration Summary", open=True):
+                            # Render the configuration summary at app load
+                            config_summary = gr.Markdown(get_current_config_summary())
                             
-                            summary_btn = gr.Button("🔍 Show Configuration Summary", variant="secondary")
-                            summary_btn.click(
-                                get_current_config_summary,
-                                outputs=[config_summary]
+                        
+                        
+                        gr.HTML('<div class="section-divider"></div>')
+                        
+                        # Agent Prompts with collapsible sections
+                        with gr.Accordion("Agent 1 Prompt (Rule Extraction)", open=False):
+                            gr.Markdown("Configure the prompt for the rule extraction agent.")
+                            agent1_prompt_box = gr.Textbox(
+                                value=startup_agent1_prompt, 
+                                label="Agent 1 Prompt", 
+                                lines=8,
+                                elem_classes=["code-textbox"],
+                                info="This agent extracts business rules from documents"
                             )
                         
-                        with gr.Accordion("Configuration Controls", open=True):
-                            with gr.Row():
-                                save_config_btn = gr.Button("💾 Save Configuration", variant="primary", scale=1)
-                                apply_config_btn = gr.Button("⚡ Apply Configuration", variant="secondary", scale=1)
-                                reset_config_btn = gr.Button("🔄 Reset to Defaults", variant="stop", scale=1)
-                            
-                            config_status = gr.Textbox(
-                                label="Configuration Status",
-                                value="Ready to save or apply configuration changes.",
-                                interactive=False,
-                                lines=3
+                        with gr.Accordion("Agent 2 Prompt (Rule Validation)", open=False):
+                            gr.Markdown("Configure the prompt for the rule validation agent.")
+                            agent2_prompt_box = gr.Textbox(
+                                value=startup_agent2_prompt, 
+                                label="Agent 2 Prompt", 
+                                lines=4,
+                                elem_classes=["code-textbox"],
+                                info="This agent validates and checks rule consistency"
                             )
                         
-                        agent1_prompt_box = gr.Textbox(value=startup_agent1_prompt, label="Agent 1 Prompt", lines=8)
-                        agent2_prompt_box = gr.Textbox(value=startup_agent2_prompt, label="Agent 2 Prompt", lines=4)
-                        
-                        # Agent 3 Configuration Section
-                        gr.Markdown("### Agent 3 (Business Rules Management)")
-                        with gr.Accordion("Agent 3 Configuration", open=True):
-                            agent3_prompt_box = gr.Textbox(value=startup_agent3_prompt, label="Agent 3 Prompt", lines=6)
+                        with gr.Accordion("Agent 3 Prompt (Business Rules Management)", open=False):
+                            gr.Markdown("Configure the prompt for the business rules management agent.")
+                            agent3_prompt_box = gr.Textbox(
+                                value=startup_agent3_prompt, 
+                                label="Agent 3 Prompt", 
+                                lines=6,
+                                elem_classes=["code-textbox"],
+                                info="This agent manages business rules and generates Drools files"
+                            )
                             
                             # Industry Selection for Agent 3
                             industry_selector = gr.Dropdown(
@@ -823,15 +714,50 @@ def create_gradio_interface():
                                 info="Select industry for specialized rule analysis"
                             )
                         
-                        default_model_box = gr.Textbox(value=startup_model, label="Default Model")
-                        generation_config_box = gr.Textbox(value=startup_generation_config, label="Generation Config (JSON)", lines=6)
+                        with gr.Accordion("Model Configuration", open=False):
+                            gr.Markdown("Configure the AI model and generation settings.")
+                            default_model_box = gr.Textbox(
+                                value=startup_model, 
+                                label="Default Model",
+                                info="Specify the AI model to use for processing"
+                            )
+                            generation_config_box = gr.Textbox(
+                                value=startup_generation_config, 
+                                label="Generation Config (JSON)", 
+                                lines=6,
+                                elem_classes=["code-textbox"],
+                                info="JSON configuration for AI model generation parameters"
+                            )
+
+
+                        with gr.Row():
+                            save_apply_button = gr.Button("Save", variant="primary", elem_classes=["btn-primary"], scale=1)
+
+                        with gr.Row():
+                            config_status = gr.Textbox(
+                                label="Configuration Status",
+                                value="Ready to save or apply configuration changes.",
+                                interactive=False,
+                                lines=3
+                            )
 
             # Tab 2: Business Rules Management
             with gr.Tab("Business Rules"):
+                gr.Markdown("""
+                # Business Rules Management
+                View extracted rules, integrate them into your knowledge base, and validate new business rules.
+                """)
+                
                 with gr.Row():
                     # Left panel: Extracted Rules & RAG Integration
-                    with gr.Column(scale=1):
-                        gr.Markdown("### Extracted Rules")
+                    with gr.Column(elem_classes=["rules-section"], scale=1): 
+                        # Add search functionality
+                        search_input = gr.Textbox(
+                            label="Search Rules",
+                            placeholder="Search by rule ID, name, or description...",
+                            show_label=True
+                        )
+                        
                         # Show extracted rules as a list (rule_id, name, description)
                         extracted_rules_list = gr.Dataframe(
                             headers=["ID", "Name", "Description"],
@@ -839,10 +765,12 @@ def create_gradio_interface():
                             label="Extracted Rules List",
                             interactive=False,
                             visible=True,
-                            row_count=5,
-                            col_count=3,
-                            column_widths=["150px", "300px", "auto"]
+                            wrap=True,
+                            row_count=20,
+                            column_widths=["150px", "300px", "auto"],
+                            value=pd.DataFrame(columns=['ID', 'Name', 'Description'])
                         )
+                        
                         # Hidden textbox to store the JSON for KB integration
                         extracted_rules_display = gr.Textbox(
                             label="Extracted Rules (JSON)",
@@ -851,36 +779,20 @@ def create_gradio_interface():
                             interactive=False,
                             visible=False
                         )
-                        add_to_kb_button = gr.Button("Add Rules to Knowledge Base", variant="primary")
-                        kb_integration_status = gr.Textbox(
-                            label="Knowledge Base Integration Status",
-                            interactive=False
-                        )
-
+                        
+                    
             # Tab 3: Chat & Rule Summary
             with gr.Tab("Chat & Rule Summary"):
+                gr.Markdown("""
+                # Interactive Business Rules Assistant
+                Chat with your AI assistant to create, analyze, and manage business rules with intelligent conflict detection and impact analysis.
+                """)
+                
                 with gr.Row():
                     # Left panel: Chat
-                    with gr.Column(scale=1):
-                        gr.Markdown("# Business Rules Management Assistant")
+                    with gr.Column(elem_classes=["config-section"], scale=1):
+                        gr.HTML('<div class="section-header">Business Rules Management Assistant</div>')
                         gr.Markdown("*Enhanced with conversational interaction, conflict detection, and impact analysis*")
-                        
-                        # Agent 3 Capabilities - always visible in Enhanced mode
-                        agent3_capabilities_accordion = gr.Accordion("Agent Capabilities", open=False, visible=True)
-                        with agent3_capabilities_accordion:
-                            gr.Markdown("""
-                            **What the agent can help you with:**
-                            - 🔍 **Rule Creation**: "Create a rule for 10% discount on orders over $100"
-                            - ⚠️ **Conflict Detection**: "Check for conflicts with this rule"
-                            - 📊 **Impact Analysis**: "What's the impact of changing our pricing rule?"
-                            - 🤝 **Conversational Support**: Ask questions in natural language
-                            - 🏭 **Industry Adaptation**: Specialized analysis for different industries
-                            
-                            **Example queries:**
-                            - "What happens if I modify the employee scheduling rule?"
-                            - "Are there any conflicts with my new discount policy?"
-                            - "Create a rule for restaurant peak hour staffing"
-                            """)
                         
                         def chat_and_update_agent3(user_input, history, rag_state_df, industry):
                             global rule_response
@@ -910,51 +822,38 @@ def create_gradio_interface():
                         )
                     
                     # Right panel: Rule Summary with Agent 3 enhancements
-                    with gr.Column(scale=1):
-                        gr.Markdown("# Rule Summary & Generation")
+                    with gr.Column(elem_classes=["rules-section"], scale=1):
+                        gr.HTML('<div class="section-header">Rule Summary & Generation</div>')
                         name_display.render()
                         summary_display.render()
                         
                         # Fixed button for Enhanced Agent 3 mode only
-                        action_button = gr.Button("Analyze Impact", variant="primary")
+                        action_button = gr.Button("Analyze Impact", variant="primary", elem_classes=["btn-primary"])
                         
                         status_box.render()
                         drl_file.render()
                         gdst_file.render()
                         
-                        # Agent 3 Decision Support - always visible in Enhanced mode
-                        decision_support_accordion = gr.Accordion("Decision Support", open=False, visible=True)
+                        decision_support_accordion = gr.Accordion("File Generation", open=False, visible=True)
                         with decision_support_accordion:
-                            decision_input = gr.Textbox(
-                                label="Your Decision",
-                                placeholder="Type 'proceed', 'modify', or 'cancel'",
-                                interactive=True
-                            )
-                            decision_button = gr.Button("Submit Decision", variant="secondary")
-                            decision_output = gr.Textbox(
-                                label="Orchestration Result",
-                                interactive=False
+                            
+                            decision_button = gr.Button("Generate Files", variant="secondary", elem_classes=["btn-secondary"])
+                            file_generation_status = gr.Markdown(
+                                "File generation status will appear here after you click 'Generate Files'.",
+                                label="Status",
+                                elem_classes=["file-status"]
                             )
                             decision_drl_file = gr.File(label="Download Generated DRL")
                             decision_gdst_file = gr.File(label="Download Generated GDST")
                             
-                            def handle_decision(decision, industry):
+                            def handle_generation(industry):
                                 """
-                                Process user's decision about rule generation and orchestrate the next steps.
-                                Handles the orchestration result and triggers Agent 2 when appropriate.
-                                
                                 Args:
-                                    decision (str): User's decision (proceed, modify, cancel)
                                     industry (str): Selected industry context
                                 
                                 Returns:
                                     Tuple: (status_message, drl_file, gdst_file)
                                 """
-                                global rule_response
-                                
-                                if 'rule_response' not in globals() or not rule_response:
-                                    return "No rule available for decision processing.", None, None
-                                
                                 # Get existing rules for validation
                                 existing_rules = []
                                 try:
@@ -962,26 +861,19 @@ def create_gradio_interface():
                                         existing_rules = json.load(f)
                                 except FileNotFoundError:
                                     pass
-                                
                                 # Check for conflicts first
                                 conflicts, conflict_analysis = analyze_rule_conflicts(
                                     rule_response, existing_rules, industry
                                 )
-                                
-                                # Call orchestrate_rule_generation with the user's decision
-                                should_proceed, status_msg, orchestration_result_json = orchestrate_rule_generation(
-                                    decision, rule_response, conflicts
-                                )
-                                
-                                # Early return if we shouldn't proceed
-                                if not should_proceed:
-                                    return status_msg, None, None
+                                should_proceed, status_msg, orchestration_result_json = orchestrate_rule_generation(rule_response, conflicts)
                                 
                                 # Parse the orchestration result
                                 try:
-                                    orchestration_result = json.loads(orchestration_result_json)
+                                    if orchestration_result_json:
+                                        orchestration_result = json.loads(orchestration_result_json)
+                                    else:
+                                        orchestration_result = None
                                     
-                                    # Check if Agent 2 should be triggered
                                     if orchestration_result.get("agent2_trigger", False):
                                         # Get the rule data from the orchestration result
                                         rule_data = orchestration_result.get("rule_data", {})
@@ -1000,76 +892,57 @@ def create_gradio_interface():
                                                 f.write(gdst)
                                             
                                             message = (
-                                                f"✅ Rule generation successful!\n\n"
-                                                f"Rule: {rule_data.get('name', 'Unnamed Rule')}\n\n"
-                                                f"Files have been created:\n"
-                                                f"- DRL: {drl_path}\n"
-                                                f"- GDST: {gdst_path}\n\n"
-                                                f"You can download them below."
+                                                f"### ✓ Rule Generation Successful\n\n"
+                                                f"**Rule:** {rule_data.get('name', 'Unnamed Rule')}\n\n"
+                                                f"**Files have been created:**\n"
+                                                f"- **DRL**: {drl_path}\n"
+                                                f"- **GDST**: {gdst_path}\n\n"
+                                                f"You can download the files below."
                                             )
                                             return message, drl_path, gdst_path
                                         else:
-                                            return "⚠️ Rule syntax verified, but execution verification failed.", None, None
+                                            return "### ⚠️ Generation Issue\n\nRule syntax verified, but execution verification failed.", None, None
                                     
-                                    return f"{status_msg} {orchestration_result.get('action', '')}", None, None
+                                    return f"### ℹ️ Status Update\n\n{status_msg} {orchestration_result.get('action', '')}", None, None
                                     
                                 except json.JSONDecodeError:
-                                    return f"Error processing orchestration result. {status_msg}", None, None
+                                    return f"### ⚠️ Processing Error\n\nError processing orchestration result.\n\n{status_msg}", None, None
                                 except Exception as e:
-                                    return f"Error during rule generation: {str(e)}", None, None
+                                    return f"### ❌ Generation Error\n\nAn error occurred during rule generation:\n\n```\n{str(e)}\n```", None, None
                             
                             decision_button.click(
-                                handle_decision,
-                                inputs=[decision_input, industry_selector],
-                                outputs=[decision_output, decision_drl_file, decision_gdst_file]
+                                handle_generation,
+                                inputs=[industry_selector],
+                                outputs=[file_generation_status, decision_drl_file, decision_gdst_file]
                             )
 
         # --- Event Actions (must be inside Blocks context) ---
         build_kb_button.click(
             build_knowledge_base_process,
-            inputs=[document_upload, chunk_size_input, chunk_overlap_input, state_rag_df],
+            inputs=[document_upload, state_rag_df],
             outputs=[rag_status_display, state_rag_df]
         )
 
         # Business Rules tab event handlers
-        def extract_rules_and_list(csv_file):
-            status, rules_json = extract_rules_from_uploaded_csv(csv_file)
-            # Always ensure rules_json is a valid JSON string (empty list if no rules)
-            if not rules_json or rules_json.strip() == '':
-                rules_json = '[]'
+        def extract_rules_and_list(csv_file, rag_state_df):
+            status_msg, rules_json, updated_df = extract_rules_from_uploaded_csv(csv_file, rag_state_df)
+            
+            # Convert rules to DataFrame for display
             try:
-                rules = json.loads(rules_json)
-                # Flatten if rules is a list of lists
-                flat_rules = []
-                for r in rules:
-                    if isinstance(r, list):
-                        flat_rules.extend(r)
-                    else:
-                        flat_rules.append(r)
-                rules_list = [[r.get('rule_id', ''), r.get('name', ''), r.get('description', '')] for r in flat_rules]
-                rules_json = json.dumps(flat_rules, indent=2)
-            except Exception as e:
-                print(f"[DEBUG] Error parsing rules_json: {e}, rules_json: {rules_json}")
-                rules_list = []
-                rules_json = '[]'
-            # Use gr.update to force refresh of the DataFrame UI
-            return (
-                status,
-                rules_json,
-                gr.update(value=rules_list, visible=True)
-            )
+                rules = json.loads(rules_json) if rules_json else []
+                rules_df = pd.DataFrame([(r.get('rule_id', ''), r.get('name', ''), r.get('description', '')) 
+                                       for r in rules], columns=['ID', 'Name', 'Description'])
+            except:
+                rules_df = pd.DataFrame(columns=['ID', 'Name', 'Description'])
+            
+            return status_msg, rules_json, rules_df, updated_df
         # The extracted rules table will always be refreshed after extraction (success or fail)
         extract_button.click(
             extract_rules_and_list,
-            inputs=[csv_upload],
-            outputs=[extraction_status, extracted_rules_display, extracted_rules_list]
+            inputs=[csv_upload, state_rag_df],
+            outputs=[extraction_status, extracted_rules_display, extracted_rules_list, state_rag_df]
         )
-        # IMPORTANT: Only pass the JSON textbox as input to add_rules_to_knowledge_base, never the table
-        add_to_kb_button.click(
-            add_rules_to_knowledge_base,
-            inputs=[extracted_rules_display, state_rag_df],
-            outputs=[kb_integration_status, state_rag_df]
-        )
+        # Rules are now automatically added to knowledge base during extraction
 
         # Ensure chat_interface uses state_rag_df as input and output, so it always gets the latest KB
         def chat_and_update(user_input, history, rag_state_df, mode=None, industry=None):
@@ -1098,31 +971,89 @@ def create_gradio_interface():
         )
         
         # Configuration save/apply event handlers
-        save_config_btn.click(
-            save_current_config,
+        def save_config_and_refresh_summary(agent1_prompt, agent2_prompt, agent3_prompt, model, generation_config, industry):
+            status_message, success = save_and_apply_config(agent1_prompt, agent2_prompt, agent3_prompt, model, generation_config, industry)
+            
+            # Only refresh the summary if save was successful
+            if success:
+                updated_summary = get_current_config_summary()
+                return status_message, updated_summary
+            else:
+                # Return the status message but don't update summary
+                return status_message, gr.update()
+                
+        save_apply_button.click(
+            save_config_and_refresh_summary,
             inputs=[
                 agent1_prompt_box, agent2_prompt_box, agent3_prompt_box, 
                 default_model_box, generation_config_box, industry_selector
             ],
-            outputs=[config_status]
+            outputs=[config_status, config_summary]
         )
         
-        apply_config_btn.click(
-            apply_saved_config,
-            outputs=[
-                agent1_prompt_box, agent2_prompt_box, agent3_prompt_box,
-                default_model_box, generation_config_box, industry_selector,
-                config_status
-            ]
+        # Add search event handler
+        def process_rules_to_df(rules_data):
+            """Convert rules to DataFrame and ensure proper formatting"""
+            try:
+                if isinstance(rules_data, str):
+                    rules = json.loads(rules_data)
+                else:
+                    rules = rules_data
+
+                if not rules:
+                    return pd.DataFrame(columns=['ID', 'Name', 'Description'])
+
+                # Create list of valid rules
+                valid_rules = []
+                for rule in rules:
+                    if rule and isinstance(rule, dict):
+                        rule_id = rule.get('rule_id', '')
+                        name = rule.get('name', '')
+                        desc = rule.get('description', '')
+                        if rule_id and name and desc:  # Only add if all fields have values
+                            valid_rules.append((rule_id, name, desc))
+
+                # Create DataFrame with proper column names
+                df = pd.DataFrame(valid_rules, columns=['ID', 'Name', 'Description'])
+                return df.reset_index(drop=True)  # Reset index to remove gaps
+            except Exception as e:
+                print(f"Error processing rules: {e}")
+                return pd.DataFrame(columns=['ID', 'Name', 'Description'])
+
+        def filter_rules(query: str, current_rules_df, rules_json: str):
+            """Filter rules based on search query"""
+            try:
+                # If query is empty or current_rules_df is empty, show all rules
+                if not query or query.strip() == "":
+                    return process_rules_to_df(rules_json)
+
+                # Ensure we're working with the correct column names
+                if not isinstance(current_rules_df, pd.DataFrame):
+                    return process_rules_to_df(rules_json)
+
+                # Make sure DataFrame has the correct columns
+                current_rules_df.columns = ['ID', 'Name', 'Description']
+                
+                # Filter based on query
+                query = query.lower().strip()
+                mask = (
+                    current_rules_df['ID'].astype(str).str.lower().str.contains(query, na=False) |
+                    current_rules_df['Name'].astype(str).str.lower().str.contains(query, na=False) |
+                    current_rules_df['Description'].astype(str).str.lower().str.contains(query, na=False)
+                )
+                filtered_df = current_rules_df[mask].reset_index(drop=True)
+                return filtered_df
+
+            except Exception as e:
+                print(f"Error in filter_rules: {e}")
+                return process_rules_to_df(rules_json)
+
+        # Connect the search functionality
+        search_input.change(
+            filter_rules,
+            inputs=[search_input, extracted_rules_list, extracted_rules_display],
+            outputs=[extracted_rules_list]
         )
-        
-        reset_config_btn.click(
-            reset_configuration,
-            outputs=[
-                agent1_prompt_box, agent2_prompt_box, agent3_prompt_box,
-                default_model_box, generation_config_box, industry_selector,
-                config_status
-            ]
-        )
+  
     return demo
 

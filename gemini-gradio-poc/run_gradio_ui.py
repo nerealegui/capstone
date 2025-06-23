@@ -35,7 +35,7 @@ def ensure_virtualenv():
                 subprocess.check_call([sys.executable, "-m", "venv", str(venv_path)],
                                        stdout=sys.stdout, stderr=sys.stderr,
                                        cwd=Path(__file__).parent)
-                print(f"✅ Virtual environment created at {venv_path}")
+                print(f"✓ Virtual environment created at {venv_path}")
             except subprocess.CalledProcessError as e:
                 print(f"❌ Failed to create virtual environment. Error: {e}")
                 print("Please try creating it manually: python -m venv venv")
@@ -69,7 +69,7 @@ def ensure_virtualenv():
 
         sys.exit(1) # Exit as the user needs to activate manually
 
-    print(f"✅ Running inside virtual environment: {sys.prefix}")
+    print(f"✓ Running inside virtual environment: {sys.prefix}")
 
 def check_dependencies():
     """Check if required dependencies are installed, install if missing."""

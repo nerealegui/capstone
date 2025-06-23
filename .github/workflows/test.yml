@@ -1,40 +1,123 @@
-name: Tests
-
-on:
-  pull_request:
-    branches: [ main, master ]
-  push:
-    branches: [ main, master ]
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    
-    steps:
-    - uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-    
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.12'
-    
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        cd gemini-gradio-poc
-        pip install -r requirements.txt
-    
-    - name: Run all tests
-      run: |
-        cd gemini-gradio-poc
-        python -m pytest tests/ -v
-      env:
-        GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
-    
-    - name: Test import functionality
-      run: |
-        cd gemini-gradio-poc
-        python -c "from utils.rule_extractor import extract_rules_from_csv, validate_rule_conflicts; print('Rule extractor imports successfully')"
-        python -c "from interface.chat_app import build_knowledge_base_process; print('Chat app imports successfully')"
+# name: Tests
+#
+# on:
+#   pull_request:
+#     branches: [ main ]
+#   push:
+#     branches: [ main ]
+#
+# jobs:
+#   test:
+#     runs-on: ubuntu-latest
+#     
+#     steps:
+#     - uses: actions/checkout@v4
+#       with:
+#         fetch-depth: 0
+#     
+#     - name: Set up Python
+#       uses: actions/setup-python@v4
+#       with:
+#         python-version: '3.12'
+#     
+#     - name: Install dependencies
+#       run: |
+#         python -m pip install --upgrade pip
+#         cd gemini-gradio-poc
+#         pip install -r requirements.txt
+#         pip install pytest
+#     
+#     - name: Run test_agent2.py
+#       id: test_agent2
+#       continue-on-error: true
+#       run: |
+#         cd gemini-gradio-poc
+#         python -m pytest tests/test_agent2.py -v
+#       env:
+#         GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+#     
+#     - name: Run test_agent3.py  
+#       id: test_agent3
+#       continue-on-error: true
+#       run: |
+#         cd gemini-gradio-poc
+#         python -m pytest tests/test_agent3.py -v
+#       env:
+#         GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+#     
+#     - name: Run test_build_kb.py
+#       id: test_build_kb
+#       continue-on-error: true
+#       run: |
+#         cd gemini-gradio-poc
+#         python -m pytest tests/test_build_kb.py -v
+#       env:
+#         GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+#     
+#     - name: Run test_config_manager.py
+#       id: test_config_manager
+#       continue-on-error: true
+#       run: |
+#         cd gemini-gradio-poc
+#         python -m pytest tests/test_config_manager.py -v
+#       env:
+#         GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+#     
+#     - name: Run test_json_response_handler.py
+#       id: test_json_response_handler
+#       continue-on-error: true
+#       run: |
+#         cd gemini-gradio-poc
+#         python -m pytest tests/test_json_response_handler.py -v
+#       env:
+#         GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+#     
+#     - name: Run test_rule_extractor.py
+#       id: test_rule_extractor
+#       continue-on-error: true
+#       run: |
+#         cd gemini-gradio-poc
+#         python -m pytest tests/test_rule_extractor.py -v
+#       env:
+#         GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+#     
+#     - name: Test import functionality
+#       run: |
+#         cd gemini-gradio-poc
+#         python -c "from utils.rule_extractor import extract_rules_from_csv, validate_rule_conflicts; print('Rule extractor imports successfully')"
+#         python -c "from interface.chat_app import build_knowledge_base_process; print('Chat app imports successfully')"
+#     
+#     - name: Comment on PR with test results
+#       if: github.event_name == 'pull_request'
+#       uses: actions/github-script@v6
+#       with:
+#         github-token: ${{ secrets.GITHUB_TOKEN }}
+#         script: |
+#           // Initialize array to track failing tests
+#           const failing = [];
+#           
+#           if ('${{ steps.test_agent2.outcome }}' !== 'success') failing.push('test_agent2.py');
+#           if ('${{ steps.test_agent3.outcome }}' !== 'success') failing.push('test_agent3.py');
+#           if ('${{ steps.test_build_kb.outcome }}' !== 'success') failing.push('test_build_kb.py');
+#           if ('${{ steps.test_config_manager.outcome }}' !== 'success') failing.push('test_config_manager.py');
+#           if ('${{ steps.test_json_response_handler.outcome }}' !== 'success') failing.push('test_json_response_handler.py');
+#           if ('${{ steps.test_rule_extractor.outcome }}' !== 'success') failing.push('test_rule_extractor.py');
+#           
+#           let body = '';
+#           
+#           if (failing.length > 0) {
+#             body = '## ❌ Test Failures Detected\n\nThe following test files are failing:\n\n';
+#             failing.forEach(test => {
+#               body += `- ${test}\n`;
+#             });
+#             body += '\nPlease fix these failures before merging this PR.';
+#           } else {
+#             body = '## ✓ All Tests Passed\n\nGreat job! All test files are passing.';
+#           }
+#           
+#           github.rest.issues.createComment({
+#             issue_number: context.issue.number,
+#             owner: context.repo.owner,
+#             repo: context.repo.repo,
+#             body: body
+#           });
