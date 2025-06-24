@@ -1,0 +1,438 @@
+"""
+Langraph Workflow Orchestrator for Business Rule Management Platform
+
+This module provides Langraph-based workflow orchestration for the multi-agent
+business rule management system, enabling visual workflow design and better
+orchestration of LLM tasks.
+"""
+
+import json
+import pandas as pd
+from typing import Dict, List, Any, Optional, Tuple, TypedDict
+from langgraph.graph import Graph, StateGraph
+from langgraph.graph.message import add_messages
+from langchain_core.messages import HumanMessage, AIMessage, BaseMessage
+
+# Import existing agent utilities
+from utils.rag_utils import rag_generate, initialize_gemini_client
+from utils.rule_utils import json_to_drl_gdst, verify_drools_execution
+from utils.agent3_utils import (
+    analyze_rule_conflicts, 
+    assess_rule_impact, 
+    generate_conversational_response,
+    orchestrate_rule_generation
+)
+from utils.json_response_handler import JsonResponseHandler
+from config.agent_config import AGENT1_PROMPT, AGENT2_PROMPT
+
+
+class WorkflowState(TypedDict):
+    """State object for the Langraph workflow"""
+    messages: List[BaseMessage]
+    user_input: str
+    structured_rule: Optional[Dict[str, Any]]
+    conflicts: List[Dict[str, Any]]
+    impact_analysis: Optional[Dict[str, Any]]
+    drl_content: Optional[str]
+    gdst_content: Optional[str]
+    verification_result: Optional[str]
+    rag_df: Optional[pd.DataFrame]
+    industry: str
+    error_message: Optional[str]
+    final_response: str
+
+
+class BusinessRuleWorkflow:
+    """
+    Langraph-based workflow orchestrator for business rule management.
+    
+    This class defines a workflow graph that orchestrates the interaction
+    between different agents in the business rule management platform.
+    """
+    
+    def __init__(self):
+        """Initialize the workflow with Langraph StateGraph"""
+        self.graph = StateGraph(WorkflowState)
+        self._build_workflow()
+        
+    def _build_workflow(self):
+        """Build the Langraph workflow by defining nodes and edges"""
+        
+        # Add nodes for each agent/task
+        self.graph.add_node("agent1_parse_rule", self._agent1_parse_rule)
+        self.graph.add_node("agent3_conflict_analysis", self._agent3_conflict_analysis)
+        self.graph.add_node("agent3_impact_analysis", self._agent3_impact_analysis)
+        self.graph.add_node("agent3_orchestration", self._agent3_orchestration)
+        self.graph.add_node("agent2_generate_files", self._agent2_generate_files)
+        self.graph.add_node("verify_files", self._verify_files)
+        self.graph.add_node("generate_response", self._generate_response)
+        self.graph.add_node("handle_error", self._handle_error)
+        
+        # Set entry point
+        self.graph.set_entry_point("agent1_parse_rule")
+        
+        # Define workflow edges
+        self.graph.add_conditional_edges(
+            "agent1_parse_rule",
+            self._should_proceed_to_conflict_analysis,
+            {
+                "conflict_analysis": "agent3_conflict_analysis",
+                "error": "handle_error"
+            }
+        )
+        
+        self.graph.add_edge("agent3_conflict_analysis", "agent3_impact_analysis")
+        self.graph.add_edge("agent3_impact_analysis", "agent3_orchestration")
+        
+        self.graph.add_conditional_edges(
+            "agent3_orchestration",
+            self._should_generate_files,
+            {
+                "generate_files": "agent2_generate_files",
+                "response_only": "generate_response",
+                "error": "handle_error"
+            }
+        )
+        
+        self.graph.add_edge("agent2_generate_files", "verify_files")
+        self.graph.add_edge("verify_files", "generate_response")
+        self.graph.add_edge("handle_error", "generate_response")
+        
+        # Set finish point
+        self.graph.set_finish_point("generate_response")
+        
+    def _agent1_parse_rule(self, state: WorkflowState) -> WorkflowState:
+        """
+        Agent 1: Parse natural language input into structured JSON rule
+        """
+        try:
+            print(f"[Workflow] Agent 1: Parsing user input: {state['user_input'][:100]}...")
+            
+            # Use RAG if available
+            if state.get('rag_df') is not None and not state['rag_df'].empty:
+                response = rag_generate(
+                    user_query=state['user_input'],
+                    context={},
+                    rag_df=state['rag_df'],
+                    industry=state.get('industry', 'generic'),
+                    history=[]
+                )
+            else:
+                # Fallback to direct LLM call without RAG
+                client = initialize_gemini_client()
+                prompt = f"{AGENT1_PROMPT}\n\nUser Input: {state['user_input']}"
+                
+                response_obj = client.models.generate_content(
+                    model="gemini-2.0-flash-exp",
+                    contents=[{"role": "user", "parts": [{"text": prompt}]}]
+                )
+                response = response_obj.text
+            
+            # Parse JSON response
+            handler = JsonResponseHandler()
+            structured_rule = handler.parse_json_response(response)
+            
+            state["structured_rule"] = structured_rule
+            state["messages"].append(AIMessage(content=f"Parsed rule: {json.dumps(structured_rule, indent=2)}"))
+            
+            print(f"[Workflow] Agent 1: Successfully parsed rule")
+            return state
+            
+        except Exception as e:
+            print(f"[Workflow] Agent 1 Error: {e}")
+            state["error_message"] = f"Failed to parse rule: {str(e)}"
+            return state
+    
+    def _agent3_conflict_analysis(self, state: WorkflowState) -> WorkflowState:
+        """
+        Agent 3: Analyze potential conflicts with existing rules
+        """
+        try:
+            print("[Workflow] Agent 3: Analyzing rule conflicts...")
+            
+            if not state.get("structured_rule"):
+                state["error_message"] = "No structured rule available for conflict analysis"
+                return state
+            
+            # Extract existing rules from knowledge base
+            existing_rules = []
+            if state.get('rag_df') is not None and not state['rag_df'].empty:
+                # Extract rules from RAG DataFrame
+                for _, row in state['rag_df'].iterrows():
+                    if 'rule' in str(row.get('text', '')).lower():
+                        existing_rules.append({
+                            "rule_id": f"existing_{len(existing_rules)}",
+                            "name": f"Existing Rule {len(existing_rules)}",
+                            "description": row.get('text', '')[:200]
+                        })
+            
+            # Analyze conflicts
+            conflicts, _ = analyze_rule_conflicts(
+                state["structured_rule"],
+                existing_rules,
+                state.get('industry', 'generic')
+            )
+            
+            state["conflicts"] = conflicts
+            state["messages"].append(AIMessage(content=f"Found {len(conflicts)} potential conflicts"))
+            
+            print(f"[Workflow] Agent 3: Found {len(conflicts)} conflicts")
+            return state
+            
+        except Exception as e:
+            print(f"[Workflow] Agent 3 Conflict Analysis Error: {e}")
+            state["error_message"] = f"Failed conflict analysis: {str(e)}"
+            return state
+    
+    def _agent3_impact_analysis(self, state: WorkflowState) -> WorkflowState:
+        """
+        Agent 3: Assess the impact of the proposed rule
+        """
+        try:
+            print("[Workflow] Agent 3: Analyzing rule impact...")
+            
+            if not state.get("structured_rule"):
+                state["error_message"] = "No structured rule available for impact analysis"
+                return state
+            
+            # Assess impact
+            impact_analysis = assess_rule_impact(
+                state["structured_rule"],
+                [],  # existing_rules - simplified for now
+                state.get('industry', 'generic')
+            )
+            
+            state["impact_analysis"] = impact_analysis
+            state["messages"].append(AIMessage(content=f"Impact analysis completed"))
+            
+            print("[Workflow] Agent 3: Impact analysis completed")
+            return state
+            
+        except Exception as e:
+            print(f"[Workflow] Agent 3 Impact Analysis Error: {e}")
+            state["error_message"] = f"Failed impact analysis: {str(e)}"
+            return state
+    
+    def _agent3_orchestration(self, state: WorkflowState) -> WorkflowState:
+        """
+        Agent 3: Orchestrate the next steps based on conflicts and impact
+        """
+        try:
+            print("[Workflow] Agent 3: Orchestrating next steps...")
+            
+            should_proceed, message, orchestration_result = orchestrate_rule_generation(
+                state["structured_rule"],
+                state.get("conflicts", [])
+            )
+            
+            state["messages"].append(AIMessage(content=message))
+            
+            # Set flag for conditional routing
+            state["should_proceed_to_generation"] = should_proceed
+            
+            print(f"[Workflow] Agent 3: Orchestration decision: {should_proceed}")
+            return state
+            
+        except Exception as e:
+            print(f"[Workflow] Agent 3 Orchestration Error: {e}")
+            state["error_message"] = f"Failed orchestration: {str(e)}"
+            return state
+    
+    def _agent2_generate_files(self, state: WorkflowState) -> WorkflowState:
+        """
+        Agent 2: Generate DRL and GDST files from structured rule
+        """
+        try:
+            print("[Workflow] Agent 2: Generating DRL and GDST files...")
+            
+            if not state.get("structured_rule"):
+                state["error_message"] = "No structured rule available for file generation"
+                return state
+            
+            # Generate files using existing function
+            drl_content, gdst_content = json_to_drl_gdst(state["structured_rule"])
+            
+            state["drl_content"] = drl_content
+            state["gdst_content"] = gdst_content
+            state["messages"].append(AIMessage(content="Generated DRL and GDST files"))
+            
+            print("[Workflow] Agent 2: File generation completed")
+            return state
+            
+        except Exception as e:
+            print(f"[Workflow] Agent 2 Error: {e}")
+            state["error_message"] = f"Failed file generation: {str(e)}"
+            return state
+    
+    def _verify_files(self, state: WorkflowState) -> WorkflowState:
+        """
+        Verify the generated DRL and GDST files
+        """
+        try:
+            print("[Workflow] Verifying generated files...")
+            
+            if not state.get("drl_content") or not state.get("gdst_content"):
+                state["error_message"] = "No files available for verification"
+                return state
+            
+            # Verify files using existing function
+            verification_result = verify_drools_execution(
+                state["drl_content"], 
+                state["gdst_content"]
+            )
+            
+            state["verification_result"] = verification_result
+            state["messages"].append(AIMessage(content=f"Verification: {verification_result}"))
+            
+            print("[Workflow] File verification completed")
+            return state
+            
+        except Exception as e:
+            print(f"[Workflow] Verification Error: {e}")
+            state["error_message"] = f"Failed verification: {str(e)}"
+            return state
+    
+    def _generate_response(self, state: WorkflowState) -> WorkflowState:
+        """
+        Generate final response for the user
+        """
+        try:
+            print("[Workflow] Generating final response...")
+            
+            if state.get("error_message"):
+                response = f"I encountered an error: {state['error_message']}"
+            else:
+                # Generate conversational response using Agent 3
+                response = generate_conversational_response(
+                    state["user_input"],
+                    {"structured_rule": state.get("structured_rule")},
+                    state.get("rag_df", pd.DataFrame()),
+                    state.get("industry", "generic"),
+                    []
+                )
+            
+            state["final_response"] = response
+            state["messages"].append(AIMessage(content=response))
+            
+            print("[Workflow] Final response generated")
+            return state
+            
+        except Exception as e:
+            print(f"[Workflow] Response Generation Error: {e}")
+            state["final_response"] = f"Error generating response: {str(e)}"
+            return state
+    
+    def _handle_error(self, state: WorkflowState) -> WorkflowState:
+        """
+        Handle errors that occur during the workflow
+        """
+        print(f"[Workflow] Handling error: {state.get('error_message', 'Unknown error')}")
+        
+        # Ensure we have an error message
+        if not state.get("error_message"):
+            state["error_message"] = "An unexpected error occurred in the workflow"
+        
+        return state
+    
+    def _should_proceed_to_conflict_analysis(self, state: WorkflowState) -> str:
+        """Conditional edge: Check if we should proceed to conflict analysis"""
+        if state.get("error_message"):
+            return "error"
+        if state.get("structured_rule"):
+            return "conflict_analysis"
+        return "error"
+    
+    def _should_generate_files(self, state: WorkflowState) -> str:
+        """Conditional edge: Check if we should generate files"""
+        if state.get("error_message"):
+            return "error"
+        if state.get("should_proceed_to_generation", False):
+            return "generate_files"
+        return "response_only"
+    
+    def run_workflow(
+        self, 
+        user_input: str, 
+        rag_df: Optional[pd.DataFrame] = None,
+        industry: str = "generic"
+    ) -> Dict[str, Any]:
+        """
+        Run the complete workflow for business rule processing
+        
+        Args:
+            user_input: Natural language input from user
+            rag_df: RAG knowledge base DataFrame (optional)
+            industry: Industry context for rule processing
+            
+        Returns:
+            Dictionary containing workflow results
+        """
+        print(f"[Workflow] Starting workflow for input: {user_input[:100]}...")
+        
+        # Initialize state
+        initial_state = WorkflowState(
+            messages=[HumanMessage(content=user_input)],
+            user_input=user_input,
+            structured_rule=None,
+            conflicts=[],
+            impact_analysis=None,
+            drl_content=None,
+            gdst_content=None,
+            verification_result=None,
+            rag_df=rag_df,
+            industry=industry,
+            error_message=None,
+            final_response=""
+        )
+        
+        # Compile and run the graph
+        try:
+            compiled_graph = self.graph.compile()
+            final_state = compiled_graph.invoke(initial_state)
+            
+            print("[Workflow] Workflow completed successfully")
+            
+            # Return results
+            return {
+                "response": final_state.get("final_response", ""),
+                "structured_rule": final_state.get("structured_rule"),
+                "conflicts": final_state.get("conflicts", []),
+                "impact_analysis": final_state.get("impact_analysis"),
+                "drl_content": final_state.get("drl_content"),
+                "gdst_content": final_state.get("gdst_content"),
+                "verification_result": final_state.get("verification_result"),
+                "messages": [msg.content for msg in final_state.get("messages", [])],
+                "error": final_state.get("error_message")
+            }
+            
+        except Exception as e:
+            print(f"[Workflow] Workflow execution failed: {e}")
+            return {
+                "response": f"Workflow execution failed: {str(e)}",
+                "error": str(e)
+            }
+
+
+def create_workflow() -> BusinessRuleWorkflow:
+    """Factory function to create a new workflow instance"""
+    return BusinessRuleWorkflow()
+
+
+def run_business_rule_workflow(
+    user_input: str,
+    rag_df: Optional[pd.DataFrame] = None,
+    industry: str = "generic"
+) -> Dict[str, Any]:
+    """
+    Convenience function to run the business rule workflow
+    
+    Args:
+        user_input: Natural language input from user
+        rag_df: RAG knowledge base DataFrame (optional) 
+        industry: Industry context for rule processing
+        
+    Returns:
+        Dictionary containing workflow results
+    """
+    workflow = create_workflow()
+    return workflow.run_workflow(user_input, rag_df, industry)

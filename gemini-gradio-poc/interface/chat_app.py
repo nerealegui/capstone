@@ -29,6 +29,11 @@ from utils.config_manager import (
     apply_config_to_runtime,
     get_config_summary
 )
+from utils.workflow_orchestrator import run_business_rule_workflow
+
+# Global variables
+rule_response = {}  # Used for UI updates  
+use_langraph_workflow = True  # Toggle for Langraph workflow orchestration
 
 # New function to build_knowledge_base_process, which calls functions in rag_utils.
 def build_knowledge_base_process(
@@ -149,8 +154,72 @@ def chat_with_rag(user_input: str, history: list, rag_state_df: pd.DataFrame):
 
 def chat_with_agent3(user_input: str, history: list, rag_state_df: pd.DataFrame, industry: str = "generic"):
     """
-    Enhanced chat function using Agent 3 for conversational interaction with conflict detection and impact analysis.
-    Uses saved configuration when available.
+    Enhanced Agent 3 conversation with conflict detection, impact analysis, and optional Langraph workflow orchestration.
+    
+    This function can either use the traditional Agent 3 approach or the new Langraph workflow 
+    orchestration based on the global use_langraph_workflow flag.
+    """
+    global rule_response, use_langraph_workflow
+    
+    # Defensive: ensure rag_state_df is always a DataFrame
+    if rag_state_df is None:
+        rag_state_df = pd.DataFrame()
+    
+    # Check if we should use Langraph workflow
+    if use_langraph_workflow:
+        try:
+            print(f"[Chat] Using Langraph workflow for: {user_input[:100]}...")
+            
+            # Run Langraph workflow
+            workflow_result = run_business_rule_workflow(
+                user_input=user_input,
+                rag_df=rag_state_df if not rag_state_df.empty else None,
+                industry=industry
+            )
+            
+            # Extract results for UI updates
+            if workflow_result.get("structured_rule"):
+                rule_response = workflow_result["structured_rule"]
+                # Add workflow metadata
+                rule_response["workflow_type"] = "langraph"
+                rule_response["summary"] = workflow_result.get("response", "")
+                
+                # Add workflow execution details
+                if workflow_result.get("conflicts"):
+                    rule_response["conflicts_found"] = len(workflow_result["conflicts"])
+                if workflow_result.get("verification_result"):
+                    rule_response["verification"] = workflow_result["verification_result"]
+            else:
+                # Default rule_response for non-rule conversations
+                rule_response = {
+                    "name": "Langraph Workflow Response",
+                    "summary": workflow_result.get("response", ""),
+                    "workflow_type": "langraph",
+                    "logic": {"message": "Processed via Langraph workflow"}
+                }
+            
+            response = workflow_result.get("response", "I processed your request using the Langraph workflow.")
+            
+            # If there was an error, fall back to traditional approach
+            if workflow_result.get("error"):
+                print(f"[Chat] Langraph workflow error: {workflow_result['error']}")
+                print("[Chat] Falling back to traditional Agent 3 approach...")
+                return _traditional_agent3_chat(user_input, history, rag_state_df, industry)
+            
+            return response
+            
+        except Exception as e:
+            print(f"[Chat] Langraph workflow failed: {e}")
+            print("[Chat] Falling back to traditional Agent 3 approach...")
+            return _traditional_agent3_chat(user_input, history, rag_state_df, industry)
+    else:
+        # Use traditional Agent 3 approach
+        return _traditional_agent3_chat(user_input, history, rag_state_df, industry)
+
+
+def _traditional_agent3_chat(user_input: str, history: list, rag_state_df: pd.DataFrame, industry: str = "generic"):
+    """
+    Traditional Agent 3 conversation (original implementation)
     """
     global rule_response
     
@@ -793,6 +862,27 @@ def create_gradio_interface():
                     with gr.Column(elem_classes=["config-section"], scale=1):
                         gr.HTML('<div class="section-header">Business Rules Management Assistant</div>')
                         gr.Markdown("*Enhanced with conversational interaction, conflict detection, and impact analysis*")
+                        
+                        # Langraph workflow toggle
+                        langraph_toggle = gr.Checkbox(
+                            label="🔄 Use Langraph Workflow Orchestration",
+                            value=True,
+                            info="Enable Langraph-based workflow orchestration for visual workflow design and better transparency"
+                        )
+                        
+                        def toggle_langraph_workflow(enabled):
+                            global use_langraph_workflow
+                            use_langraph_workflow = enabled
+                            status = "✅ Langraph workflow enabled" if enabled else "❌ Using traditional Agent 3 workflow"
+                            print(f"[Config] {status}")
+                            return status
+                        
+                        langraph_status = gr.Markdown("✅ Langraph workflow enabled")
+                        langraph_toggle.change(
+                            fn=toggle_langraph_workflow,
+                            inputs=[langraph_toggle],
+                            outputs=[langraph_status]
+                        )
                         
                         def chat_and_update_agent3(user_input, history, rag_state_df, industry):
                             global rule_response
