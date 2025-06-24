@@ -1009,7 +1009,7 @@ def create_gradio_interface():
                         def load_selected_conversation(conversation_list_data):
                             """Load the first selected conversation."""
                             if conversation_list_data is None or conversation_list_data.empty:
-                                return [], "generic", "Name will appear here after input.", "Summary will appear here after input."
+                                return gr.update(value=[]), "generic", "Name will appear here after input.", "Summary will appear here after input."
                             
                             # Get the conversation ID from the first row (title matches)
                             selected_title = conversation_list_data.iloc[0, 0] if len(conversation_list_data) > 0 else ""
@@ -1018,9 +1018,10 @@ def create_gradio_interface():
                             for conv in conversations:
                                 if conv.get("title") == selected_title:
                                     history, industry = load_conversation_by_id(conv["id"])
-                                    return history, industry, "Name will appear here after input.", "Summary will appear here after input."
+                                    # Use gr.update to ensure the chatbot component refreshes properly
+                                    return gr.update(value=history), industry, "Name will appear here after input.", "Summary will appear here after input."
                             
-                            return [], "generic", "Name will appear here after input.", "Summary will appear here after input."
+                            return gr.update(value=[]), "generic", "Name will appear here after input.", "Summary will appear here after input."
                         
                         def delete_selected_conversation(conversation_list_data):
                             """Delete the first selected conversation."""
