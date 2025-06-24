@@ -1144,6 +1144,82 @@ def create_gradio_interface():
             inputs=[search_input, extracted_rules_list, extracted_rules_display],
             outputs=[extracted_rules_list]
         )
+        
+        # Tab 4: Workflow Visualization
+        with gr.Tab("Langraph Workflow"):
+            gr.Markdown("""
+            # Langraph Workflow Visualization
+            Explore the visual workflow design and execution transparency provided by Langraph orchestration.
+            """)
+            
+            with gr.Row():
+                # Left panel: Workflow Diagram
+                with gr.Column(scale=2):
+                    gr.HTML('<div class="section-header">Workflow Architecture</div>')
+                    
+                    from utils.workflow_orchestrator import get_workflow_visualization, create_workflow
+                    
+                    workflow_diagram = gr.Markdown(
+                        value=get_workflow_visualization(),
+                        label="Workflow Diagram"
+                    )
+                
+                # Right panel: Workflow Metrics and Controls
+                with gr.Column(scale=1):
+                    gr.HTML('<div class="section-header">Workflow Information</div>')
+                    
+                    def get_workflow_info():
+                        try:
+                            workflow = create_workflow()
+                            metrics = workflow.get_workflow_metrics()
+                            
+                            info = f"""
+**Workflow Metrics:**
+- **Total Nodes:** {metrics.get('total_nodes', 'Unknown')}
+- **Workflow Type:** {metrics.get('workflow_type', 'Unknown')}
+- **Entry Point:** {metrics.get('entry_point', 'Unknown')}
+- **Finish Point:** {metrics.get('finish_point', 'Unknown')}
+- **Conditional Routing:** {'✅' if metrics.get('supports_conditional_routing') else '❌'}
+- **Error Handling:** {'✅' if metrics.get('error_handling') else '❌'}
+- **Fallback Enabled:** {'✅' if metrics.get('fallback_enabled') else '❌'}
+
+**Node Names:**
+{chr(10).join(f'• {node}' for node in metrics.get('node_names', []))}
+
+**Current Status:**
+- Langraph: {'✅ Active' if use_langraph_workflow else '❌ Disabled'}
+- Traditional Agent 3: {'❌ Standby' if use_langraph_workflow else '✅ Active'}
+                            """
+                            return info
+                        except Exception as e:
+                            return f"Error getting workflow info: {str(e)}"
+                    
+                    workflow_info = gr.Markdown(
+                        value=get_workflow_info(),
+                        label="Workflow Status"
+                    )
+                    
+                    refresh_button = gr.Button("🔄 Refresh Metrics", variant="secondary")
+                    refresh_button.click(
+                        fn=get_workflow_info,
+                        outputs=[workflow_info]
+                    )
+                    
+                    gr.Markdown("""
+**Langraph Benefits:**
+- 🎯 **Visual Design**: Clear workflow representation
+- 🔧 **Modular Components**: Reusable agent nodes
+- 🔍 **Transparency**: Execution tracking & debugging  
+- 🌊 **Flexible Orchestration**: Conditional routing
+- 🤝 **Collaboration**: Easier team development
+- 📈 **Scalability**: Complex workflow management
+
+**Usage:**
+1. Enable Langraph in the Chat tab
+2. Submit business rule requests
+3. Monitor workflow execution
+4. View transparent agent interactions
+                    """)
   
     return demo
 

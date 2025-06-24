@@ -42,6 +42,78 @@ class WorkflowState(TypedDict):
     final_response: str
 
 
+def get_workflow_visualization() -> str:
+    """
+    Generate a text-based visualization of the Langraph workflow
+    
+    Returns:
+        String representation of the workflow graph
+    """
+    return """
+🔄 Business Rule Management Workflow (Langraph)
+
+┌─────────────────┐
+│   User Input    │
+│  (Natural Lang) │
+└─────────┬───────┘
+          │
+          ▼
+┌─────────────────┐
+│    Agent 1      │
+│  Parse & Extract│
+│   JSON Rule     │
+└─────────┬───────┘
+          │
+          ▼
+┌─────────────────┐
+│    Agent 3      │
+│ Conflict Analysis│
+└─────────┬───────┘
+          │
+          ▼
+┌─────────────────┐
+│    Agent 3      │
+│ Impact Analysis │
+└─────────┬───────┘
+          │
+          ▼
+┌─────────────────┐
+│    Agent 3      │
+│  Orchestration  │
+│   (Decision)    │
+└─────────┬───────┘
+          │
+     ┌────┴────┐
+     │         │
+     ▼         ▼
+┌─────────┐ ┌─────────┐
+│Generate │ │Response │
+│  Files  │ │  Only   │
+│(Agent 2)│ │         │
+└────┬────┘ └─────────┘
+     │
+     ▼
+┌─────────┐
+│ Verify  │
+│ Files   │
+└────┬────┘
+     │
+     ▼
+┌─────────────────┐
+│ Final Response  │
+│  (User-facing)  │
+└─────────────────┘
+
+📊 Workflow Features:
+• Visual workflow design & debugging
+• Modular, reusable agent components  
+• Transparent execution tracking
+• Conditional branching based on conflicts
+• Error handling with graceful fallbacks
+• Compatible with existing RAG system
+"""
+
+
 class BusinessRuleWorkflow:
     """
     Langraph-based workflow orchestrator for business rule management.
@@ -349,6 +421,45 @@ class BusinessRuleWorkflow:
         if state.get("should_proceed_to_generation", False):
             return "generate_files"
         return "response_only"
+    
+    def get_workflow_metrics(self) -> Dict[str, Any]:
+        """
+        Get metrics and information about the workflow structure
+        
+        Returns:
+            Dictionary containing workflow metrics
+        """
+        try:
+            compiled_graph = self.graph.compile()
+            
+            # Get node information
+            nodes = []
+            if hasattr(compiled_graph, 'nodes'):
+                nodes = list(compiled_graph.nodes.keys()) if compiled_graph.nodes else []
+            
+            # Get edge information  
+            edges = []
+            if hasattr(compiled_graph, 'edges'):
+                edges = list(compiled_graph.edges.keys()) if compiled_graph.edges else []
+            
+            return {
+                "total_nodes": len(nodes),
+                "node_names": nodes,
+                "total_edges": len(edges),
+                "edge_connections": edges,
+                "workflow_type": "StateGraph",
+                "entry_point": "agent1_parse_rule",
+                "finish_point": "generate_response",
+                "supports_conditional_routing": True,
+                "error_handling": True,
+                "fallback_enabled": True
+            }
+        except Exception as e:
+            return {
+                "error": f"Failed to get workflow metrics: {str(e)}",
+                "total_nodes": 8,  # Known from our implementation
+                "workflow_type": "StateGraph"
+            }
     
     def run_workflow(
         self, 
