@@ -1058,13 +1058,32 @@ def create_gradio_interface():
             chatbot_update, industry, name, summary = load_selected_conversation(conversation_list_data)
             
             # Also update the textbox to potentially trigger interface refresh
-            textbox_update = gr.update(value="")
+            textbox_update = gr.update(value="", interactive=True)
             
             # Return updates for multiple components to ensure refresh
             return chatbot_update, industry, name, summary, textbox_update
         
+        # Alternative function that tries a different approach
+        def direct_load_conversation(conversation_list_data):
+            """Alternative implementation that loads conversation with direct history return."""
+            if conversation_list_data is None or conversation_list_data.empty:
+                return [], "generic", "Name will appear here after input.", "Summary will appear here after input.", ""
+            
+            # Get the conversation ID from the first row (title matches)
+            selected_title = conversation_list_data.iloc[0, 0] if len(conversation_list_data) > 0 else ""
+            conversations = conversation_storage.list_conversations()
+            
+            for conv in conversations:
+                if conv.get("title") == selected_title:
+                    history, industry = load_conversation_by_id(conv["id"])
+                    print(f"Direct load: {len(history)} messages")  # Debug
+                    # Return history directly instead of gr.update()
+                    return history, industry, "Name will appear here after input.", "Summary will appear here after input.", ""
+            
+            return [], "generic", "Name will appear here after input.", "Summary will appear here after input.", ""
+        
         load_conversation_btn.click(
-            load_and_refresh_conversation,
+            direct_load_conversation,  # Try direct approach first
             inputs=[conversation_list],
             outputs=[chat_interface.chatbot, industry_selector, name_display, summary_display, chat_interface.textbox]
         )
