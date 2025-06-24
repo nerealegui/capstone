@@ -29,6 +29,41 @@ from utils.config_manager import (
     apply_config_to_runtime,
     get_config_summary
 )
+from utils.conversation_storage import conversation_storage
+
+# Global variables for conversation tracking
+current_conversation_id = None
+rule_response = None
+
+# Conversation management functions
+def start_new_conversation(title: str = None):
+    """Start a new conversation."""
+    global current_conversation_id
+    current_conversation_id = conversation_storage.create_conversation(title)
+    return current_conversation_id
+
+def load_conversation_by_id(conversation_id: str):
+    """Load an existing conversation by ID."""
+    global current_conversation_id
+    current_conversation_id = conversation_id
+    conversation_data = conversation_storage.load_conversation(conversation_id)
+    if conversation_data:
+        # Return the chat history for Gradio
+        history = conversation_storage.get_conversation_messages_for_gradio(conversation_id)
+        industry = conversation_data.get("industry", "generic")
+        # TODO: Restore RAG state if needed
+        return history, industry
+    return [], "generic"
+
+def save_current_message(user_message: str, assistant_message: str, rag_state=None, industry: str = "generic"):
+    """Save the current message to the active conversation."""
+    global current_conversation_id
+    if current_conversation_id is None:
+        current_conversation_id = start_new_conversation()
+    
+    return conversation_storage.save_message(
+        current_conversation_id, user_message, assistant_message, rag_state, industry
+    )
 
 # New function to build_knowledge_base_process, which calls functions in rag_utils.
 def build_knowledge_base_process(
@@ -789,8 +824,39 @@ def create_gradio_interface():
                 """)
                 
                 with gr.Row():
-                    # Left panel: Chat
-                    with gr.Column(elem_classes=["config-section"], scale=1):
+                    # Left sidebar: Conversation History
+                    with gr.Column(elem_classes=["config-section"], scale=1, min_width=300):
+                        gr.HTML('<div class="section-header">💬 Conversation History</div>')
+                        
+                        # New conversation button
+                        new_conversation_btn = gr.Button("+ New Conversation", variant="primary", elem_classes=["btn-primary"])
+                        
+                        # Conversation list
+                        conversation_list = gr.Dataframe(
+                            headers=["Title", "Messages", "Updated"],
+                            datatype=["str", "number", "str"],
+                            label="Previous Conversations",
+                            interactive=False,
+                            visible=True,
+                            wrap=True,
+                            row_count=10,
+                            column_widths=["200px", "60px", "120px"],
+                            value=[]
+                        )
+                        
+                        # Conversation management buttons
+                        with gr.Row():
+                            load_conversation_btn = gr.Button("Load Selected", size="sm")
+                            delete_conversation_btn = gr.Button("Delete", variant="stop", size="sm")
+                        
+                        # Rename conversation input (initially hidden)
+                        with gr.Row(visible=False) as rename_row:
+                            rename_input = gr.Textbox(placeholder="New conversation title", scale=3)
+                            rename_confirm_btn = gr.Button("Rename", size="sm", scale=1)
+                            rename_cancel_btn = gr.Button("Cancel", size="sm", scale=1)
+                    
+                    # Right panel: Chat
+                    with gr.Column(elem_classes=["config-section"], scale=2):
                         gr.HTML('<div class="section-header">Business Rules Management Assistant</div>')
                         gr.Markdown("*Enhanced with conversational interaction, conflict detection, and impact analysis*")
                         
@@ -799,6 +865,9 @@ def create_gradio_interface():
                             
                             # Always use Enhanced Agent 3 mode
                             response = chat_with_agent3(user_input, history, rag_state_df, industry)
+
+                            # Save the conversation message
+                            save_current_message(user_input, response, rag_state_df, industry)
 
                             # Extract rule information for summary display
                             if 'rule_response' in globals() and rule_response:
@@ -820,9 +889,10 @@ def create_gradio_interface():
                             additional_outputs=[name_display, summary_display, state_rag_df],
                             additional_inputs=[state_rag_df, industry_selector],
                         )
-                    
-                    # Right panel: Rule Summary with Agent 3 enhancements
-                    with gr.Column(elem_classes=["rules-section"], scale=1):
+                
+                # Rule Summary & Generation section moved to a row below
+                with gr.Row():
+                    with gr.Column(elem_classes=["rules-section"]):
                         gr.HTML('<div class="section-header">Rule Summary & Generation</div>')
                         name_display.render()
                         summary_display.render()
@@ -915,12 +985,113 @@ def create_gradio_interface():
                                 inputs=[industry_selector],
                                 outputs=[file_generation_status, decision_drl_file, decision_gdst_file]
                             )
+                            
+                        # Conversation management functions (defined inside Blocks context)
+                        def refresh_conversation_list():
+                            """Refresh the conversation list display."""
+                            conversations = conversation_storage.list_conversations()
+                            conv_data = []
+                            for conv in conversations:
+                                title = conv.get("title", "Untitled")
+                                msg_count = conv.get("message_count", 0)
+                                updated = conv.get("updated_at", "")[:16]  # Truncate timestamp
+                                conv_data.append([title, msg_count, updated])
+                            return conv_data
+                        
+                        def create_new_conversation():
+                            """Create a new conversation and refresh the list."""
+                            global current_conversation_id
+                            current_conversation_id = start_new_conversation()
+                            conv_list = refresh_conversation_list()
+                            # Clear the chatbot history for new conversation
+                            return conv_list, [], "Name will appear here after input.", "Summary will appear here after input."
+                        
+                        def load_selected_conversation(conversation_list_data):
+                            """Load the first selected conversation and force refresh."""
+                            if conversation_list_data is None or conversation_list_data.empty:
+                                return gr.update(value=[], interactive=True), "generic", "Name will appear here after input.", "Summary will appear here after input."
+                            
+                            # Get the conversation ID from the first row (title matches)
+                            selected_title = conversation_list_data.iloc[0, 0] if len(conversation_list_data) > 0 else ""
+                            conversations = conversation_storage.list_conversations()
+                            
+                            for conv in conversations:
+                                if conv.get("title") == selected_title:
+                                    history, industry = load_conversation_by_id(conv["id"])
+                                    print(f"Loading conversation with {len(history)} messages")  # Debug
+                                    # Force update with explicit properties to trigger refresh
+                                    return gr.update(value=history, interactive=True), industry, "Name will appear here after input.", "Summary will appear here after input."
+                            
+                            return gr.update(value=[], interactive=True), "generic", "Name will appear here after input.", "Summary will appear here after input."
+                        
+                        def delete_selected_conversation(conversation_list_data):
+                            """Delete the first selected conversation."""
+                            if conversation_list_data is None or conversation_list_data.empty:
+                                return refresh_conversation_list()
+                            
+                            selected_title = conversation_list_data.iloc[0, 0] if len(conversation_list_data) > 0 else ""
+                            conversations = conversation_storage.list_conversations()
+                            
+                            for conv in conversations:
+                                if conv.get("title") == selected_title:
+                                    conversation_storage.delete_conversation(conv["id"])
+                                    break
+                            
+                            return refresh_conversation_list()
 
         # --- Event Actions (must be inside Blocks context) ---
         build_kb_button.click(
             build_knowledge_base_process,
             inputs=[document_upload, state_rag_df],
             outputs=[rag_status_display, state_rag_df]
+        )
+
+        # Conversation management event handlers
+        new_conversation_btn.click(
+            create_new_conversation,
+            outputs=[conversation_list, chat_interface.chatbot, name_display, summary_display]
+        )
+        
+        def load_and_refresh_conversation(conversation_list_data):
+            """Load conversation and trigger a full interface refresh."""
+            # First load the conversation
+            chatbot_update, industry, name, summary = load_selected_conversation(conversation_list_data)
+            
+            # Also update the textbox to potentially trigger interface refresh
+            textbox_update = gr.update(value="", interactive=True)
+            
+            # Return updates for multiple components to ensure refresh
+            return chatbot_update, industry, name, summary, textbox_update
+        
+        # Alternative function that tries a different approach
+        def direct_load_conversation(conversation_list_data):
+            """Alternative implementation that loads conversation with direct history return."""
+            if conversation_list_data is None or conversation_list_data.empty:
+                return [], "generic", "Name will appear here after input.", "Summary will appear here after input.", ""
+            
+            # Get the conversation ID from the first row (title matches)
+            selected_title = conversation_list_data.iloc[0, 0] if len(conversation_list_data) > 0 else ""
+            conversations = conversation_storage.list_conversations()
+            
+            for conv in conversations:
+                if conv.get("title") == selected_title:
+                    history, industry = load_conversation_by_id(conv["id"])
+                    print(f"Direct load: {len(history)} messages")  # Debug
+                    # Return history directly instead of gr.update()
+                    return history, industry, "Name will appear here after input.", "Summary will appear here after input.", ""
+            
+            return [], "generic", "Name will appear here after input.", "Summary will appear here after input.", ""
+        
+        load_conversation_btn.click(
+            direct_load_conversation,  # Try direct approach first
+            inputs=[conversation_list],
+            outputs=[chat_interface.chatbot, industry_selector, name_display, summary_display, chat_interface.textbox]
+        )
+        
+        delete_conversation_btn.click(
+            delete_selected_conversation,
+            inputs=[conversation_list],
+            outputs=[conversation_list]
         )
 
         # Business Rules tab event handlers
@@ -948,6 +1119,10 @@ def create_gradio_interface():
         def chat_and_update(user_input, history, rag_state_df, mode=None, industry=None):
             global rule_response
             response = chat_with_rag(user_input, history, rag_state_df)
+            
+            # Save the conversation message
+            save_current_message(user_input, response, rag_state_df, industry or "generic")
+            
             name = rule_response.get('name', 'Name will appear here after input.')
             summary = rule_response.get('summary', 'Summary will appear here after input.')
             return response, name, summary, rag_state_df
@@ -1055,5 +1230,20 @@ def create_gradio_interface():
             outputs=[extracted_rules_list]
         )
   
+        # Add startup initialization
+        def initialize_app():
+            """Initialize the app with conversation list and create a default conversation."""
+            global current_conversation_id
+            # Start with a new conversation if none exists
+            if current_conversation_id is None:
+                current_conversation_id = start_new_conversation("New Conversation")
+            return refresh_conversation_list()
+        
+        # Add the startup initialization to the demo
+        demo.load(
+            initialize_app,
+            outputs=[conversation_list]
+        )
+        
     return demo
 

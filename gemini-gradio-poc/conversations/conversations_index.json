@@ -1,0 +1,44 @@
+{
+  "conversations": [
+    {
+      "id": "2fb9cf26-ea43-4f1f-a4b2-193092be277a",
+      "title": "Test Integration",
+      "created_at": "2025-06-23T14:50:29.400094",
+      "updated_at": "2025-06-23T14:50:29.400461",
+      "message_count": 1,
+      "preview": "Hello test"
+    },
+    {
+      "id": "81757490-9b26-4fa6-8ec4-3115985f1e24",
+      "title": "💳 Payment Rules - COMPLETED",
+      "created_at": "2025-06-23T14:57:01.663573",
+      "updated_at": "2025-06-23T14:57:01.667340",
+      "message_count": 3,
+      "preview": "Yes, please create the credit score rule and then generate the DRL files"
+    },
+    {
+      "id": "314afe01-e28b-4757-b554-7a87f83ca344",
+      "title": "📦 Inventory Rules - COMPLETED",
+      "created_at": "2025-06-23T14:57:01.664765",
+      "updated_at": "2025-06-23T14:57:01.667675",
+      "message_count": 2,
+      "preview": "Reorder when stock drops below 20% of average monthly sales, but never less than 50 units"
+    },
+    {
+      "id": "4d95fd19-c333-481a-a5c6-e8c45576d24f",
+      "title": "🔍 Rule Analysis - ACTIVE",
+      "created_at": "2025-06-23T14:57:01.666625",
+      "updated_at": "2025-06-23T14:57:01.668031",
+      "message_count": 1,
+      "preview": "I want to review all my existing rules and check for conflicts"
+    },
+    {
+      "id": "8bc7800a-72ec-4944-b1fb-0e0b92123eb4",
+      "title": "New Chat Session",
+      "created_at": "2025-06-23T14:57:01.669026",
+      "updated_at": "2025-06-23T14:57:01.669412",
+      "message_count": 1,
+      "preview": "Hello, I need help with business rules"
+    }
+  ]
+}
