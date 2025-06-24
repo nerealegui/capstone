@@ -5,6 +5,8 @@ from google.genai import types
 from config.agent_config import DEFAULT_MODEL, GENERATION_CONFIG
 from utils.rag_utils import initialize_gemini_client
 import re  # Add the regex module
+import string
+from collections import OrderedDict
 
 def json_to_drl_gdst(json_data):
     """
@@ -293,6 +295,134 @@ Do not include any additional text, just return the DRL and GDST contents in the
         return drl_content, gdst_content
     except Exception as e:
         raise ValueError(f"Error in GenAI response processing: {str(e)}")
+
+CANONICAL_RULE_FIELDS = [
+    "rule_id", "name", "category", "description", "summary",
+    "conditions", "actions", "priority", "active"
+]
+CANONICAL_CONDITION_FIELDS = ["field", "operator", "value"]
+CANONICAL_ACTION_FIELDS = ["type", "details"]
+
+FIELD_MAP = {
+    "attribute": "field",
+    "fact": "field",
+}
+ACTION_TYPE_MAP = {
+    "action_type": "type",
+    "assign_employees": "number_employees",
+    "assignment": "number_employees",
+}
+ACTION_DETAILS_MAP = {
+    "number_of_employees": "details",
+    "value": "details",
+}
+
+def normalize_condition(cond):
+    norm = OrderedDict()
+    # Map alternative keys to canonical
+    val = cond.get("field") or cond.get("attribute") or cond.get("fact") or ""
+    if val == "restaurant_size":
+        val = "size"
+    norm["field"] = val
+    norm["operator"] = cond.get("operator", "")
+    norm["value"] = str(cond.get("value", ""))
+    return norm
+
+def normalize_action(act):
+    norm = OrderedDict()
+    act_type = act.get("type") or act.get("action_type") or ""
+    act_type = ACTION_TYPE_MAP.get(act_type, act_type)
+    norm["type"] = act_type
+    details = act.get("details") or act.get("number_of_employees") or act.get("value") or ""
+    norm["details"] = str(details)
+    return norm
+
+def normalize_rule_fields(new_rule, canonical_fields=CANONICAL_RULE_FIELDS):
+    # Flatten logic if present
+    rule = dict(new_rule)
+    if "logic" in rule:
+        logic = rule.pop("logic")
+        if "conditions" in logic:
+            rule["conditions"] = logic["conditions"]
+        if "actions" in logic:
+            rule["actions"] = logic["actions"]
+
+    # Normalize conditions
+    norm_conditions = []
+    for cond in rule.get("conditions", []):
+        norm_conditions.append(normalize_condition(cond))
+
+    # Normalize actions
+    norm_actions = []
+    for act in rule.get("actions", []):
+        norm_actions.append(normalize_action(act))
+
+    # Build ordered rule
+    ordered = OrderedDict()
+    for field in canonical_fields:
+        if field == "conditions":
+            ordered["conditions"] = norm_conditions
+        elif field == "actions":
+            ordered["actions"] = norm_actions
+        elif field == "description":
+            ordered["description"] = rule.get("description") or rule.get("summary", "")
+        elif field == "summary":
+            ordered["summary"] = rule.get("summary") or rule.get("description", "")
+        elif field == "priority":
+            ordered["priority"] = rule.get("priority", "High")
+        elif field == "active":
+            ordered["active"] = rule.get("active", "TRUE")
+        else:
+            ordered[field] = rule.get(field, "")
+    return ordered
+
+def generate_rule_id(rules, rule_name):
+    """Generate a unique rule_id for a given rule name."""
+    base = "BR"
+    same_name = [r for r in rules if r.get("name") == rule_name]
+    if same_name:
+        nums = [r["rule_id"] for r in same_name if r.get("rule_id", "").startswith(base)]
+        if nums:
+            last = sorted(nums)[-1]
+            prefix = last[:5]
+            suffix = last[5:]
+            if suffix and suffix[-1].isalpha():
+                next_letter = chr(ord(suffix[-1]) + 1)
+            else:
+                next_letter = "a"
+            return f"{prefix}{next_letter}"
+        else:
+            return f"{base}001a"
+    else:
+        nums = [int(r["rule_id"][2:5]) for r in rules if r.get("rule_id", "").startswith(base) and r["rule_id"][2:5].isdigit()]
+        next_num = max(nums) + 1 if nums else 1
+        return f"{base}{next_num:03d}a"
+
+def update_extracted_rules_json(new_rule: dict, json_path: str = "./extracted_rules.json") -> bool:
+    # Load existing rules
+    rules = []
+    if os.path.exists(json_path):
+        with open(json_path, "r", encoding="utf-8") as f:
+            rules = json.load(f)
+    # Normalize new rule
+    normalized_rule = normalize_rule_fields(new_rule)
+    # Generate rule_id if missing
+    if not normalized_rule.get("rule_id"):
+        normalized_rule["rule_id"] = generate_rule_id(rules, normalized_rule["name"])
+    # Only update if rule_id matches, else append
+    updated = False
+    for idx, rule in enumerate(rules):
+        if rule.get("rule_id") == normalized_rule["rule_id"]:
+            rules[idx] = normalized_rule
+            updated = True
+            break
+    if not updated:
+        rules.append(normalized_rule)
+    # Save back to file
+    os.makedirs(os.path.dirname(json_path), exist_ok=True)
+    with open(json_path, "w", encoding="utf-8") as f:
+        json.dump(rules, f, indent=2, ensure_ascii=False)
+    return True
 
 def verify_drools_execution(drl_content, gdst_content):
     """

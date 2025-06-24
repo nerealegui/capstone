@@ -12,7 +12,7 @@ from utils.json_response_handler import JsonResponseHandler
 
 from utils.rag_utils import read_documents_from_paths, embed_texts, retrieve, rag_generate, initialize_gemini_client
 from utils.kb_utils import core_build_knowledge_base
-from utils.rule_utils import json_to_drl_gdst, verify_drools_execution
+from utils.rule_utils import json_to_drl_gdst, verify_drools_execution, update_extracted_rules_json
 from utils.rule_extractor import extract_rules_from_csv, save_extracted_rules
 from utils.agent3_utils import (
     analyze_rule_conflicts, 
@@ -686,14 +686,14 @@ def create_gradio_interface():
                                 info="This agent extracts business rules from documents"
                             )
                         
-                        with gr.Accordion("Agent 2 Prompt (Rule Validation)", open=False):
-                            gr.Markdown("Configure the prompt for the rule validation agent.")
+                        with gr.Accordion("Agent 2 Prompt (Drools files creation)", open=False):
+                            gr.Markdown("Configure the prompt for the drools file creation agent.")
                             agent2_prompt_box = gr.Textbox(
                                 value=startup_agent2_prompt, 
                                 label="Agent 2 Prompt", 
                                 lines=4,
                                 elem_classes=["code-textbox"],
-                                info="This agent validates and checks rule consistency"
+                                info="This agent generates Drools files (drl and gdst) based on the user's needs"
                             )
                         
                         with gr.Accordion("Agent 3 Prompt (Business Rules Management)", open=False):
@@ -703,7 +703,7 @@ def create_gradio_interface():
                                 label="Agent 3 Prompt", 
                                 lines=6,
                                 elem_classes=["code-textbox"],
-                                info="This agent manages business rules and generates Drools files"
+                                info="This agent validates and checks rule consistency"
                             )
                             
                             # Industry Selection for Agent 3
@@ -891,12 +891,17 @@ def create_gradio_interface():
                                             with open(gdst_path, "w") as f:
                                                 f.write(gdst)
                                             
+                                            # Persist the rule to extracted_rules.json
+                                            update_extracted_rules_json(rule_data, json_path="./extracted_rules.json")
+    
                                             message = (
                                                 f"### ✓ Rule Generation Successful\n\n"
                                                 f"**Rule:** {rule_data.get('name', 'Unnamed Rule')}\n\n"
                                                 f"**Files have been created:**\n"
                                                 f"- **DRL**: {drl_path}\n"
                                                 f"- **GDST**: {gdst_path}\n\n"
+                                                #just to debug delete after testing
+                                                f"Rule has been saved to extracted_rules.json.\n\n"
                                                 f"You can download the files below."
                                             )
                                             return message, drl_path, gdst_path
