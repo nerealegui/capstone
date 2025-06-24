@@ -1007,9 +1007,9 @@ def create_gradio_interface():
                             return conv_list, [], "Name will appear here after input.", "Summary will appear here after input."
                         
                         def load_selected_conversation(conversation_list_data):
-                            """Load the first selected conversation."""
+                            """Load the first selected conversation and force refresh."""
                             if conversation_list_data is None or conversation_list_data.empty:
-                                return gr.update(value=[]), "generic", "Name will appear here after input.", "Summary will appear here after input."
+                                return gr.update(value=[], interactive=True), "generic", "Name will appear here after input.", "Summary will appear here after input."
                             
                             # Get the conversation ID from the first row (title matches)
                             selected_title = conversation_list_data.iloc[0, 0] if len(conversation_list_data) > 0 else ""
@@ -1018,10 +1018,11 @@ def create_gradio_interface():
                             for conv in conversations:
                                 if conv.get("title") == selected_title:
                                     history, industry = load_conversation_by_id(conv["id"])
-                                    # Use gr.update to ensure the chatbot component refreshes properly
-                                    return gr.update(value=history), industry, "Name will appear here after input.", "Summary will appear here after input."
+                                    print(f"Loading conversation with {len(history)} messages")  # Debug
+                                    # Force update with explicit properties to trigger refresh
+                                    return gr.update(value=history, interactive=True), industry, "Name will appear here after input.", "Summary will appear here after input."
                             
-                            return gr.update(value=[]), "generic", "Name will appear here after input.", "Summary will appear here after input."
+                            return gr.update(value=[], interactive=True), "generic", "Name will appear here after input.", "Summary will appear here after input."
                         
                         def delete_selected_conversation(conversation_list_data):
                             """Delete the first selected conversation."""
@@ -1051,10 +1052,21 @@ def create_gradio_interface():
             outputs=[conversation_list, chat_interface.chatbot, name_display, summary_display]
         )
         
+        def load_and_refresh_conversation(conversation_list_data):
+            """Load conversation and trigger a full interface refresh."""
+            # First load the conversation
+            chatbot_update, industry, name, summary = load_selected_conversation(conversation_list_data)
+            
+            # Also update the textbox to potentially trigger interface refresh
+            textbox_update = gr.update(value="")
+            
+            # Return updates for multiple components to ensure refresh
+            return chatbot_update, industry, name, summary, textbox_update
+        
         load_conversation_btn.click(
-            load_selected_conversation,
+            load_and_refresh_conversation,
             inputs=[conversation_list],
-            outputs=[chat_interface.chatbot, industry_selector, name_display, summary_display]
+            outputs=[chat_interface.chatbot, industry_selector, name_display, summary_display, chat_interface.textbox]
         )
         
         delete_conversation_btn.click(
