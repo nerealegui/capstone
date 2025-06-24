@@ -158,6 +158,11 @@ def chat_with_agent3(user_input: str, history: list, rag_state_df: pd.DataFrame,
     
     This function can either use the traditional Agent 3 approach or the new Langraph workflow 
     orchestration based on the global use_langraph_workflow flag.
+    
+    Langraph Workflow uses all 3 agents:
+    - Agent 1: Natural language → structured JSON rule parsing
+    - Agent 3: Conflict analysis, impact assessment, and orchestration decisions
+    - Agent 2: DRL/GDST file generation (when needed)
     """
     global rule_response, use_langraph_workflow
     
@@ -168,7 +173,10 @@ def chat_with_agent3(user_input: str, history: list, rag_state_df: pd.DataFrame,
     # Check if we should use Langraph workflow
     if use_langraph_workflow:
         try:
-            print(f"[Chat] Using Langraph workflow for: {user_input[:100]}...")
+            print(f"[Chat] 🔄 Using Langraph workflow orchestration for: {user_input[:50]}...")
+            
+            # Create status message for user feedback
+            status_prefix = "🔄 **Langraph Workflow Active**\n\n"
             
             # Run Langraph workflow
             workflow_result = run_business_rule_workflow(
@@ -189,6 +197,16 @@ def chat_with_agent3(user_input: str, history: list, rag_state_df: pd.DataFrame,
                     rule_response["conflicts_found"] = len(workflow_result["conflicts"])
                 if workflow_result.get("verification_result"):
                     rule_response["verification"] = workflow_result["verification_result"]
+                    
+                # Add status information to the response
+                status_info = "\n\n---\n**Workflow Status:**\n"
+                status_info += f"✅ Agent 1: Rule parsed successfully\n"
+                status_info += f"✅ Agent 3: Analyzed {rule_response.get('conflicts_found', 0)} conflicts\n"
+                if workflow_result.get("drl_content"):
+                    status_info += f"✅ Agent 2: Generated DRL/GDST files\n"
+                if workflow_result.get("verification_result"):
+                    status_info += f"✅ Files verified: {workflow_result['verification_result']}\n"
+                    
             else:
                 # Default rule_response for non-rule conversations
                 rule_response = {
@@ -197,21 +215,25 @@ def chat_with_agent3(user_input: str, history: list, rag_state_df: pd.DataFrame,
                     "workflow_type": "langraph",
                     "logic": {"message": "Processed via Langraph workflow"}
                 }
+                status_info = "\n\n---\n**Workflow Status:**\n✅ Processed via Langraph workflow orchestration\n"
             
-            response = workflow_result.get("response", "I processed your request using the Langraph workflow.")
+            base_response = workflow_result.get("response", "I processed your request using the Langraph workflow.")
+            response = status_prefix + base_response + status_info
             
             # If there was an error, fall back to traditional approach
             if workflow_result.get("error"):
                 print(f"[Chat] Langraph workflow error: {workflow_result['error']}")
                 print("[Chat] Falling back to traditional Agent 3 approach...")
-                return _traditional_agent3_chat(user_input, history, rag_state_df, industry)
+                fallback_response = _traditional_agent3_chat(user_input, history, rag_state_df, industry)
+                return f"⚠️ **Langraph workflow encountered an error. Using traditional Agent 3 fallback.**\n\n{fallback_response}"
             
             return response
             
         except Exception as e:
             print(f"[Chat] Langraph workflow failed: {e}")
             print("[Chat] Falling back to traditional Agent 3 approach...")
-            return _traditional_agent3_chat(user_input, history, rag_state_df, industry)
+            fallback_response = _traditional_agent3_chat(user_input, history, rag_state_df, industry)
+            return f"⚠️ **Langraph workflow failed. Using traditional Agent 3 fallback.**\n\nError: {str(e)}\n\n{fallback_response}"
     else:
         # Use traditional Agent 3 approach
         return _traditional_agent3_chat(user_input, history, rag_state_df, industry)
@@ -863,7 +885,7 @@ def create_gradio_interface():
                         gr.HTML('<div class="section-header">Business Rules Management Assistant</div>')
                         gr.Markdown("*Enhanced with conversational interaction, conflict detection, and impact analysis*")
                         
-                        # Langraph workflow toggle
+                        # Langraph workflow toggle with enhanced status
                         langraph_toggle = gr.Checkbox(
                             label="🔄 Use Langraph Workflow Orchestration",
                             value=True,
@@ -873,11 +895,54 @@ def create_gradio_interface():
                         def toggle_langraph_workflow(enabled):
                             global use_langraph_workflow
                             use_langraph_workflow = enabled
-                            status = "✅ Langraph workflow enabled" if enabled else "❌ Using traditional Agent 3 workflow"
-                            print(f"[Config] {status}")
+                            if enabled:
+                                status = """
+## ✅ Langraph Workflow Enabled
+
+**Active Agents:**
+- 🤖 **Agent 1**: Natural language → JSON rule parsing
+- 🤖 **Agent 3**: Conflict analysis & impact assessment  
+- 🤖 **Agent 3**: Orchestration & decision making
+- 🤖 **Agent 2**: DRL/GDST file generation (conditional)
+
+**Features:**
+- 🔍 **Real-time status** in chat responses
+- 📊 **Transparent execution** tracking
+- 🌊 **Conditional routing** based on analysis
+- ⚡ **Automatic fallback** to traditional Agent 3
+                                """
+                            else:
+                                status = """
+## ❌ Traditional Agent 3 Workflow Active
+
+**Active Mode:**
+- 🤖 **Agent 3**: Traditional business rules management
+- 📝 **Single agent** handling all tasks
+- 🔄 **Standard processing** without visual workflow
+
+**To enable Langraph:**
+- ✅ Check the box above to activate workflow orchestration
+                                """
+                            
+                            print(f"[Config] {'✅ Langraph workflow enabled' if enabled else '❌ Using traditional Agent 3 workflow'}")
                             return status
                         
-                        langraph_status = gr.Markdown("✅ Langraph workflow enabled")
+                        langraph_status = gr.Markdown("""
+## ✅ Langraph Workflow Enabled
+
+**Active Agents:**
+- 🤖 **Agent 1**: Natural language → JSON rule parsing
+- 🤖 **Agent 3**: Conflict analysis & impact assessment  
+- 🤖 **Agent 3**: Orchestration & decision making
+- 🤖 **Agent 2**: DRL/GDST file generation (conditional)
+
+**Features:**
+- 🔍 **Real-time status** in chat responses
+- 📊 **Transparent execution** tracking
+- 🌊 **Conditional routing** based on analysis
+- ⚡ **Automatic fallback** to traditional Agent 3
+                        """)
+                        
                         langraph_toggle.change(
                             fn=toggle_langraph_workflow,
                             inputs=[langraph_toggle],
@@ -1148,14 +1213,20 @@ def create_gradio_interface():
         # Tab 4: Workflow Visualization
         with gr.Tab("Langraph Workflow"):
             gr.Markdown("""
-            # Langraph Workflow Visualization
-            Explore the visual workflow design and execution transparency provided by Langraph orchestration.
+            # 🔄 Langraph Workflow Orchestration
+            Visual workflow design and execution transparency for the business rule management platform.
+            
+            **What agents are executed by Langraph:**
+            - **Agent 1**: Natural language → structured JSON rule parsing
+            - **Agent 3**: Conflict analysis, impact assessment, and orchestration decisions  
+            - **Agent 2**: DRL/GDST file generation (conditional based on Agent 3 decisions)
+            - **Plus**: Verification and response generation nodes
             """)
             
             with gr.Row():
                 # Left panel: Workflow Diagram
                 with gr.Column(scale=2):
-                    gr.HTML('<div class="section-header">Workflow Architecture</div>')
+                    gr.HTML('<div class="section-header">📊 Workflow Architecture</div>')
                     
                     from utils.workflow_orchestrator import get_workflow_visualization, create_workflow
                     
@@ -1166,7 +1237,7 @@ def create_gradio_interface():
                 
                 # Right panel: Workflow Metrics and Controls
                 with gr.Column(scale=1):
-                    gr.HTML('<div class="section-header">Workflow Information</div>')
+                    gr.HTML('<div class="section-header">📋 Workflow Information</div>')
                     
                     def get_workflow_info():
                         try:
@@ -1174,7 +1245,7 @@ def create_gradio_interface():
                             metrics = workflow.get_workflow_metrics()
                             
                             info = f"""
-**Workflow Metrics:**
+**📊 Workflow Metrics:**
 - **Total Nodes:** {metrics.get('total_nodes', 'Unknown')}
 - **Workflow Type:** {metrics.get('workflow_type', 'Unknown')}
 - **Entry Point:** {metrics.get('entry_point', 'Unknown')}
@@ -1183,12 +1254,17 @@ def create_gradio_interface():
 - **Error Handling:** {'✅' if metrics.get('error_handling') else '❌'}
 - **Fallback Enabled:** {'✅' if metrics.get('fallback_enabled') else '❌'}
 
-**Node Names:**
-{chr(10).join(f'• {node}' for node in metrics.get('node_names', []))}
+**🔗 Agent Nodes:**
+{chr(10).join(f'• {node}' for node in metrics.get('node_names', []) if 'agent' in node.lower())}
 
-**Current Status:**
-- Langraph: {'✅ Active' if use_langraph_workflow else '❌ Disabled'}
-- Traditional Agent 3: {'❌ Standby' if use_langraph_workflow else '✅ Active'}
+**⚙️ Current Status:**
+- **Langraph Workflow:** {'🟢 Active' if use_langraph_workflow else '🔴 Disabled'}
+- **Traditional Agent 3:** {'🟠 Standby' if use_langraph_workflow else '🟢 Active'}
+
+**🎯 Agent Execution in Langraph:**
+- **All 3 Agents**: Agent 1 (parsing) → Agent 3 (analysis & orchestration) → Agent 2 (file generation, if needed)
+- **Enhanced Flow**: Includes conflict detection, impact analysis, and conditional file generation
+- **Transparency**: Each step is tracked and visible in chat responses
                             """
                             return info
                         except Exception as e:
@@ -1199,26 +1275,32 @@ def create_gradio_interface():
                         label="Workflow Status"
                     )
                     
-                    refresh_button = gr.Button("🔄 Refresh Metrics", variant="secondary")
+                    refresh_button = gr.Button("🔄 Refresh Status", variant="secondary")
                     refresh_button.click(
                         fn=get_workflow_info,
                         outputs=[workflow_info]
                     )
                     
                     gr.Markdown("""
-**Langraph Benefits:**
+**🚀 Langraph Benefits:**
 - 🎯 **Visual Design**: Clear workflow representation
 - 🔧 **Modular Components**: Reusable agent nodes
 - 🔍 **Transparency**: Execution tracking & debugging  
-- 🌊 **Flexible Orchestration**: Conditional routing
-- 🤝 **Collaboration**: Easier team development
-- 📈 **Scalability**: Complex workflow management
+- 🌊 **Flexible Orchestration**: Conditional routing based on conflict analysis
+- 🤝 **Enhanced Collaboration**: Clear agent interaction patterns
+- 📈 **Scalability**: Complex workflow management made simple
 
-**Usage:**
-1. Enable Langraph in the Chat tab
-2. Submit business rule requests
-3. Monitor workflow execution
-4. View transparent agent interactions
+**📖 How to Use:**
+1. **Enable**: Check "Use Langraph Workflow Orchestration" in the Chat tab
+2. **Submit**: Send business rule creation or analysis requests 
+3. **Monitor**: Watch real-time workflow status in chat responses
+4. **Debug**: View transparent agent interactions and decisions
+5. **Fallback**: System automatically falls back to traditional Agent 3 on errors
+
+**🔧 What Gets Executed:**
+- **Rule Creation**: Agent 1 → Agent 3 (conflicts) → Agent 3 (impact) → Agent 3 (orchestration) → Agent 2 (if files needed)
+- **Analysis Only**: Agent 1 → Agent 3 (analysis) → Response
+- **Error Handling**: Automatic fallback to traditional Agent 3 workflow
                     """)
   
     return demo

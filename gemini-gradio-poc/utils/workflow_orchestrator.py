@@ -50,35 +50,38 @@ def get_workflow_visualization() -> str:
         String representation of the workflow graph
     """
     return """
-🔄 Business Rule Management Workflow (Langraph)
+🔄 **Business Rule Management Workflow (Langraph)**
 
+**🎯 Agent Execution Flow:**
+
+```
 ┌─────────────────┐
-│   User Input    │
+│   User Input    │ ← Natural language request
 │  (Natural Lang) │
 └─────────┬───────┘
           │
           ▼
 ┌─────────────────┐
-│    Agent 1      │
+│  🤖 AGENT 1     │ ← Parse natural language to JSON
 │  Parse & Extract│
 │   JSON Rule     │
 └─────────┬───────┘
           │
           ▼
 ┌─────────────────┐
-│    Agent 3      │
+│  🤖 AGENT 3     │ ← Analyze conflicts with existing rules
 │ Conflict Analysis│
 └─────────┬───────┘
           │
           ▼
 ┌─────────────────┐
-│    Agent 3      │
+│  🤖 AGENT 3     │ ← Assess business impact & risk
 │ Impact Analysis │
 └─────────┬───────┘
           │
           ▼
 ┌─────────────────┐
-│    Agent 3      │
+│  🤖 AGENT 3     │ ← Decision: Generate files or respond?
 │  Orchestration  │
 │   (Decision)    │
 └─────────┬───────┘
@@ -87,30 +90,38 @@ def get_workflow_visualization() -> str:
      │         │
      ▼         ▼
 ┌─────────┐ ┌─────────┐
-│Generate │ │Response │
-│  Files  │ │  Only   │
-│(Agent 2)│ │         │
-└────┬────┘ └─────────┘
+│🤖AGENT 2│ │Response │ ← Direct response (no files)
+│Generate │ │  Only   │
+│  Files  │ │         │
+│(DRL/GDST│ └─────────┘
+└────┬────┘
      │
      ▼
 ┌─────────┐
-│ Verify  │
+│ Verify  │ ← Validate generated files
 │ Files   │
 └────┬────┘
      │
      ▼
 ┌─────────────────┐
-│ Final Response  │
+│ Final Response  │ ← User-facing response with status
 │  (User-facing)  │
 └─────────────────┘
+```
 
-📊 Workflow Features:
-• Visual workflow design & debugging
-• Modular, reusable agent components  
-• Transparent execution tracking
-• Conditional branching based on conflicts
-• Error handling with graceful fallbacks
-• Compatible with existing RAG system
+**📊 Workflow Features:**
+• **3 AI Agents**: Agent 1 (parsing) + Agent 3 (analysis & orchestration) + Agent 2 (file generation)
+• **Visual workflow** design & debugging transparency
+• **Modular, reusable** agent components for each task
+• **Conditional branching** based on conflict analysis results
+• **Error handling** with graceful fallbacks to traditional Agent 3
+• **Real-time status** updates visible in chat responses
+• **Compatible** with existing RAG knowledge base system
+
+**🔍 Agent Roles:**
+- **Agent 1**: Natural language → structured JSON rule conversion
+- **Agent 3**: Business rule conflict detection, impact analysis, and workflow orchestration  
+- **Agent 2**: DRL (Drools Rule Language) and GDST file generation when needed
 """
 
 
@@ -178,7 +189,7 @@ class BusinessRuleWorkflow:
         Agent 1: Parse natural language input into structured JSON rule
         """
         try:
-            print(f"[Workflow] Agent 1: Parsing user input: {state['user_input'][:100]}...")
+            print(f"[Workflow] 🤖 Agent 1: Parsing user input: {state['user_input'][:100]}...")
             
             # Use RAG if available
             if state.get('rag_df') is not None and not state['rag_df'].empty:
@@ -205,14 +216,14 @@ class BusinessRuleWorkflow:
             structured_rule = handler.parse_json_response(response)
             
             state["structured_rule"] = structured_rule
-            state["messages"].append(AIMessage(content=f"Parsed rule: {json.dumps(structured_rule, indent=2)}"))
+            state["messages"].append(AIMessage(content=f"🤖 Agent 1: Parsed rule structure: {structured_rule.get('name', 'Unnamed Rule')}"))
             
-            print(f"[Workflow] Agent 1: Successfully parsed rule")
+            print(f"[Workflow] ✅ Agent 1: Successfully parsed rule: {structured_rule.get('name', 'Unnamed Rule')}")
             return state
             
         except Exception as e:
-            print(f"[Workflow] Agent 1 Error: {e}")
-            state["error_message"] = f"Failed to parse rule: {str(e)}"
+            print(f"[Workflow] ❌ Agent 1 Error: {e}")
+            state["error_message"] = f"Agent 1 failed to parse rule: {str(e)}"
             return state
     
     def _agent3_conflict_analysis(self, state: WorkflowState) -> WorkflowState:
@@ -220,7 +231,7 @@ class BusinessRuleWorkflow:
         Agent 3: Analyze potential conflicts with existing rules
         """
         try:
-            print("[Workflow] Agent 3: Analyzing rule conflicts...")
+            print("[Workflow] 🤖 Agent 3: Analyzing rule conflicts...")
             
             if not state.get("structured_rule"):
                 state["error_message"] = "No structured rule available for conflict analysis"
@@ -246,14 +257,14 @@ class BusinessRuleWorkflow:
             )
             
             state["conflicts"] = conflicts
-            state["messages"].append(AIMessage(content=f"Found {len(conflicts)} potential conflicts"))
+            state["messages"].append(AIMessage(content=f"🤖 Agent 3: Found {len(conflicts)} potential conflicts"))
             
-            print(f"[Workflow] Agent 3: Found {len(conflicts)} conflicts")
+            print(f"[Workflow] ✅ Agent 3: Found {len(conflicts)} conflicts")
             return state
             
         except Exception as e:
-            print(f"[Workflow] Agent 3 Conflict Analysis Error: {e}")
-            state["error_message"] = f"Failed conflict analysis: {str(e)}"
+            print(f"[Workflow] ❌ Agent 3 Conflict Analysis Error: {e}")
+            state["error_message"] = f"Agent 3 conflict analysis failed: {str(e)}"
             return state
     
     def _agent3_impact_analysis(self, state: WorkflowState) -> WorkflowState:
@@ -261,7 +272,7 @@ class BusinessRuleWorkflow:
         Agent 3: Assess the impact of the proposed rule
         """
         try:
-            print("[Workflow] Agent 3: Analyzing rule impact...")
+            print("[Workflow] 🤖 Agent 3: Analyzing rule impact...")
             
             if not state.get("structured_rule"):
                 state["error_message"] = "No structured rule available for impact analysis"
@@ -275,14 +286,14 @@ class BusinessRuleWorkflow:
             )
             
             state["impact_analysis"] = impact_analysis
-            state["messages"].append(AIMessage(content=f"Impact analysis completed"))
+            state["messages"].append(AIMessage(content=f"🤖 Agent 3: Impact analysis completed - Risk level: {impact_analysis.get('risk_level', 'Unknown')}"))
             
-            print("[Workflow] Agent 3: Impact analysis completed")
+            print("[Workflow] ✅ Agent 3: Impact analysis completed")
             return state
             
         except Exception as e:
-            print(f"[Workflow] Agent 3 Impact Analysis Error: {e}")
-            state["error_message"] = f"Failed impact analysis: {str(e)}"
+            print(f"[Workflow] ❌ Agent 3 Impact Analysis Error: {e}")
+            state["error_message"] = f"Agent 3 impact analysis failed: {str(e)}"
             return state
     
     def _agent3_orchestration(self, state: WorkflowState) -> WorkflowState:
@@ -290,24 +301,24 @@ class BusinessRuleWorkflow:
         Agent 3: Orchestrate the next steps based on conflicts and impact
         """
         try:
-            print("[Workflow] Agent 3: Orchestrating next steps...")
+            print("[Workflow] 🤖 Agent 3: Orchestrating next steps...")
             
             should_proceed, message, orchestration_result = orchestrate_rule_generation(
                 state["structured_rule"],
                 state.get("conflicts", [])
             )
             
-            state["messages"].append(AIMessage(content=message))
+            state["messages"].append(AIMessage(content=f"🤖 Agent 3: {message}"))
             
             # Set flag for conditional routing
             state["should_proceed_to_generation"] = should_proceed
             
-            print(f"[Workflow] Agent 3: Orchestration decision: {should_proceed}")
+            print(f"[Workflow] ✅ Agent 3: Orchestration decision: {'Generate files' if should_proceed else 'Response only'}")
             return state
             
         except Exception as e:
-            print(f"[Workflow] Agent 3 Orchestration Error: {e}")
-            state["error_message"] = f"Failed orchestration: {str(e)}"
+            print(f"[Workflow] ❌ Agent 3 Orchestration Error: {e}")
+            state["error_message"] = f"Agent 3 orchestration failed: {str(e)}"
             return state
     
     def _agent2_generate_files(self, state: WorkflowState) -> WorkflowState:
@@ -315,7 +326,7 @@ class BusinessRuleWorkflow:
         Agent 2: Generate DRL and GDST files from structured rule
         """
         try:
-            print("[Workflow] Agent 2: Generating DRL and GDST files...")
+            print("[Workflow] 🤖 Agent 2: Generating DRL and GDST files...")
             
             if not state.get("structured_rule"):
                 state["error_message"] = "No structured rule available for file generation"
@@ -326,14 +337,14 @@ class BusinessRuleWorkflow:
             
             state["drl_content"] = drl_content
             state["gdst_content"] = gdst_content
-            state["messages"].append(AIMessage(content="Generated DRL and GDST files"))
+            state["messages"].append(AIMessage(content="🤖 Agent 2: Generated DRL and GDST files"))
             
-            print("[Workflow] Agent 2: File generation completed")
+            print("[Workflow] ✅ Agent 2: File generation completed")
             return state
             
         except Exception as e:
-            print(f"[Workflow] Agent 2 Error: {e}")
-            state["error_message"] = f"Failed file generation: {str(e)}"
+            print(f"[Workflow] ❌ Agent 2 Error: {e}")
+            state["error_message"] = f"Agent 2 file generation failed: {str(e)}"
             return state
     
     def _verify_files(self, state: WorkflowState) -> WorkflowState:
