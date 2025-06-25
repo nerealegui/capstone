@@ -13,9 +13,11 @@ from langgraph.graph import Graph, StateGraph
 from langgraph.graph.message import add_messages
 from langchain_core.messages import HumanMessage, AIMessage, BaseMessage
 
-# Import existing agent utilities
+# Import modularized utilities
 from utils.rag_utils import rag_generate, initialize_gemini_client
-from utils.rule_utils import json_to_drl_gdst, verify_drools_execution
+from utils.file_generation_utils import handle_generation
+from utils.config_manager import load_config
+from utils.rule_utils import verify_drools_execution
 from utils.agent3_utils import (
     analyze_rule_conflicts, 
     assess_rule_impact, 
@@ -23,7 +25,6 @@ from utils.agent3_utils import (
     orchestrate_rule_generation
 )
 from utils.json_response_handler import JsonResponseHandler
-from config.agent_config import AGENT1_PROMPT, AGENT2_PROMPT
 
 
 class WorkflowState(TypedDict):
@@ -40,6 +41,7 @@ class WorkflowState(TypedDict):
     industry: str
     error_message: Optional[str]
     final_response: str
+    config: Optional[Dict[str, Any]]
 
 
 def get_workflow_visualization() -> str:
@@ -58,6 +60,12 @@ def get_workflow_visualization() -> str:
 ┌─────────────────┐
 │   User Input    │ ← Natural language request
 │  (Natural Lang) │
+└─────────┬───────┘
+          │
+          ▼
+┌─────────────────┐
+│  ⚙️ Load Config  │ ← Load configuration & prompts
+│   (Setup)       │
 └─────────┬───────┘
           │
           ▼
@@ -113,15 +121,17 @@ def get_workflow_visualization() -> str:
 • **3 AI Agents**: Agent 1 (parsing) + Agent 3 (analysis & orchestration) + Agent 2 (file generation)
 • **Visual workflow** design & debugging transparency
 • **Modular, reusable** agent components for each task
+• **Dynamic configuration** loading with config manager integration
 • **Conditional branching** based on conflict analysis results
 • **Error handling** with graceful error management
 • **Real-time status** updates visible in chat responses
 • **Compatible** with existing RAG knowledge base system
 
 **🔍 Agent Roles:**
-- **Agent 1**: Natural language → structured JSON rule conversion
+- **Config Loader**: Dynamic prompt & configuration management from config_manager
+- **Agent 1**: Natural language → structured JSON rule conversion (with config-based prompts)
 - **Agent 3**: Business rule conflict detection, impact analysis, and workflow orchestration  
-- **Agent 2**: DRL (Drools Rule Language) and GDST file generation when needed
+- **Agent 2**: DRL (Drools Rule Language) and GDST file generation using modularized utilities
 """
 
 
@@ -142,6 +152,7 @@ class BusinessRuleWorkflow:
         """Build the Langraph workflow by defining nodes and edges"""
         
         # Add nodes for each agent/task
+        self.graph.add_node("load_config", self._load_config)
         self.graph.add_node("agent1_parse_rule", self._agent1_parse_rule)
         self.graph.add_node("agent3_conflict_analysis", self._agent3_conflict_analysis)
         self.graph.add_node("agent3_impact_analysis", self._agent3_impact_analysis)
@@ -151,10 +162,11 @@ class BusinessRuleWorkflow:
         self.graph.add_node("generate_response", self._generate_response)
         self.graph.add_node("handle_error", self._handle_error)
         
-        # Set entry point
-        self.graph.set_entry_point("agent1_parse_rule")
+        # Set entry point to load config first
+        self.graph.set_entry_point("load_config")
         
         # Define workflow edges
+        self.graph.add_edge("load_config", "agent1_parse_rule")
         self.graph.add_conditional_edges(
             "agent1_parse_rule",
             self._should_proceed_to_conflict_analysis,
@@ -191,6 +203,10 @@ class BusinessRuleWorkflow:
         try:
             print(f"[Workflow] 🤖 Agent 1: Parsing user input: {state['user_input'][:100]}...")
             
+            # Get prompts from loaded config
+            config = state.get("config", {})
+            agent1_prompt = config.get("prompts", {}).get("agent1_prompt", "")
+            
             # Use RAG if available
             if state.get('rag_df') is not None and not state['rag_df'].empty:
                 response = rag_generate(
@@ -203,7 +219,7 @@ class BusinessRuleWorkflow:
             else:
                 # Fallback to direct LLM call without RAG
                 client = initialize_gemini_client()
-                prompt = f"{AGENT1_PROMPT}\n\nUser Input: {state['user_input']}"
+                prompt = f"{agent1_prompt}\n\nUser Input: {state['user_input']}" if agent1_prompt else f"Parse this input: {state['user_input']}"
                 
                 response_obj = client.models.generate_content(
                     model="gemini-2.0-flash-exp",
@@ -323,7 +339,7 @@ class BusinessRuleWorkflow:
     
     def _agent2_generate_files(self, state: WorkflowState) -> WorkflowState:
         """
-        Agent 2: Generate DRL and GDST files from structured rule
+        Agent 2: Generate DRL and GDST files using modularized file generation
         """
         try:
             print("[Workflow] 🤖 Agent 2: Generating DRL and GDST files...")
@@ -332,12 +348,15 @@ class BusinessRuleWorkflow:
                 state["error_message"] = "No structured rule available for file generation"
                 return state
             
-            # Generate files using existing function
-            drl_content, gdst_content = json_to_drl_gdst(state["structured_rule"])
+            # Use modularized file generation utility
+            drl_content, gdst_content, generation_message = handle_generation(
+                state["structured_rule"], 
+                state.get('industry', 'generic')
+            )
             
             state["drl_content"] = drl_content
             state["gdst_content"] = gdst_content
-            state["messages"].append(AIMessage(content="🤖 Agent 2: Generated DRL and GDST files"))
+            state["messages"].append(AIMessage(content=f"🤖 Agent 2: {generation_message}"))
             
             print("[Workflow] ✅ Agent 2: File generation completed")
             return state
@@ -417,6 +436,21 @@ class BusinessRuleWorkflow:
         
         return state
     
+    def _load_config(self, state: WorkflowState) -> WorkflowState:
+        """
+        Load current configuration from config manager
+        """
+        try:
+            print("[Workflow] Loading configuration...")
+            config, message = load_config()
+            state["config"] = config
+            print(f"[Workflow] ✅ Configuration loaded successfully: {message}")
+            return state
+        except Exception as e:
+            print(f"[Workflow] ⚠️ Config loading warning: {e}")
+            state["config"] = {}  # Use empty config as fallback
+            return state
+    
     def _should_proceed_to_conflict_analysis(self, state: WorkflowState) -> str:
         """Conditional edge: Check if we should proceed to conflict analysis"""
         if state.get("error_message"):
@@ -493,29 +527,44 @@ class BusinessRuleWorkflow:
         """
         print(f"[Workflow] Starting workflow for input: {user_input[:100]}...")
         
+        # Debug: Log history structure
+        if history:
+            print(f"[Workflow] DEBUG: History structure ({len(history)} items):")
+            for i, item in enumerate(history[-3:]):  # Show last 3 items
+                if isinstance(item, (list, tuple)):
+                    user_part = item[0] if len(item) > 0 else "None"
+                    bot_part = item[1] if len(item) > 1 else "None"
+                    print(f"[Workflow] DEBUG: History[{i}] = [{user_part[:50]}..., {bot_part[:50] if bot_part else 'None'}...]")
+                elif isinstance(item, dict):
+                    user_part = item.get('user', 'None')
+                    assistant_part = item.get('assistant', 'None')
+                    print(f"[Workflow] DEBUG: History[{i}] = {{user: {user_part[:50]}..., assistant: {assistant_part[:50] if assistant_part else 'None'}...}}")
+                else:
+                    print(f"[Workflow] DEBUG: History[{i}] = {type(item)} - {str(item)[:50]}...")
+        
         # Build context from history for better understanding
         context_input = user_input
         if history and len(history) > 0:
             print(f"[Workflow] Processing conversation history with {len(history)} previous messages...")
             # Build context from recent conversation history
             recent_context = []
-            for item in history[-3:]:  # Use last 3 exchanges for context
+            for item in history[-5:]:  # Use last 5 exchanges for more context
                 if isinstance(item, (list, tuple)) and len(item) >= 2:
                     user_msg, bot_msg = item[0], item[1]
-                    # Only include complete exchanges (skip if bot_msg is None)
-                    if bot_msg is not None and str(bot_msg).strip():
+                    # Include user message even if bot response is None (current message)
+                    if user_msg and str(user_msg).strip():
                         recent_context.append(f"User: {user_msg}")
-                        recent_context.append(f"Assistant: {bot_msg}")
-                    elif bot_msg is None:
-                        # This is the current message being processed, don't include in context
-                        print(f"[Workflow] Skipping incomplete exchange in history (current message)")
+                        # Only add bot response if it exists and is not None
+                        if bot_msg is not None and str(bot_msg).strip():
+                            recent_context.append(f"Assistant: {bot_msg}")
                 elif isinstance(item, dict):
-                    if 'user' in item and 'assistant' in item:
-                        assistant_msg = item['assistant']
-                        # Only include complete exchanges (skip if assistant is None or empty)
-                        if assistant_msg is not None and str(assistant_msg).strip():
-                            recent_context.append(f"User: {item['user']}")
-                            recent_context.append(f"Assistant: {assistant_msg}")
+                    if 'user' in item:
+                        user_msg = item['user']
+                        if user_msg and str(user_msg).strip():
+                            recent_context.append(f"User: {user_msg}")
+                            # Only add assistant response if it exists and is not None
+                            if 'assistant' in item and item['assistant'] is not None and str(item['assistant']).strip():
+                                recent_context.append(f"Assistant: {item['assistant']}")
             
             if recent_context:
                 context_input = f"Previous conversation:\n{chr(10).join(recent_context)}\n\nCurrent request: {user_input}"
@@ -524,7 +573,7 @@ class BusinessRuleWorkflow:
             else:
                 print(f"[Workflow] No valid conversation context found, using original input")
         
-        # Initialize state
+        # Initialize state with config placeholder
         initial_state = WorkflowState(
             messages=[HumanMessage(content=context_input)],
             user_input=context_input,
@@ -537,7 +586,8 @@ class BusinessRuleWorkflow:
             rag_df=rag_df,
             industry=industry,
             error_message=None,
-            final_response=""
+            final_response="",
+            config=None  # Will be loaded by first node
         )
         
         # Compile and run the graph
@@ -557,7 +607,8 @@ class BusinessRuleWorkflow:
                 "gdst_content": final_state.get("gdst_content"),
                 "verification_result": final_state.get("verification_result"),
                 "messages": [msg.content for msg in final_state.get("messages", [])],
-                "error": final_state.get("error_message")
+                "error": final_state.get("error_message"),
+                "config": final_state.get("config")  # Include config in results
             }
             
         except Exception as e:
