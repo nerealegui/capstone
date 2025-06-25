@@ -1,461 +1,39 @@
 import os
 import gradio as gr
 import json
-import os
 import pandas as pd
-import numpy as np
-from google import genai
-from google.genai import types
-from config.agent_config import AGENT1_PROMPT, AGENT2_PROMPT, AGENT3_PROMPT, DEFAULT_MODEL, GENERATION_CONFIG, AGENT3_GENERATION_CONFIG, INDUSTRY_CONFIGS
+from config.agent_config import INDUSTRY_CONFIGS
 from typing import Dict, List, Any
-from utils.json_response_handler import JsonResponseHandler
 
-from utils.rag_utils import read_documents_from_paths, embed_texts, retrieve, rag_generate, initialize_gemini_client
-from utils.kb_utils import core_build_knowledge_base
-from utils.rule_utils import json_to_drl_gdst, verify_drools_execution
-from utils.rule_extractor import extract_rules_from_csv, save_extracted_rules
-from utils.agent3_utils import (
-    analyze_rule_conflicts, 
-    assess_rule_impact, 
-    generate_conversational_response,
-    orchestrate_rule_generation,
-    _extract_existing_rules_from_kb
+# Import utility functions from their respective modules
+from utils.ui_utils import (
+    load_css_from_file,
+    build_knowledge_base_process,
+    extract_rules_from_uploaded_csv,
+    get_workflow_status,
+    process_rules_to_df,
+    filter_rules,
+    update_rule_summary
+)
+from utils.chat_utils import (
+    chat_with_rag,
+    chat_with_agent3,
+    analyze_impact_only,
+    get_last_rule_response
 )
 from utils.config_manager import (
     get_default_config,
     reload_prompts_from_defaults,
-    save_config,
     load_config,
-    apply_config_to_runtime,
-    get_config_summary
+    get_current_config_summary,
+    save_and_apply_config
 )
-from utils.workflow_orchestrator import run_business_rule_workflow
+from utils.file_generation_utils import handle_generation
 
 # Global variables
 rule_response = {}  # Used for UI updates
 
-def load_css_from_file(css_file_path):
-    """
-    Load CSS content from an external file.
-    
-    Args:
-        css_file_path (str): Path to the CSS file
-        
-    Returns:
-        str: CSS content as string, or empty string if file not found
-    """
-    try:
-        # Get the directory of the current file
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        full_path = os.path.join(current_dir, css_file_path)
-        
-        with open(full_path, 'r', encoding='utf-8') as f:
-            return f.read()
-    except FileNotFoundError:
-        print(f"Warning: CSS file not found at {css_file_path}. Using default styling.")
-        return ""
-    except Exception as e:
-        print(f"Warning: Error reading CSS file {css_file_path}: {e}. Using default styling.")
-        return ""
 
-# New function to build_knowledge_base_process, which calls functions in rag_utils.
-def build_knowledge_base_process(
-    uploaded_files: list, 
-    rag_state_df: pd.DataFrame
-):
-    """
-    Enhanced Gradio generator for building the knowledge base with progress indicators.
-    Handles UI status updates and delegates core logic to kb_utils.core_build_knowledge_base.
-    Args:
-        uploaded_files (list): List of uploaded file-like objects (must have .name attribute).
-        rag_state_df (pd.DataFrame): Existing RAG state DataFrame.
-    Yields:
-        Tuple[str, pd.DataFrame]: Status message and updated RAG DataFrame.
-    """
-    # --- Enhanced Gradio generator logic with progress indicators ---
-    yield "Starting knowledge base build process...", rag_state_df
-    
-    if not uploaded_files:
-        yield "Please upload documents first to build the knowledge base.", rag_state_df if rag_state_df is not None else pd.DataFrame()
-        return
-        
-    file_paths = [f.name for f in uploaded_files if f and hasattr(f, 'name') and f.name]
-    if not file_paths:
-        yield "No valid file paths found from upload.", rag_state_df if rag_state_df is not None else pd.DataFrame()
-        return
-    
-    yield f"Processing {len(file_paths)} document(s)...", rag_state_df
-    yield f"Reading documents and extracting text content...", rag_state_df
-    yield f"Generating embeddings for enhanced search capabilities...", rag_state_df
-    
-    # Use default chunk size and overlap
-    chunk_size = 500
-    chunk_overlap = 50
-    
-    # Pass the existing KB DataFrame for merging
-    status_message, result_df = core_build_knowledge_base(file_paths, chunk_size, chunk_overlap, existing_kb_df=rag_state_df)
-    
-    # Enhanced status message with timestamp
-    from datetime import datetime
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    
-    if "successfully" in status_message.lower():
-        final_status = f"✓  {status_message}\nLast updated: {timestamp}\nTotal chunks in knowledge base: {len(result_df)}"
-    else:
-        final_status = f"✗ {status_message}\nAttempted at: {timestamp}"
-    
-    yield final_status, result_df
-
-
-def chat_with_rag(user_input: str, history: list, rag_state_df: pd.DataFrame):
-    global rule_response
-    
-    # Defensive: ensure rag_state_df is always a DataFrame
-    if rag_state_df is None:
-        rag_state_df = pd.DataFrame()
-    
-    # Check for empty input
-    if not user_input or not user_input.strip():
-        empty_response = "Please enter a message."
-        return empty_response, history, "Name will appear here after input.", "Summary will appear here after input.", {"message": "RAG index is empty."}
-    
-    # Validate API key without storing unused client variable
-    try:
-        initialize_gemini_client()
-    except ValueError as e:
-         error_message = f"API Key Error: {e}"
-         print(error_message)
-         return error_message, history, "Name will appear here after input.", "Summary will appear here after input.", {"message": "RAG index is empty."}
-    
-    # Determine if RAG should be used (if rag_state_df is not empty)
-    use_rag = not rag_state_df.empty
-
-    if use_rag:
-        try:
-            llm_response_text = rag_generate(
-                query=user_input,
-                df=rag_state_df,
-                agent_prompt=AGENT1_PROMPT,
-                model_name=DEFAULT_MODEL,
-                generation_config=GENERATION_CONFIG,
-                history=history,
-                top_k=3
-            )
-            try:
-                # Use the JsonResponseHandler to parse the response
-                rule_response = JsonResponseHandler.parse_json_response(llm_response_text)
-                print("Parsed rule_response:", rule_response)
-                if not isinstance(rule_response, dict):
-                     raise ValueError("Response is not a JSON object.")
-            except (json.JSONDecodeError, ValueError, Exception) as e:
-                print(f"Warning: Could not parse LLM response as JSON. Error: {e}")
-                print(f"Raw LLM Response received:\n{llm_response_text[:300]}...")
-                rule_response = {
-                    "name": "LLM Response Parse Error",
-                    "summary": f"The AI returned a response, but it wasn't valid JSON. Raw response start: {llm_response_text[:150]}...",
-                    "logic": {"message": "Response was not in expected JSON format."}
-                }
-        except Exception as e:
-            rule_response = {
-                "name": "RAG Generation Error",
-                "summary": f"An error occurred during RAG response generation: {str(e)}",
-                "logic": {"message": "RAG failed."}
-            }
-    else:
-        print("Knowledge base is empty. RAG is not active.")
-        rule_response = {
-            "name": "Knowledge Base Empty",
-            "summary": "Knowledge base not built. Please upload documents and click 'Build Knowledge Base' first.",
-            "logic": {"message": "RAG index is empty."}
-        }
-
-    # Extract values for the response
-    response_summary = rule_response.get('summary', 'No summary available.')
-    
-    return response_summary
-
-
-def chat_with_agent3(user_input: str, history: list, rag_state_df: pd.DataFrame, industry: str = "generic"):
-    """
-    Enhanced Agent 3 conversation with Langraph workflow orchestration.
-    
-    Langraph Workflow uses all 3 agents:
-    - Agent 1: Natural language → structured JSON rule parsing
-    - Agent 3: Conflict analysis, impact assessment, and orchestration decisions
-    - Agent 2: DRL/GDST file generation (when needed)
-    """
-    global rule_response
-    
-    # Defensive: ensure rag_state_df is always a DataFrame
-    if rag_state_df is None:
-        rag_state_df = pd.DataFrame()
-    
-    try:
-        print(f"[Chat] 🔄 Using Langraph workflow orchestration for: {user_input[:50]}...")
-        
-        # Create status message for user feedback
-        status_prefix = "🔄 **Langraph Workflow Active**\n\n"
-        
-        # Run Langraph workflow
-        workflow_result = run_business_rule_workflow(
-            user_input=user_input,
-            rag_df=rag_state_df if not rag_state_df.empty else None,
-            industry=industry
-        )
-        
-        # Extract results for UI updates
-        if workflow_result.get("structured_rule"):
-            rule_response = workflow_result["structured_rule"]
-            # Add workflow metadata
-            rule_response["workflow_type"] = "langraph"
-            rule_response["summary"] = workflow_result.get("response", "")
-            
-            # Add workflow execution details
-            if workflow_result.get("conflicts"):
-                rule_response["conflicts_found"] = len(workflow_result["conflicts"])
-            if workflow_result.get("verification_result"):
-                rule_response["verification"] = workflow_result["verification_result"]
-                
-            # Add status information to the response
-            status_info = "\n\n---\n**Workflow Status:**\n"
-            status_info += f"✅ Agent 1: Rule parsed successfully\n"
-            status_info += f"✅ Agent 3: Analyzed {rule_response.get('conflicts_found', 0)} conflicts\n"
-            if workflow_result.get("drl_content"):
-                status_info += f"✅ Agent 2: Generated DRL/GDST files\n"
-            if workflow_result.get("verification_result"):
-                status_info += f"✅ Files verified: {workflow_result['verification_result']}\n"
-                
-        else:
-            # Default rule_response for non-rule conversations
-            rule_response = {
-                "name": "Langraph Workflow Response",
-                "summary": workflow_result.get("response", ""),
-                "workflow_type": "langraph",
-                "logic": {"message": "Processed via Langraph workflow"}
-            }
-            status_info = "\n\n---\n**Workflow Status:**\n✅ Processed via Langraph workflow orchestration\n"
-        
-        base_response = workflow_result.get("response", "I processed your request using the Langraph workflow.")
-        response = status_prefix + base_response + status_info
-        
-        # Handle errors
-        if workflow_result.get("error"):
-            print(f"[Chat] Langraph workflow error: {workflow_result['error']}")
-            return f"⚠️ **Langraph workflow encountered an error.**\n\nError: {workflow_result['error']}\n\nPlease try again or check your configuration."
-        
-        return response
-        
-    except Exception as e:
-        print(f"[Chat] Langraph workflow failed: {e}")
-        return f"⚠️ **Langraph workflow failed.**\n\nError: {str(e)}\n\nPlease check your configuration and try again."
-
-
-
-
-def update_rule_summary():
-    """Extract rule information from the global rule_response and return for UI update."""
-    global rule_response
-    
-    try:
-        if 'rule_response' in globals() and rule_response:
-            name_val = rule_response.get('name', 'Name will appear here after input.')
-            summary_val = rule_response.get('summary', 'Summary will appear here after input.')
-            return name_val, summary_val
-        else:
-            return "Name will appear here after input.", "Summary will appear here after input."
-    except Exception as e:
-        print(f"Error in update_rule_summary: {e}")
-        return "Error loading rule data", "Error loading rule data"
-
-def extract_rules_from_uploaded_csv(csv_file, rag_state_df=None):
-    """
-    Enhanced process for extracting business rules from CSV and automatically adding them to the knowledge base.
-    
-    Args:
-        csv_file: Gradio file upload object
-        rag_state_df: Current RAG state DataFrame
-        
-    Returns:
-        Tuple[str, str, pd.DataFrame]: Status message, extracted rules JSON as string, and updated RAG DataFrame
-    """
-    if not csv_file:
-        return "Please upload a CSV file first to begin rule extraction.", "", pd.DataFrame(columns=['ID', 'Name', 'Description'])
-    
-    try:
-        # Extract rules from CSV
-        rules = extract_rules_from_csv(csv_file.name)
-        
-        if not rules:
-            return "No business rules found in the CSV file. Please check the file format and content.", "", pd.DataFrame(columns=['ID', 'Name', 'Description'])
-        
-        # Save extracted rules
-        output_path = "extracted_rules.json"
-        success = save_extracted_rules(rules, output_path)
-        
-        if not success:
-            return "✗ Error saving extracted rules to file. Please check file permissions.", "", rag_state_df
-        
-        rules_json = json.dumps(rules, indent=2)
-        
-        # Convert rules to text for RAG indexing
-        rule_texts = []
-        for rule in rules:
-            rule_text = f"""
-Rule: {rule.get('name', 'Unknown')}
-Category: {rule.get('category', 'Unknown')}
-Description: {rule.get('description', 'No description')}
-Summary: {rule.get('summary', 'No summary')}
-Priority: {rule.get('priority', 'Medium')}
-Active: {rule.get('active', True)}
-"""
-            rule_texts.append(rule_text)
-        
-        # Prepare a temporary file for the RAG system
-        temp_file = "temp_rules.txt"
-        with open(temp_file, 'w') as f:
-            f.write("\n".join(rule_texts))
-        
-        # Add rules to knowledge base using the core_build_knowledge_base function
-        status_message, updated_df = core_build_knowledge_base([temp_file], existing_kb_df=rag_state_df)
-        
-        # Clean up temporary file
-        try:
-            os.remove(temp_file)
-        except:
-            pass
-        
-        if "successfully" in status_message.lower():
-            # Include a timestamp for the successful operation
-            from datetime import datetime
-            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            full_status = f"✓  Successfully extracted {len(rules)} business rule(s) from CSV file and added to knowledge base.\n"\
-                          f"Last updated: {timestamp}\n"\
-                          f"Rules saved to: {output_path}\n"\
-                          f"Knowledge base now contains {len(updated_df)} chunks."
-            return full_status, rules_json, updated_df
-        else:
-            return f"✓  Rules extracted but couldn't be added to knowledge base: {status_message}", rules_json, rag_state_df
-            
-    except Exception as e:
-        return f"✗ Error processing CSV file: {str(e)}\nPlease ensure the CSV file contains valid business rule data.", "", rag_state_df
-
-
-# Configuration management functions
-def get_current_config_summary():
-    """Get a summary of the current configuration."""
-    try:
-        config, _ = load_config()
-        return get_config_summary(config)
-    except Exception as e:
-        return f"Error loading configuration: {str(e)}"
-
-def save_and_apply_config(agent1_prompt, agent2_prompt, agent3_prompt, model, generation_config_str, industry):
-    """Save and apply the current configuration values."""
-    try:
-        # Parse generation config
-        try:
-            generation_config = json.loads(generation_config_str)
-        except json.JSONDecodeError:
-            return "Invalid JSON in generation config.", False
-
-        config = {
-            "agent_prompts": {
-                "agent1": agent1_prompt,
-                "agent2": agent2_prompt,
-                "agent3": agent3_prompt
-            },
-            "model_config": {
-                "default_model": model,
-                "generation_config": generation_config,
-                "agent3_generation_config": AGENT3_GENERATION_CONFIG
-            },
-            "agent3_settings": {
-                "industry": industry,
-                "enabled": True
-            },
-            "ui_settings": {
-                "default_tab": "Chat & Rule Summary"
-            }
-        }
-
-        success = save_config(config)
-        if success:
-            apply_config_to_runtime(config)
-            return f"✓ Configuration saved and applied successfully!", True
-        else:
-            return f"❌ Failed to save configuration.", False
-    except Exception as e:
-        return f"❌ Error saving and applying configuration: {str(e)}", False
-
-
-def analyze_impact_only(industry: str = "generic"):
-    """
-    Analyze impact without generating drools files - for Enhanced Agent 3 mode.
-    Returns:
-        Tuple[str, None, None]: Status message with analysis, no files
-    """
-    global rule_response
-    try:
-        if 'rule_response' not in globals() or not rule_response:
-            return "No rule to analyze. Please interact with the chat first.", None, None
-
-        # Get existing rules for validation
-        existing_rules = []
-        try:
-            with open("extracted_rules.json", 'r') as f:
-                existing_rules = json.load(f)
-        except FileNotFoundError:
-            pass
-
-        # Use Agent 3 for enhanced conflict detection and impact analysis
-        conflicts, conflict_analysis = analyze_rule_conflicts(
-            rule_response, existing_rules, industry
-        )
-        
-        impact_analysis = assess_rule_impact(
-            rule_response, existing_rules, industry
-        )
-
-        if conflicts:
-            conflict_messages = []
-            for conflict in conflicts:
-                impact_info = conflict.get('industry_impact', 'No impact analysis available')
-                conflict_messages.append(
-                    f"⚠️ {conflict['type']}: {conflict['message']}\n"
-                    f"   Industry Impact: {impact_info}"
-                )
-            
-            detailed_message = (
-                "⚠️ Conflicts Detected by Agent 3:\n\n" + 
-                "\n\n".join(conflict_messages) + 
-                f"\n\n📊 Detailed Analysis:\n{conflict_analysis}\n\n" +
-                f"📈 Impact Assessment:\n{json.dumps(impact_analysis, indent=2)}\n\n" +
-                "Please use the Decision Support section below to proceed, modify, or cancel."
-            )
-            return (detailed_message, None, None)
-
-        # If no conflicts, show positive impact analysis
-        success_message = (
-            ##f"📊 Impact Analysis Summary:\n{json.dumps(impact_analysis, indent=2)}\n\n" +
-            f"📈 Detailed Analysis:\n{conflict_analysis}\n\n" +
-            "Rule is ready for implementation. Use the Decision Support section below to proceed."
-        )
-        
-        return (success_message, None, None)
-            
-    except Exception as e:
-        return (f"Agent 3 Analysis Error: {str(e)}", None, None)
-
-# New function to initialize_gemini_client, moved from rag_utils
-def initialize_gemini_client():
-    api_key = os.environ.get('GOOGLE_API_KEY')
-    if not api_key:
-        raise ValueError("Google API key not found in environment variables. Please check your .env file.")
-
-    client = genai.Client(
-        api_key=api_key
-    )
-    return client
 
 def create_gradio_interface():
     """Create and return the Gradio interface for the Gemini Chat Application with two tabs: Configuration and Chat/Rule Summary."""
@@ -555,7 +133,7 @@ def create_gradio_interface():
                         gr.HTML('<div class="section-header">Agent Configuration</div>')
                         
                         # Configuration Summary
-                        with gr.Accordion("**Configuration Summary**", open=True):
+                        with gr.Accordion("Configuration Summary", open=True):
                             # Render the configuration summary at app load
                             config_summary = gr.Markdown(get_current_config_summary())
                             
@@ -579,31 +157,6 @@ def create_gradio_interface():
                             """)
                             
                             from utils.workflow_orchestrator import create_workflow
-                            
-                            def get_workflow_status():
-                                try:
-                                    workflow = create_workflow()
-                                    metrics = workflow.get_workflow_metrics()
-                                    
-                                    status = f"""
-**📊 Current Workflow Status:**
-- **Nodes:** {metrics.get('total_nodes', 'Unknown')} workflow nodes
-- **Type:** {metrics.get('workflow_type', 'Unknown')}
-- **Entry Point:** {metrics.get('entry_point', 'Unknown')}
-- **Status:** 🟢 **Active** (Langraph orchestration enabled)
-
-**🔗 Agent Execution Order:**
-1. **Agent 1** → Parse natural language to structured rule
-2. **Agent 3** → Analyze conflicts with existing rules  
-3. **Agent 3** → Assess business impact and risk
-4. **Agent 3** → Orchestrate next steps (files or response)
-5. **Agent 2** → Generate DRL/GDST files (if needed)
-6. **Verification** → Validate generated files
-7. **Response** → Provide user-facing results
-                                    """
-                                    return status
-                                except Exception as e:
-                                    return f"**Error getting workflow status:** {str(e)}"
                             
                             workflow_status_display = gr.Markdown(
                                 value=get_workflow_status(),
@@ -740,7 +293,8 @@ def create_gradio_interface():
                             response = chat_with_agent3(user_input, history, rag_state_df, industry)
 
                             # Extract rule information for summary display
-                            if 'rule_response' in globals() and rule_response:
+                            rule_response = get_last_rule_response()
+                            if rule_response:
                                 name = rule_response.get('name', 'Name will appear here after input.')
                                 summary = rule_response.get('summary', 'Summary will appear here after input.')
                             else:
@@ -776,7 +330,7 @@ def create_gradio_interface():
                         decision_support_accordion = gr.Accordion("File Generation", open=False, visible=True)
                         with decision_support_accordion:
                             
-                            decision_button = gr.Button("Generate Files", variant="secondary", elem_classes=["btn-secondary"])
+                            decision_button = gr.Button("Generate Files", variant="primary", elem_classes=["btn-primary"])
                             file_generation_status = gr.Markdown(
                                 "File generation status will appear here after you click 'Generate Files'.",
                                 label="Status",
@@ -785,7 +339,7 @@ def create_gradio_interface():
                             decision_drl_file = gr.File(label="Download Generated DRL")
                             decision_gdst_file = gr.File(label="Download Generated GDST")
                             
-                            def handle_generation(industry):
+                            def handle_generation_click(industry):
                                 """
                                 Args:
                                     industry (str): Selected industry context
@@ -793,64 +347,11 @@ def create_gradio_interface():
                                 Returns:
                                     Tuple: (status_message, drl_file, gdst_file)
                                 """
-                                # Get existing rules for validation
-                                existing_rules = []
-                                try:
-                                    with open("extracted_rules.json", 'r') as f:
-                                        existing_rules = json.load(f)
-                                except FileNotFoundError:
-                                    pass
-                                # Check for conflicts first
-                                conflicts, conflict_analysis = analyze_rule_conflicts(
-                                    rule_response, existing_rules, industry
-                                )
-                                should_proceed, status_msg, orchestration_result_json = orchestrate_rule_generation(rule_response, conflicts)
-                                
-                                # Parse the orchestration result
-                                try:
-                                    if orchestration_result_json:
-                                        orchestration_result = json.loads(orchestration_result_json)
-                                    else:
-                                        orchestration_result = None
-                                    
-                                    if orchestration_result.get("agent2_trigger", False):
-                                        # Get the rule data from the orchestration result
-                                        rule_data = orchestration_result.get("rule_data", {})
-                                        
-                                        # Call Agent 2 to generate DRL and GDST
-                                        drl, gdst = json_to_drl_gdst(rule_data)
-                                        verified = verify_drools_execution(drl, gdst)
-                                        
-                                        if verified:
-                                            # Save files for download
-                                            drl_path = "generated_rule.drl"
-                                            gdst_path = "generated_table.gdst"
-                                            with open(drl_path, "w") as f:
-                                                f.write(drl)
-                                            with open(gdst_path, "w") as f:
-                                                f.write(gdst)
-                                            
-                                            message = (
-                                                f"### ✓ Rule Generation Successful\n\n"
-                                                f"**Rule:** {rule_data.get('name', 'Unnamed Rule')}\n\n"
-                                                f"**Files have been created:**\n"
-                                                f"- **DRL**: {drl_path}\n"
-                                                f"- **GDST**: {gdst_path}\n\n"
-                                                f"You can download the files below."
-                                            )
-                                            return message, drl_path, gdst_path
-                                        else:
-                                            return "### ⚠️ Generation Issue\n\nRule syntax verified, but execution verification failed.", None, None
-                                    
-                                    return f"### ℹ️ Status Update\n\n{status_msg} {orchestration_result.get('action', '')}", None, None
-                                    
-                                except json.JSONDecodeError:
-                                    return f"### ⚠️ Processing Error\n\nError processing orchestration result.\n\n{status_msg}", None, None
-                                except Exception as e:
-                                    return f"### ❌ Generation Error\n\nAn error occurred during rule generation:\n\n```\n{str(e)}\n```", None, None
+                                global rule_response
+                                return handle_generation(rule_response, industry)
                             
                             decision_button.click(
-                                handle_generation,
+                                handle_generation_click,
                                 inputs=[industry_selector],
                                 outputs=[file_generation_status, decision_drl_file, decision_gdst_file]
                             )
@@ -887,6 +388,7 @@ def create_gradio_interface():
         def chat_and_update(user_input, history, rag_state_df, mode=None, industry=None):
             global rule_response
             response = chat_with_rag(user_input, history, rag_state_df)
+            rule_response = get_last_rule_response()
             name = rule_response.get('name', 'Name will appear here after input.')
             summary = rule_response.get('summary', 'Summary will appear here after input.')
             return response, name, summary, rag_state_df
@@ -896,7 +398,8 @@ def create_gradio_interface():
 
         # Fixed button behavior for Enhanced Agent 3 mode only
         def handle_action_button(industry):
-            return analyze_impact_only(industry)
+            global rule_response
+            return analyze_impact_only(rule_response, industry)
         
         action_button.click(
             handle_action_button,
@@ -905,7 +408,7 @@ def create_gradio_interface():
         )
         
         chat_interface.chatbot.change(
-            update_rule_summary,
+            lambda: update_rule_summary(get_last_rule_response()),
             outputs=[name_display, summary_display]
         )
         

@@ -476,7 +476,8 @@ class BusinessRuleWorkflow:
         self, 
         user_input: str, 
         rag_df: Optional[pd.DataFrame] = None,
-        industry: str = "generic"
+        industry: str = "generic",
+        history: Optional[List] = None
     ) -> Dict[str, Any]:
         """
         Run the complete workflow for business rule processing
@@ -485,16 +486,48 @@ class BusinessRuleWorkflow:
             user_input: Natural language input from user
             rag_df: RAG knowledge base DataFrame (optional)
             industry: Industry context for rule processing
+            history: Conversation history for context (optional)
             
         Returns:
             Dictionary containing workflow results
         """
         print(f"[Workflow] Starting workflow for input: {user_input[:100]}...")
         
+        # Build context from history for better understanding
+        context_input = user_input
+        if history and len(history) > 0:
+            print(f"[Workflow] Processing conversation history with {len(history)} previous messages...")
+            # Build context from recent conversation history
+            recent_context = []
+            for item in history[-3:]:  # Use last 3 exchanges for context
+                if isinstance(item, (list, tuple)) and len(item) >= 2:
+                    user_msg, bot_msg = item[0], item[1]
+                    # Only include complete exchanges (skip if bot_msg is None)
+                    if bot_msg is not None and str(bot_msg).strip():
+                        recent_context.append(f"User: {user_msg}")
+                        recent_context.append(f"Assistant: {bot_msg}")
+                    elif bot_msg is None:
+                        # This is the current message being processed, don't include in context
+                        print(f"[Workflow] Skipping incomplete exchange in history (current message)")
+                elif isinstance(item, dict):
+                    if 'user' in item and 'assistant' in item:
+                        assistant_msg = item['assistant']
+                        # Only include complete exchanges (skip if assistant is None or empty)
+                        if assistant_msg is not None and str(assistant_msg).strip():
+                            recent_context.append(f"User: {item['user']}")
+                            recent_context.append(f"Assistant: {assistant_msg}")
+            
+            if recent_context:
+                context_input = f"Previous conversation:\n{chr(10).join(recent_context)}\n\nCurrent request: {user_input}"
+                print(f"[Workflow] Enhanced input with conversation context ({len(recent_context)} context items)")
+                print(f"[Workflow] Context preview: {context_input[:200]}...")
+            else:
+                print(f"[Workflow] No valid conversation context found, using original input")
+        
         # Initialize state
         initial_state = WorkflowState(
-            messages=[HumanMessage(content=user_input)],
-            user_input=user_input,
+            messages=[HumanMessage(content=context_input)],
+            user_input=context_input,
             structured_rule=None,
             conflicts=[],
             impact_analysis=None,
@@ -543,7 +576,8 @@ def create_workflow() -> BusinessRuleWorkflow:
 def run_business_rule_workflow(
     user_input: str,
     rag_df: Optional[pd.DataFrame] = None,
-    industry: str = "generic"
+    industry: str = "generic",
+    history: Optional[List] = None
 ) -> Dict[str, Any]:
     """
     Convenience function to run the business rule workflow
@@ -552,9 +586,10 @@ def run_business_rule_workflow(
         user_input: Natural language input from user
         rag_df: RAG knowledge base DataFrame (optional) 
         industry: Industry context for rule processing
+        history: Conversation history for context (optional)
         
     Returns:
         Dictionary containing workflow results
     """
     workflow = create_workflow()
-    return workflow.run_workflow(user_input, rag_df, industry)
+    return workflow.run_workflow(user_input, rag_df, industry, history)

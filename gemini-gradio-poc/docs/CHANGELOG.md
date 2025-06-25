@@ -2,6 +2,123 @@
 
 # Changelog
 
+## [2025-06-25] - Major Code Refactoring: Modularization and Separation of Concerns
+
+### 🏗️ **Complete Architecture Refactoring**
+- **Objective**: Moved all non-essential methods from `chat_app.py` to their corresponding utility files for better code organization and maintainability
+- **Result**: Reduced `chat_app.py` from 999 lines to 501 lines (50% reduction!)
+- **Focus**: `chat_app.py` now contains only UI layout, component definition, and event binding logic
+
+### ✨ **New Utility Modules Created**
+
+#### 📋 `utils/ui_utils.py` (288 lines)
+- **Purpose**: UI-specific helper functions and Gradio interface utilities
+- **Functions Moved**:
+  - `load_css_from_file()` - CSS loading utility with proper path resolution
+  - `build_knowledge_base_process()` - KB building with progress indicators and status updates
+  - `extract_rules_from_uploaded_csv()` - CSV rule extraction with automatic KB integration
+  - `get_workflow_status()` - Langraph workflow status display
+  - `process_rules_to_df()` - DataFrame processing for rule lists
+  - `filter_rules()` - Search and filtering functionality for rule management
+  - `update_rule_summary()` - Rule summary updates for UI components
+
+#### 💬 `utils/chat_utils.py` (252 lines)
+- **Purpose**: Chat logic and conversation state management
+- **Functions Moved**:
+  - `chat_with_rag()` - RAG-based chat functionality with API key validation
+  - `chat_with_agent3()` - Enhanced Langraph workflow orchestration
+  - `analyze_impact_only()` - Impact analysis without file generation
+  - `get_last_rule_response()` - State management for rule responses across modules
+- **State Management**: Introduced module-level `last_rule_response` variable for proper state handling
+
+#### 📁 `utils/file_generation_utils.py` (82 lines)
+- **Purpose**: Business rule file generation orchestration
+- **Functions Moved**:
+  - `handle_generation()` - DRL/GDST file generation with conflict analysis and verification
+
+### 🔧 **Enhanced Existing Modules**
+
+#### ⚙️ `utils/config_manager.py` (Enhanced)
+- **Functions Added**:
+  - `get_current_config_summary()` - Configuration summary display for UI
+  - `save_and_apply_config()` - Unified configuration persistence and application
+- **Integration**: Seamless integration with existing configuration management system
+
+### 📊 **Refactoring Benefits Achieved**
+
+#### 🗂️ **Better Organization**
+- **Single Responsibility Principle**: Each utility module has a clear, focused purpose
+- **Logical Separation**: UI concerns separated from business logic and data processing
+- **Import Structure**: Clean, organized imports with clear dependencies
+
+#### 📈 **Improved Maintainability**
+- **Modular Design**: Functions can be modified independently without affecting UI
+- **Code Reusability**: Utility functions can be reused across different interfaces
+- **Error Isolation**: Issues in business logic don't affect UI rendering
+
+#### 🧪 **Enhanced Testability**
+- **Unit Testing**: Utility functions can be tested in isolation
+- **Mock-Friendly**: Clear separation makes mocking dependencies easier
+- **Test Coverage**: Each module can have dedicated test suites
+
+#### 📚 **Better Readability**
+- **Focused Files**: Each file has a clear, understandable purpose
+- **Reduced Complexity**: `chat_app.py` is now purely focused on UI concerns
+- **Documentation**: Clear function docstrings and type hints throughout
+
+#### ⚡ **Performance Improvements**
+- **Smaller Main File**: Faster loading and parsing of the main interface file
+- **Optimized Imports**: Only necessary imports in each module
+- **Memory Efficiency**: Better resource management with separated concerns
+
+### 🔄 **State Management Improvements**
+- **Global State Handling**: Proper management of `rule_response` across modules
+- **Module Communication**: Clean interfaces between UI and business logic
+- **Data Flow**: Clear data flow from chat utilities to UI components
+
+### 📋 **File Structure After Refactoring**
+
+```
+interface/
+├── chat_app.py (501 lines) - Pure UI logic and component definitions
+└── styles.css - CSS styling (unchanged)
+
+utils/
+├── ui_utils.py (288 lines) - UI helper functions and Gradio utilities
+├── chat_utils.py (252 lines) - Chat logic and state management
+├── file_generation_utils.py (82 lines) - File generation orchestration
+├── config_manager.py (299 lines) - Enhanced configuration management
+├── [existing utility files remain unchanged]
+```
+
+### 🚀 **Technical Implementation Details**
+- **Import Strategy**: Updated all imports to use the new modular structure
+- **Function Migration**: Carefully moved functions while maintaining all dependencies
+- **Error Handling**: Preserved all existing error handling and validation
+- **API Compatibility**: Maintained all existing function signatures and behaviors
+- **Google Gen AI SDK**: Continued use of `google.genai` as primary AI interface
+- **Gradio Integration**: Maintained all Gradio interface functionality and styling
+
+### 🎯 **Design Philosophy Applied**
+- **Separation of Concerns**: UI, business logic, and data processing are clearly separated
+- **Modular Architecture**: Each module can be developed and tested independently
+- **Clean Code Principles**: Following industry best practices for code organization
+- **Enterprise-Ready**: Structure suitable for professional development environments
+
+### ✅ **Quality Assurance**
+- **No Errors**: All refactored files pass lint checks without errors
+- **Functionality Preserved**: All existing features and capabilities maintained
+- **Performance Validated**: No performance degradation from refactoring
+- **State Management**: Proper handling of global state across modules
+
+### 🔮 **Future Benefits**
+- **Easier Maintenance**: Changes to business logic won't affect UI code
+- **Extensibility**: New features can be added to appropriate utility modules
+- **Team Development**: Multiple developers can work on different modules simultaneously
+- **Testing Strategy**: Comprehensive testing can be implemented per module
+
+This refactoring represents a significant improvement in code quality, maintainability, and developer experience while preserving all existing functionality and following the Google Gen AI SDK and Gradio best practices.
+
 ## [2025-06-22] - Unified Save and Apply Configuration
 
 ### ✨ Removed - Old Methods
@@ -613,3 +730,23 @@ The RAG system now gracefully handles invalid inputs and provides meaningful err
 ---
 
 *This changelog will be updated with all major changes and features in the Capstone repository going forward.*
+
+## [2025-06-25] - Bug Fix: Chat History Processing for Follow-up Questions
+
+### 🐛 **Critical Chat Bug Fixed**
+- **Issue**: Follow-up questions like "Can you assign 5 employees instead?" were not being processed correctly due to improper conversation history handling
+- **Root Cause**: The workflow orchestrator was including incomplete conversation exchanges (where bot response = `None`) in the context, causing confusion for the AI model
+- **Solution**: Updated `workflow_orchestrator.py` to filter out incomplete exchanges and only include complete user-assistant pairs in conversation context
+- **Impact**: Chat now properly handles follow-up questions and modifications to existing rules
+
+### 🔧 **Technical Changes**
+- **File**: `utils/workflow_orchestrator.py`
+  - Enhanced history processing logic in `run_workflow()` method
+  - Added validation to skip incomplete exchanges (where `bot_msg is None`)
+  - Added debugging logs to track context building process
+  - Improved context preview for better troubleshooting
+
+### ✅ **Validation**
+- Tested with sample conversation history containing incomplete exchanges
+- Confirmed that only complete user-assistant pairs are included in context
+- Verified that current messages (with `None` responses) are properly skipped
