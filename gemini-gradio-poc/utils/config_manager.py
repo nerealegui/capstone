@@ -250,3 +250,51 @@ def reset_config_to_defaults() -> Tuple[bool, str]:
     
     except Exception as e:
         return False, f"Error resetting configuration: {str(e)}"
+
+def get_current_config_summary() -> str:
+    """Get a summary of the current configuration."""
+    try:
+        config, _ = load_config()
+        return get_config_summary(config)
+    except Exception as e:
+        return f"Error loading configuration: {str(e)}"
+
+
+def save_and_apply_config(agent1_prompt: str, agent2_prompt: str, agent3_prompt: str, 
+                         model: str, generation_config_str: str, industry: str) -> Tuple[str, bool]:
+    """Save and apply the current configuration values."""
+    try:
+        # Parse generation config
+        try:
+            generation_config = json.loads(generation_config_str)
+        except json.JSONDecodeError:
+            return "Invalid JSON in generation config.", False
+
+        config = {
+            "agent_prompts": {
+                "agent1": agent1_prompt,
+                "agent2": agent2_prompt,
+                "agent3": agent3_prompt
+            },
+            "model_config": {
+                "default_model": model,
+                "generation_config": generation_config,
+                "agent3_generation_config": AGENT3_GENERATION_CONFIG
+            },
+            "agent3_settings": {
+                "industry": industry,
+                "enabled": True
+            },
+            "ui_settings": {
+                "default_tab": "Chat & Rule Summary"
+            }
+        }
+
+        success = save_config(config)
+        if success:
+            apply_config_to_runtime(config)
+            return f"✓ Configuration saved and applied successfully!", True
+        else:
+            return f"❌ Failed to save configuration.", False
+    except Exception as e:
+        return f"❌ Error saving and applying configuration: {str(e)}", False

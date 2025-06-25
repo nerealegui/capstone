@@ -49,22 +49,24 @@ architecture-beta
 ### Current Implementation
 - **Agent 1**: Converts natural language business rules to structured JSON using Google Gemini (via `google.genai`).
 - **Agent 2**: Converts JSON rule output to Drools DRL and GDST files using Google Gen AI (`google.genai`).
+- **Agent 3**: Enhanced with conflict detection, impact analysis, and orchestration capabilities.
+- **Langraph Workflow Orchestration**: Visual workflow design and transparent execution tracking for LLM tasks.
 - **Business Rule Validation**: CSV upload, extraction, conflict detection, and RAG integration system.
 - **Rule Extractor**: LLM-powered intelligent conversion from CSV to structured JSON with fallback mechanisms.
 - **Conflict Detection**: Validates rules for duplicates and conflicts before integration.
 - **RAG Integration**: Extracted rules are automatically added to the knowledge base for searchable queries.
-- **Enhanced UI**: New "Business Rules" tab for complete rule management workflow.
+- **Enhanced UI**: New "Business Rules" tab for complete rule management workflow with Langraph visualization.
 - **Verification Step**: Placeholder for Drools execution verification after file generation.
 - **Gradio UI**: 'Preview & Apply' button triggers Agent 2, generates files, verifies, and provides download links.
 - **File Download**: Users can download generated `.drl` and `.gdst` files directly from the interface.
-- **Unit Tests**: Agent 2 logic and rule extraction functionality covered by comprehensive unit tests.
-- **UI Updates**: Cleaner interface, removed JSON display block, improved status and download components.
+- **Unit Tests**: Agent 2 logic, rule extraction functionality, and Langraph workflows covered by comprehensive tests.
+- **UI Updates**: Cleaner interface, workflow toggle, improved status and download components.
 
 ### Planned Architecture
 - **Backend API**: FastAPI server for orchestration (planned).
-- **Enhanced Agent Framework**: Multi-agent orchestration (LangChain, CrewAI, or similar).
+- **Enhanced Agent Framework**: ✅ **Completed** - Langraph-based multi-agent orchestration with visual workflow design.
 - **Advanced Rule Storage**: Versioned rule management and conflict detection.
-- **Frontend Enhancements**: More advanced rule management and visualization.
+- **Frontend Enhancements**: ✅ **Partially Completed** - Added Langraph workflow visualization tab and orchestration toggle.
 
 ## Workflow Summary
 
@@ -85,10 +87,19 @@ architecture-beta
 6. Rules become searchable and queryable through the chat interface.
 7. Users can download processed rules in JSON format.
 
-### Integrated RAG-Enhanced Workflow
-1. User queries about business rules through chat interface.
-2. RAG system searches through integrated rule knowledge base.
-3. Context-aware responses include relevant business rules.
-4. Users can refine or create new rules based on retrieved information.
+### Langraph Workflow Orchestration (New)
+1. User enables Langraph workflow in the Chat interface toggle.
+2. User submits business rule request through chat.
+3. Langraph StateGraph orchestrates the following workflow:
+   - **Agent 1 Node**: Parses natural language into structured JSON
+   - **Agent 3 Conflict Node**: Analyzes conflicts with existing rules
+   - **Agent 3 Impact Node**: Assesses rule impact and risks
+   - **Agent 3 Orchestration Node**: Makes generation decisions
+   - **Agent 2 Node**: Generates DRL and GDST files (conditional)
+   - **Verification Node**: Validates generated files
+   - **Response Node**: Generates user-facing response
+4. Workflow provides transparent execution tracking and error handling.
+5. System falls back to traditional Agent 3 workflow on errors.
+6. Users can visualize workflow structure in the Langraph Workflow tab.
 
 ---

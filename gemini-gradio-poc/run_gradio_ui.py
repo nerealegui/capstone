@@ -75,25 +75,32 @@ def check_dependencies():
     """Check if required dependencies are installed, install if missing."""
     dependencies = [
         "gradio==5.29.0",
-        "google-genai",
+        "google-genai>=1.0.0",
         "python-dotenv",
-        "pandas",
-        "numpy",
-        "scikit-learn", 
-        "python-docx",  
-        "PyPDF2"        
+        "pandas>=2.0.0",
+        "numpy>=1.24.0",
+        "scikit-learn>=1.5.0",
+        "python-docx>=1.0.0",
+        "PyPDF2>=3.0.0",
+        "langgraph>=0.4.0",
+        "python-multipart>=0.0.18",
+        "aiofiles>=22.0.0",
+        "httpx>=0.24.1"
     ]
+
     pip_args = [sys.executable, "-m", "pip", "install"]
+    
     # If not in venv, add --break-system-packages for Homebrew Python/PEP 668
     if not os.environ.get('VIRTUAL_ENV'):
         pip_args.append("--break-system-packages")
         print("\n⚠️  Warning: Not running inside a virtual environment. Using --break-system-packages for pip.\n")
+
     for dep in dependencies:
         try:
             subprocess.check_call(pip_args + [dep])
-            print(f"Successfully installed or upgraded {dep}")
+            print(f"✅ Successfully installed or upgraded {dep}")
         except subprocess.CalledProcessError as e:
-            print(f"Failed to install {dep}. Error: {e}")
+            print(f"❌ Failed to install {dep}. Error: {e}")
             sys.exit(1)
 
 def check_api_key():
