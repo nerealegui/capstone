@@ -34,6 +34,30 @@ from utils.workflow_orchestrator import run_business_rule_workflow
 # Global variables
 rule_response = {}  # Used for UI updates
 
+def load_css_from_file(css_file_path):
+    """
+    Load CSS content from an external file.
+    
+    Args:
+        css_file_path (str): Path to the CSS file
+        
+    Returns:
+        str: CSS content as string, or empty string if file not found
+    """
+    try:
+        # Get the directory of the current file
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        full_path = os.path.join(current_dir, css_file_path)
+        
+        with open(full_path, 'r', encoding='utf-8') as f:
+            return f.read()
+    except FileNotFoundError:
+        print(f"Warning: CSS file not found at {css_file_path}. Using default styling.")
+        return ""
+    except Exception as e:
+        print(f"Warning: Error reading CSS file {css_file_path}: {e}. Using default styling.")
+        return ""
+
 # New function to build_knowledge_base_process, which calls functions in rag_utils.
 def build_knowledge_base_process(
     uploaded_files: list, 
@@ -472,85 +496,10 @@ def create_gradio_interface():
     # --- State for RAG DataFrame (must be defined before use) ---
     state_rag_df = gr.State(pd.DataFrame())
 
-    with gr.Blocks(theme=gr.themes.Soft(), css="""
-        /* Enhanced UI Styling */
-        footer {visibility: hidden}
-        
-        /* Main container improvements */
-        .gradio-container {
-            max-width: 1400px !important;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        
-        /* Section styling with cards */
-        .config-section {
-            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 24px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-        }
-        
-        .kb-section {
-            background: linear-gradient(135deg, #fefbff 0%, #f8f4ff 100%);
-            border: 1px solid #e9d5ff;
-            border-radius: 12px;
-            padding: 24px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 8px rgba(139, 92, 246, 0.1);
-        }
-        
-        .rules-section {
-            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 24px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-        }
-        
-        /* Section headers */
-        .section-header {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: #1e293b;
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        /* Octicon styling */
-        .octicon {
-            width: 20px;
-            height: 20px;
-        }
-
-        /* Blue Color Palette */
-        .blue-4 .octicon {
-            fill: #218bff !important;
-        }
-        .blue-5 .octicon {
-            fill: #0969da !important;
-        }
-        
-        /* File generation status styling */
-        .file-status {
-            background-color: #f0f9ff;
-            border-left: 4px solid #0284c7;
-            padding: 12px 16px;
-            margin: 16px 0;
-            border-radius: 4px;
-            font-size: 0.95rem;
-        }
-        
-        .file-status p {
-            margin: 0;
-            line-height: 1.5;
-        }
-    """) as demo:
+    # Load CSS from external file
+    custom_css = load_css_from_file("styles.css")
+    
+    with gr.Blocks(theme=gr.themes.Soft(), css=custom_css) as demo:
         # --- UI Definition ---
         with gr.Tabs():
             # Tab 1: Configuration
