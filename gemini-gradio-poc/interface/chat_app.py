@@ -606,7 +606,7 @@ def create_gradio_interface():
                         gr.HTML('<div class="section-header">Agent Configuration</div>')
                         
                         # Configuration Summary
-                        with gr.Accordion("Configuration Summary", open=True):
+                        with gr.Accordion("**Configuration Summary**", open=True):
                             # Render the configuration summary at app load
                             config_summary = gr.Markdown(get_current_config_summary())
                             
