@@ -23,14 +23,16 @@ This system uses **LangGraph StateGraph** as the primary workflow orchestration 
 
 **Core Implementation:**
 - **`utils/workflow_orchestrator.py`** - Main LangGraph StateGraph implementation
-- **`BusinessRuleWorkflow`** class with 8-node StateGraph configuration
-- **`WorkflowState` TypedDict** for structured data flow between nodes
+- **`BusinessRuleWorkflow`** class with 9-node StateGraph configuration
+- **`WorkflowState` TypedDict** for structured data flow between nodes with dynamic config loading
 - **Conditional routing functions** for intelligent decision making
-- **State management** with message history and context preservation
+- **State management** with enhanced conversation history and context preservation
+- **Modularized utilities** integration with config_manager and file_generation_utils
 
 **StateGraph Node Structure:**
 ```python
-# LangGraph StateGraph nodes
+# LangGraph StateGraph nodes (9 total)
+self.graph.add_node("load_config", self._load_config)
 self.graph.add_node("agent1_parse_rule", self._agent1_parse_rule)
 self.graph.add_node("agent3_conflict_analysis", self._agent3_conflict_analysis)  
 self.graph.add_node("agent3_impact_analysis", self._agent3_impact_analysis)
@@ -39,11 +41,20 @@ self.graph.add_node("agent2_generate_files", self._agent2_generate_files)
 self.graph.add_node("verify_files", self._verify_files)
 self.graph.add_node("generate_response", self._generate_response)
 self.graph.add_node("handle_error", self._handle_error)
+
+# Entry point: load_config (dynamic configuration loading)
+self.graph.set_entry_point("load_config")
 ```
 
 **Conditional Edge Routing:**
 ```python
 # LangGraph conditional edges for intelligent workflow routing
+self.graph.add_conditional_edges(
+    "load_config",
+    lambda state: "agent1_parse_rule",  # Direct flow to rule parsing
+    {"agent1_parse_rule": "agent1_parse_rule"}
+)
+
 self.graph.add_conditional_edges(
     "agent1_parse_rule", 
     self._should_proceed_to_conflict_analysis,
@@ -60,24 +71,27 @@ self.graph.add_conditional_edges(
 ### 🚀 LangGraph StateGraph Benefits
 
 🎯 **Visual Workflow Design**: Clear StateGraph representation with transparent agent node interactions  
-🔧 **Modular Node Components**: Reusable agent nodes for each business rule task with state management  
+🔧 **Modular Node Components**: Reusable agent nodes with state management and modularized utility integration  
 🔍 **Execution Transparency**: Real-time node tracking & debugging capabilities with workflow metrics  
 🌊 **Conditional Routing**: Intelligent decision making based on conflict analysis and orchestration results  
 🤝 **Enhanced Agent Collaboration**: Clear interaction patterns between agents through structured state flow  
 📈 **Scalability**: Complex multi-agent workflow management through graph-based orchestration  
 🛡️ **Error Handling**: Dedicated error management nodes with graceful fallback mechanisms  
-📊 **State Management**: TypedDict-based state preservation across workflow execution  
+📊 **State Management**: TypedDict-based state preservation with enhanced conversation history processing  
+⚙️ **Dynamic Configuration**: Runtime config loading with modularized utility integration  
 
 ### 📊 LangGraph StateGraph Features
 
-• **8-Node StateGraph Architecture**: agent1_parse_rule + agent3_conflict_analysis + agent3_impact_analysis + agent3_orchestration + agent2_generate_files + verify_files + generate_response + handle_error  
+• **9-Node StateGraph Architecture**: load_config + agent1_parse_rule + agent3_conflict_analysis + agent3_impact_analysis + agent3_orchestration + agent2_generate_files + verify_files + generate_response + handle_error  
 • **Visual workflow design** with StateGraph execution transparency  
-• **Modular, reusable** agent nodes with TypedDict state management  
+• **Modular, reusable** agent nodes with TypedDict state management and utility integration  
+• **Dynamic configuration loading** at workflow entry point with config_manager integration  
+• **Enhanced conversation history** processing with improved context window and message handling  
 • **Conditional edge routing** based on conflict analysis and orchestration decisions  
 • **Error handling nodes** with graceful error management workflows  
 • **Real-time state tracking** visible in chat responses with workflow metrics  
 • **Compatible** with existing RAG knowledge base system integration  
-• **Conversation context** processing with message history preservation  
+• **Modularized utilities** integration with config_manager and file_generation_utils  
 
 ### 📖 How to Use LangGraph StateGraph
 
@@ -90,12 +104,19 @@ self.graph.add_conditional_edges(
 
 ### � LangGraph Workflow Execution Flow
 
-The **LangGraph StateGraph** orchestrates business rule processing through this visual workflow with **8 interconnected nodes** and **conditional routing**:
+The **LangGraph StateGraph** orchestrates business rule processing through this visual workflow with **9 interconnected nodes** and **conditional routing**:
 
 ```
 ┌─────────────────┐
 │   User Input    │ ← Natural language request  
 │  (Natural Lang) │
+└─────────┬───────┘
+          │
+          ▼
+┌─────────────────┐
+│  ⚙️ CONFIG      │ ← LangGraph Node: Dynamic configuration loading
+│   Load Config   │   (Entry Point - NEW)
+│                 │  
 └─────────┬───────┘
           │
           ▼
@@ -149,7 +170,8 @@ The **LangGraph StateGraph** orchestrates business rule processing through this 
 
 ### 🎛️ LangGraph StateGraph Features
 
-**8 Workflow Nodes:**
+**9 Workflow Nodes:**
+- `load_config` → Dynamic configuration loading (Entry Point)
 - `agent1_parse_rule` → Natural language parsing to structured JSON
 - `agent3_conflict_analysis` → Conflict analysis with existing rules
 - `agent3_impact_analysis` → Impact assessment and risk evaluation  
@@ -168,8 +190,9 @@ The **LangGraph StateGraph** orchestrates business rule processing through this 
 **Real-time Execution:**
 - **Visual workflow monitoring** shows active nodes and transitions
 - **State transparency** reveals decision points and data flow
-- **Conversation context** processes history for enhanced understanding
+- **Enhanced conversation context** processing with improved history handling
 - **Live status updates** track workflow progression through nodes
+- **Dynamic configuration** loading with modularized utility integration
 
 ## Documentation
 - [Business Documentation](./BUSINESS.md)
