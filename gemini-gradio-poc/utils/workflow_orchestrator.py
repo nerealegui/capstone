@@ -114,7 +114,7 @@ def get_workflow_visualization() -> str:
 • **Visual workflow** design & debugging transparency
 • **Modular, reusable** agent components for each task
 • **Conditional branching** based on conflict analysis results
-• **Error handling** with graceful fallbacks to traditional Agent 3
+• **Error handling** with graceful error management
 • **Real-time status** updates visible in chat responses
 • **Compatible** with existing RAG knowledge base system
 
@@ -463,7 +463,7 @@ class BusinessRuleWorkflow:
                 "finish_point": "generate_response",
                 "supports_conditional_routing": True,
                 "error_handling": True,
-                "fallback_enabled": True
+                "langraph_enabled": True
             }
         except Exception as e:
             return {
