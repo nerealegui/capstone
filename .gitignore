@@ -15,3 +15,8 @@ env/
 dist/
 build/
 *.so
+
+# Session data (user-specific)
+gemini-gradio-poc/data/sessions/
+gemini-gradio-poc/extracted_rules.json
+gemini-gradio-poc/temp_rules.txt

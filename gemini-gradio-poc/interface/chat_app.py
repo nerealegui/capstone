@@ -29,6 +29,14 @@ from utils.config_manager import (
     save_and_apply_config
 )
 from utils.file_generation_utils import handle_generation
+from utils.persistence_manager import (
+    load_knowledge_base,
+    load_rules,
+    session_exists,
+    clear_session,
+    get_session_summary,
+    get_change_log
+)
 
 # Global variables
 rule_response = {}  # Used for UI updates
@@ -56,6 +64,32 @@ def create_gradio_interface():
         print(f"Warning: Could not load startup configuration: {e}")
         startup_config = get_default_config()
 
+    # Load saved session data on startup
+    startup_kb_df = pd.DataFrame()
+    startup_rules = []
+    session_status = "No previous session found"
+    
+    try:
+        # Try to load knowledge base
+        kb_df, kb_msg = load_knowledge_base()
+        if kb_df is not None:
+            startup_kb_df = kb_df
+            print(f"Loaded knowledge base: {kb_msg}")
+        
+        # Try to load rules
+        rules, rules_msg = load_rules()
+        if rules is not None:
+            startup_rules = rules
+            print(f"Loaded rules: {rules_msg}")
+        
+        # Get session summary if data exists
+        if session_exists():
+            session_status = f"Previous session loaded successfully\n{get_session_summary()}"
+        
+    except Exception as e:
+        print(f"Warning: Could not load session data: {e}")
+        session_status = f"Error loading session: {str(e)}"
+
     # Extract startup values
     startup_agent1_prompt = startup_config["agent_prompts"]["agent1"]
     startup_agent2_prompt = startup_config["agent_prompts"]["agent2"]
@@ -71,8 +105,8 @@ def create_gradio_interface():
     gdst_file = gr.File(label="Download GDST", visible=False)  # Hidden in Enhanced Agent 3 mode
     status_box = gr.Textbox(label="Status")
 
-    # --- State for RAG DataFrame (must be defined before use) ---
-    state_rag_df = gr.State(pd.DataFrame())
+    # --- State for RAG DataFrame (initialized with loaded session data) ---
+    state_rag_df = gr.State(startup_kb_df)
 
     # Load CSS from external file
     custom_css = load_css_from_file("styles.css")
@@ -105,7 +139,7 @@ def create_gradio_interface():
                             
                             rag_status_display = gr.Textbox(
                                 label="Knowledge Base Status",
-                                value="Knowledge base not built yet. Upload documents and click 'Build Knowledge Base' to get started.",
+                                value=f"Knowledge base loaded with {len(startup_kb_df)} chunks" if not startup_kb_df.empty else "Knowledge base not built yet. Upload documents and click 'Build Knowledge Base' to get started.",
                                 interactive=False,
                                 lines=2
                             )
@@ -127,6 +161,21 @@ def create_gradio_interface():
                                 interactive=False,
                                 lines=2
                             )
+                        
+                        gr.HTML('<div class="section-divider"></div>')
+                        
+                        gr.HTML('<div class="section-header blue-6"><svg class="octicon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M8 0a8 8 0 1 0 8 8A8 8 0 0 0 8 0zm0 15A7 7 0 1 1 15 8a7 7 0 0 1-7 7z"></path><path d="M8 4a1 1 0 1 0 1 1 1 1 0 0 0-1-1zm1 3H7v4h2z"></path></svg> Session Management</div>')
+                        with gr.Accordion("Session & Data Persistence", open=True):
+                            session_status_display = gr.Textbox(
+                                label="Session Status",
+                                value=session_status,
+                                interactive=False,
+                                lines=4
+                            )
+                            
+                            with gr.Row():
+                                new_session_button = gr.Button("New Session", variant="secondary", elem_classes=["btn-secondary"], scale=1)
+                                view_changes_button = gr.Button("View Changes", variant="secondary", elem_classes=["btn-secondary"], scale=1)
                     
                     # Agent Config Variables Column
                     with gr.Column(elem_classes=["config-section"], scale=1):
@@ -260,13 +309,13 @@ def create_gradio_interface():
                             wrap=True,
                             row_count=20,
                             column_widths=["150px", "300px", "auto"],
-                            value=pd.DataFrame(columns=['ID', 'Name', 'Description'])
+                            value=process_rules_to_df(startup_rules)
                         )
                         
                         # Hidden textbox to store the JSON for KB integration
                         extracted_rules_display = gr.Textbox(
                             label="Extracted Rules (JSON)",
-                            value="Extracted rules will appear here...",
+                            value=json.dumps(startup_rules, indent=2) if startup_rules else "No rules loaded",
                             lines=15,
                             interactive=False,
                             visible=False
@@ -412,6 +461,102 @@ def create_gradio_interface():
             outputs=[name_display, summary_display]
         )
         
+        # Session management functions
+        def handle_new_session():
+            """Clear the current session and start fresh."""
+            try:
+                success, message = clear_session()
+                if success:
+                    # Reset UI components
+                    empty_df = pd.DataFrame()
+                    status = f"✓ New session started: {message}"
+                    return (
+                        status,  # session_status_display
+                        empty_df,  # state_rag_df
+                        "Knowledge base cleared. Upload documents to build a new knowledge base.",  # rag_status_display
+                        "",  # extraction_status (reset rules)
+                    )
+                else:
+                    return (
+                        f"✗ Error starting new session: {message}",
+                        gr.update(),  # Don't update state_rag_df
+                        gr.update(),  # Don't update rag_status_display
+                        gr.update(),  # Don't update extraction_status
+                    )
+            except Exception as e:
+                return (
+                    f"✗ Error starting new session: {str(e)}",
+                    gr.update(),
+                    gr.update(),
+                    gr.update(),
+                )
+        
+        def handle_view_changes():
+            """Display the change log for the current session."""
+            try:
+                changes = get_change_log()
+                if not changes:
+                    return "📝 **Session Activity Log**\n\nNo changes recorded in current session"
+                
+                # Format change log for display with better formatting
+                formatted_changes = []
+                for i, change in enumerate(changes[-10:], 1):  # Show last 10 changes
+                    timestamp = change.get('timestamp', 'Unknown')
+                    component = change.get('component', 'Unknown')
+                    description = change.get('description', 'No description')
+                    metadata = change.get('metadata', {})
+                    
+                    # Format timestamp for better readability
+                    try:
+                        from datetime import datetime
+                        dt = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
+                        formatted_time = dt.strftime('%Y-%m-%d %H:%M:%S')
+                    except:
+                        formatted_time = timestamp
+                    
+                    # Format component name
+                    component_display = {
+                        'knowledge_base': '📚 Knowledge Base',
+                        'rules': '📋 Business Rules'
+                    }.get(component, f'🔧 {component.title()}')
+                    
+                    # Build the change entry
+                    change_entry = f"**{i}.** {component_display}\n"
+                    change_entry += f"   ⏰ {formatted_time}\n"
+                    change_entry += f"   📄 {description}\n"
+                    
+                    # Add metadata if available
+                    if metadata:
+                        metadata_parts = []
+                        if 'chunks_count' in metadata:
+                            metadata_parts.append(f"Chunks: {metadata['chunks_count']}")
+                        if 'rules_count' in metadata:
+                            metadata_parts.append(f"Rules: {metadata['rules_count']}")
+                        if metadata_parts:
+                            change_entry += f"   ℹ️  {', '.join(metadata_parts)}\n"
+                    
+                    formatted_changes.append(change_entry)
+                
+                header = f"📝 **Session Activity Log** ({len(changes)} total changes)\n\n"
+                header += "**Recent Activity (Last 10 changes):**\n\n"
+                
+                return header + "\n".join(formatted_changes)
+            except Exception as e:
+                return f"❌ Error retrieving change log: {str(e)}"
+        
+        # Event handlers for session management
+        new_session_button.click(
+            handle_new_session,
+            inputs=[],
+            outputs=[session_status_display, state_rag_df, rag_status_display, extraction_status]
+        )
+        
+        view_changes_button.click(
+            handle_view_changes,
+            inputs=[],
+            outputs=[session_status_display]
+        )
+        
         # Configuration save/apply event handlers
         def save_config_and_refresh_summary(agent1_prompt, agent2_prompt, agent3_prompt, model, generation_config, industry):
             status_message, success = save_and_apply_config(agent1_prompt, agent2_prompt, agent3_prompt, model, generation_config, industry)
@@ -434,61 +579,6 @@ def create_gradio_interface():
         )
         
         # Add search event handler
-        def process_rules_to_df(rules_data):
-            """Convert rules to DataFrame and ensure proper formatting"""
-            try:
-                if isinstance(rules_data, str):
-                    rules = json.loads(rules_data)
-                else:
-                    rules = rules_data
-
-                if not rules:
-                    return pd.DataFrame(columns=['ID', 'Name', 'Description'])
-
-                # Create list of valid rules
-                valid_rules = []
-                for rule in rules:
-                    if rule and isinstance(rule, dict):
-                        rule_id = rule.get('rule_id', '')
-                        name = rule.get('name', '')
-                        desc = rule.get('description', '')
-                        if rule_id and name and desc:  # Only add if all fields have values
-                            valid_rules.append((rule_id, name, desc))
-
-                # Create DataFrame with proper column names
-                df = pd.DataFrame(valid_rules, columns=['ID', 'Name', 'Description'])
-                return df.reset_index(drop=True)  # Reset index to remove gaps
-            except Exception as e:
-                print(f"Error processing rules: {e}")
-                return pd.DataFrame(columns=['ID', 'Name', 'Description'])
-
-        def filter_rules(query: str, current_rules_df, rules_json: str):
-            """Filter rules based on search query"""
-            try:
-                # If query is empty or current_rules_df is empty, show all rules
-                if not query or query.strip() == "":
-                    return process_rules_to_df(rules_json)
-
-                # Ensure we're working with the correct column names
-                if not isinstance(current_rules_df, pd.DataFrame):
-                    return process_rules_to_df(rules_json)
-
-                # Make sure DataFrame has the correct columns
-                current_rules_df.columns = ['ID', 'Name', 'Description']
-                
-                # Filter based on query
-                query = query.lower().strip()
-                mask = (
-                    current_rules_df['ID'].astype(str).str.lower().str.contains(query, na=False) |
-                    current_rules_df['Name'].astype(str).str.lower().str.contains(query, na=False) |
-                    current_rules_df['Description'].astype(str).str.lower().str.contains(query, na=False)
-                )
-                filtered_df = current_rules_df[mask].reset_index(drop=True)
-                return filtered_df
-
-            except Exception as e:
-                print(f"Error in filter_rules: {e}")
-                return process_rules_to_df(rules_json)
 
         # Connect the search functionality
         search_input.change(

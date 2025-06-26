@@ -1,0 +1,29 @@
+[
+  {
+    "timestamp": "2025-06-26T17:50:36.009934",
+    "component": "knowledge_base",
+    "description": "Knowledge base created with documents: new_restaurant_content.docx",
+    "metadata": {
+      "chunks_count": 18,
+      "file_path": "data/sessions/knowledge_base.pkl"
+    }
+  },
+  {
+    "timestamp": "2025-06-26T17:51:36.123027",
+    "component": "rules",
+    "description": "Rules extracted from CSV file: /private/var/folders/zy/f_7d7jsn3wx1vz7s83yxcwlh0000gn/T/gradio/17737c91b64131df0b7001240447ea2f134870ab326a97534b70e544ee1bcfa4/restaurant_rules.csv",
+    "metadata": {
+      "rules_count": 48,
+      "file_path": "data/sessions/extracted_rules.json"
+    }
+  },
+  {
+    "timestamp": "2025-06-26T17:51:36.668634",
+    "component": "knowledge_base",
+    "description": "Knowledge base updated with documents: temp_rules.txt",
+    "metadata": {
+      "chunks_count": 47,
+      "file_path": "data/sessions/knowledge_base.pkl"
+    }
+  }
+]
