@@ -579,61 +579,6 @@ def create_gradio_interface():
         )
         
         # Add search event handler
-        def process_rules_to_df(rules_data):
-            """Convert rules to DataFrame and ensure proper formatting"""
-            try:
-                if isinstance(rules_data, str):
-                    rules = json.loads(rules_data)
-                else:
-                    rules = rules_data
-
-                if not rules:
-                    return pd.DataFrame(columns=['ID', 'Name', 'Description'])
-
-                # Create list of valid rules
-                valid_rules = []
-                for rule in rules:
-                    if rule and isinstance(rule, dict):
-                        rule_id = rule.get('rule_id', '')
-                        name = rule.get('name', '')
-                        desc = rule.get('description', '')
-                        if rule_id and name and desc:  # Only add if all fields have values
-                            valid_rules.append((rule_id, name, desc))
-
-                # Create DataFrame with proper column names
-                df = pd.DataFrame(valid_rules, columns=['ID', 'Name', 'Description'])
-                return df.reset_index(drop=True)  # Reset index to remove gaps
-            except Exception as e:
-                print(f"Error processing rules: {e}")
-                return pd.DataFrame(columns=['ID', 'Name', 'Description'])
-
-        def filter_rules(query: str, current_rules_df, rules_json: str):
-            """Filter rules based on search query"""
-            try:
-                # If query is empty or current_rules_df is empty, show all rules
-                if not query or query.strip() == "":
-                    return process_rules_to_df(rules_json)
-
-                # Ensure we're working with the correct column names
-                if not isinstance(current_rules_df, pd.DataFrame):
-                    return process_rules_to_df(rules_json)
-
-                # Make sure DataFrame has the correct columns
-                current_rules_df.columns = ['ID', 'Name', 'Description']
-                
-                # Filter based on query
-                query = query.lower().strip()
-                mask = (
-                    current_rules_df['ID'].astype(str).str.lower().str.contains(query, na=False) |
-                    current_rules_df['Name'].astype(str).str.lower().str.contains(query, na=False) |
-                    current_rules_df['Description'].astype(str).str.lower().str.contains(query, na=False)
-                )
-                filtered_df = current_rules_df[mask].reset_index(drop=True)
-                return filtered_df
-
-            except Exception as e:
-                print(f"Error in filter_rules: {e}")
-                return process_rules_to_df(rules_json)
 
         # Connect the search functionality
         search_input.change(
