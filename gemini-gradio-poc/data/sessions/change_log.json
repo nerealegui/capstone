@@ -7,5 +7,32 @@
       "chunks_count": 3,
       "file_path": "data/sessions/knowledge_base.pkl"
     }
+  },
+  {
+    "timestamp": "2025-06-26T06:41:40.093039",
+    "component": "knowledge_base",
+    "description": "Demo: Initial KB setup with business documents",
+    "metadata": {
+      "chunks_count": 3,
+      "file_path": "data/sessions/knowledge_base.pkl"
+    }
+  },
+  {
+    "timestamp": "2025-06-26T06:41:40.093589",
+    "component": "rules",
+    "description": "Demo: Initial rules setup from policy documents",
+    "metadata": {
+      "rules_count": 2,
+      "file_path": "data/sessions/extracted_rules.json"
+    }
+  },
+  {
+    "timestamp": "2025-06-26T06:41:40.094884",
+    "component": "knowledge_base",
+    "description": "Demo: Added employee handbook",
+    "metadata": {
+      "chunks_count": 4,
+      "file_path": "data/sessions/knowledge_base.pkl"
+    }
   }
 ]
