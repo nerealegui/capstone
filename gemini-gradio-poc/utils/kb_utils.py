@@ -1,5 +1,6 @@
 import pandas as pd
 from utils.rag_utils import read_documents_from_paths, chunk_text, embed_texts
+from utils.persistence_manager import save_knowledge_base
 from typing import List, Tuple
 
 def core_build_knowledge_base(file_paths: List[str], chunk_size: int = 500, chunk_overlap: int = 50, existing_kb_df: pd.DataFrame = None) -> Tuple[str, pd.DataFrame]:
@@ -63,8 +64,27 @@ def core_build_knowledge_base(file_paths: List[str], chunk_size: int = 500, chun
             merged_kb = pd.concat([existing_kb_df, rag_index_df_new], ignore_index=True)
             # Deduplicate based on 'chunk' content (and optionally 'filename')
             merged_kb = merged_kb.drop_duplicates(subset=['filename', 'chunk'], keep='last').reset_index(drop=True)
+            
+            # Save to persistent storage
+            file_names = ", ".join(set([doc['filename'] for doc in raw_docs]))
+            save_success, save_msg = save_knowledge_base(
+                merged_kb, 
+                f"Knowledge base updated with documents: {file_names}"
+            )
+            if not save_success:
+                print(f"Warning: Failed to save knowledge base: {save_msg}")
+            
             return f"Knowledge base merged successfully with {len(merged_kb)} chunks.", merged_kb
         else:
+            # Save to persistent storage
+            file_names = ", ".join(set([doc['filename'] for doc in raw_docs]))
+            save_success, save_msg = save_knowledge_base(
+                rag_index_df_new, 
+                f"Knowledge base created with documents: {file_names}"
+            )
+            if not save_success:
+                print(f"Warning: Failed to save knowledge base: {save_msg}")
+                
             return f"Knowledge base built successfully with {len(rag_index_df_new)} chunks.", rag_index_df_new
     except Exception as e:
         return f"An error occurred creating the index: {e}", existing_kb_df if existing_kb_df is not None else pd.DataFrame()

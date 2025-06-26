@@ -29,6 +29,14 @@ from utils.config_manager import (
     save_and_apply_config
 )
 from utils.file_generation_utils import handle_generation
+from utils.persistence_manager import (
+    load_knowledge_base,
+    load_rules,
+    session_exists,
+    clear_session,
+    get_session_summary,
+    get_change_log
+)
 
 # Global variables
 rule_response = {}  # Used for UI updates
@@ -56,6 +64,32 @@ def create_gradio_interface():
         print(f"Warning: Could not load startup configuration: {e}")
         startup_config = get_default_config()
 
+    # Load saved session data on startup
+    startup_kb_df = pd.DataFrame()
+    startup_rules = []
+    session_status = "No previous session found"
+    
+    try:
+        # Try to load knowledge base
+        kb_df, kb_msg = load_knowledge_base()
+        if kb_df is not None:
+            startup_kb_df = kb_df
+            print(f"Loaded knowledge base: {kb_msg}")
+        
+        # Try to load rules
+        rules, rules_msg = load_rules()
+        if rules is not None:
+            startup_rules = rules
+            print(f"Loaded rules: {rules_msg}")
+        
+        # Get session summary if data exists
+        if session_exists():
+            session_status = f"Previous session loaded successfully\n{get_session_summary()}"
+        
+    except Exception as e:
+        print(f"Warning: Could not load session data: {e}")
+        session_status = f"Error loading session: {str(e)}"
+
     # Extract startup values
     startup_agent1_prompt = startup_config["agent_prompts"]["agent1"]
     startup_agent2_prompt = startup_config["agent_prompts"]["agent2"]
@@ -71,8 +105,8 @@ def create_gradio_interface():
     gdst_file = gr.File(label="Download GDST", visible=False)  # Hidden in Enhanced Agent 3 mode
     status_box = gr.Textbox(label="Status")
 
-    # --- State for RAG DataFrame (must be defined before use) ---
-    state_rag_df = gr.State(pd.DataFrame())
+    # --- State for RAG DataFrame (initialized with loaded session data) ---
+    state_rag_df = gr.State(startup_kb_df)
 
     # Load CSS from external file
     custom_css = load_css_from_file("styles.css")
@@ -105,7 +139,7 @@ def create_gradio_interface():
                             
                             rag_status_display = gr.Textbox(
                                 label="Knowledge Base Status",
-                                value="Knowledge base not built yet. Upload documents and click 'Build Knowledge Base' to get started.",
+                                value=f"Knowledge base loaded with {len(startup_kb_df)} chunks" if not startup_kb_df.empty else "Knowledge base not built yet. Upload documents and click 'Build Knowledge Base' to get started.",
                                 interactive=False,
                                 lines=2
                             )
@@ -127,6 +161,21 @@ def create_gradio_interface():
                                 interactive=False,
                                 lines=2
                             )
+                        
+                        gr.HTML('<div class="section-divider"></div>')
+                        
+                        gr.HTML('<div class="section-header blue-6"><svg class="octicon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M8 0a8 8 0 1 0 8 8A8 8 0 0 0 8 0zm0 15A7 7 0 1 1 15 8a7 7 0 0 1-7 7z"></path><path d="M8 4a1 1 0 1 0 1 1 1 1 0 0 0-1-1zm1 3H7v4h2z"></path></svg> Session Management</div>')
+                        with gr.Accordion("Session & Data Persistence", open=True):
+                            session_status_display = gr.Textbox(
+                                label="Session Status",
+                                value=session_status,
+                                interactive=False,
+                                lines=4
+                            )
+                            
+                            with gr.Row():
+                                new_session_button = gr.Button("New Session", variant="secondary", elem_classes=["btn-secondary"], scale=1)
+                                view_changes_button = gr.Button("View Changes", variant="secondary", elem_classes=["btn-secondary"], scale=1)
                     
                     # Agent Config Variables Column
                     with gr.Column(elem_classes=["config-section"], scale=1):
@@ -410,6 +459,68 @@ def create_gradio_interface():
         chat_interface.chatbot.change(
             lambda: update_rule_summary(get_last_rule_response()),
             outputs=[name_display, summary_display]
+        )
+        
+        # Session management functions
+        def handle_new_session():
+            """Clear the current session and start fresh."""
+            try:
+                success, message = clear_session()
+                if success:
+                    # Reset UI components
+                    empty_df = pd.DataFrame()
+                    status = f"✓ New session started: {message}"
+                    return (
+                        status,  # session_status_display
+                        empty_df,  # state_rag_df
+                        "Knowledge base cleared. Upload documents to build a new knowledge base.",  # rag_status_display
+                        "",  # extraction_status (reset rules)
+                    )
+                else:
+                    return (
+                        f"✗ Error starting new session: {message}",
+                        gr.update(),  # Don't update state_rag_df
+                        gr.update(),  # Don't update rag_status_display
+                        gr.update(),  # Don't update extraction_status
+                    )
+            except Exception as e:
+                return (
+                    f"✗ Error starting new session: {str(e)}",
+                    gr.update(),
+                    gr.update(),
+                    gr.update(),
+                )
+        
+        def handle_view_changes():
+            """Display the change log for the current session."""
+            try:
+                changes = get_change_log()
+                if not changes:
+                    return "No changes recorded in current session"
+                
+                # Format change log for display
+                formatted_changes = []
+                for change in changes[-10:]:  # Show last 10 changes
+                    timestamp = change.get('timestamp', 'Unknown')
+                    component = change.get('component', 'Unknown')
+                    description = change.get('description', 'No description')
+                    formatted_changes.append(f"**{timestamp}** - {component}: {description}")
+                
+                return "**Recent Changes:**\n\n" + "\n".join(formatted_changes)
+            except Exception as e:
+                return f"Error retrieving change log: {str(e)}"
+        
+        # Event handlers for session management
+        new_session_button.click(
+            handle_new_session,
+            inputs=[],
+            outputs=[session_status_display, state_rag_df, rag_status_display, extraction_status]
+        )
+        
+        view_changes_button.click(
+            handle_view_changes,
+            inputs=[],
+            outputs=[session_status_display]
         )
         
         # Configuration save/apply event handlers

@@ -10,6 +10,7 @@ from typing import Tuple, Dict, Any, List
 from datetime import datetime
 from utils.kb_utils import core_build_knowledge_base
 from utils.rule_extractor import extract_rules_from_csv, save_extracted_rules
+from utils.persistence_manager import save_rules, log_change
 
 
 def load_css_from_file(css_file_path: str) -> str:
@@ -106,12 +107,11 @@ def extract_rules_from_uploaded_csv(csv_file, rag_state_df=None) -> Tuple[str, s
         if not rules:
             return "No business rules found in the CSV file. Please check the file format and content.", "", pd.DataFrame(columns=['ID', 'Name', 'Description'])
         
-        # Save extracted rules
-        output_path = "extracted_rules.json"
-        success = save_extracted_rules(rules, output_path)
+        # Save extracted rules to persistent storage
+        save_success, save_msg = save_rules(rules, f"Rules extracted from CSV file: {csv_file.name}")
         
-        if not success:
-            return "✗ Error saving extracted rules to file. Please check file permissions.", "", rag_state_df
+        if not save_success:
+            return f"✗ Error saving extracted rules: {save_msg}", "", rag_state_df
         
         rules_json = json.dumps(rules, indent=2)
         
@@ -147,7 +147,7 @@ Active: {rule.get('active', True)}
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             full_status = f"✓  Successfully extracted {len(rules)} business rule(s) from CSV file and added to knowledge base.\n"\
                           f"Last updated: {timestamp}\n"\
-                          f"Rules saved to: {output_path}\n"\
+                          f"Rules saved to persistent storage\n"\
                           f"Knowledge base now contains {len(updated_df)} chunks."
             return full_status, rules_json, updated_df
         else:
