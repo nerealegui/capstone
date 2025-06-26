@@ -201,12 +201,15 @@ def analyze_impact_only(rule_response: Dict[str, Any], industry: str = "generic"
         if not rule_response:
             return "No rule to analyze. Please interact with the chat first.", None, None
 
-        # Get existing rules for validation
+        # Get existing rules for validation using persistence manager
         existing_rules = []
         try:
-            with open("extracted_rules.json", 'r') as f:
-                existing_rules = json.load(f)
-        except FileNotFoundError:
+            from utils.persistence_manager import load_rules
+            rules, _ = load_rules()
+            if rules is not None:
+                existing_rules = rules
+        except Exception as e:
+            print(f"Warning: Could not load existing rules for analysis: {e}")
             pass
 
         # Use Agent 3 for enhanced conflict detection and impact analysis

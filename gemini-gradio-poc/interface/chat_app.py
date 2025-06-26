@@ -496,19 +496,53 @@ def create_gradio_interface():
             try:
                 changes = get_change_log()
                 if not changes:
-                    return "No changes recorded in current session"
+                    return "📝 **Session Activity Log**\n\nNo changes recorded in current session"
                 
-                # Format change log for display
+                # Format change log for display with better formatting
                 formatted_changes = []
-                for change in changes[-10:]:  # Show last 10 changes
+                for i, change in enumerate(changes[-10:], 1):  # Show last 10 changes
                     timestamp = change.get('timestamp', 'Unknown')
                     component = change.get('component', 'Unknown')
                     description = change.get('description', 'No description')
-                    formatted_changes.append(f"**{timestamp}** - {component}: {description}")
+                    metadata = change.get('metadata', {})
+                    
+                    # Format timestamp for better readability
+                    try:
+                        from datetime import datetime
+                        dt = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
+                        formatted_time = dt.strftime('%Y-%m-%d %H:%M:%S')
+                    except:
+                        formatted_time = timestamp
+                    
+                    # Format component name
+                    component_display = {
+                        'knowledge_base': '📚 Knowledge Base',
+                        'rules': '📋 Business Rules'
+                    }.get(component, f'🔧 {component.title()}')
+                    
+                    # Build the change entry
+                    change_entry = f"**{i}.** {component_display}\n"
+                    change_entry += f"   ⏰ {formatted_time}\n"
+                    change_entry += f"   📄 {description}\n"
+                    
+                    # Add metadata if available
+                    if metadata:
+                        metadata_parts = []
+                        if 'chunks_count' in metadata:
+                            metadata_parts.append(f"Chunks: {metadata['chunks_count']}")
+                        if 'rules_count' in metadata:
+                            metadata_parts.append(f"Rules: {metadata['rules_count']}")
+                        if metadata_parts:
+                            change_entry += f"   ℹ️  {', '.join(metadata_parts)}\n"
+                    
+                    formatted_changes.append(change_entry)
                 
-                return "**Recent Changes:**\n\n" + "\n".join(formatted_changes)
+                header = f"📝 **Session Activity Log** ({len(changes)} total changes)\n\n"
+                header += "**Recent Activity (Last 10 changes):**\n\n"
+                
+                return header + "\n".join(formatted_changes)
             except Exception as e:
-                return f"Error retrieving change log: {str(e)}"
+                return f"❌ Error retrieving change log: {str(e)}"
         
         # Event handlers for session management
         new_session_button.click(
