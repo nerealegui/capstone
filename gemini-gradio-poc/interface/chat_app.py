@@ -309,13 +309,13 @@ def create_gradio_interface():
                             wrap=True,
                             row_count=20,
                             column_widths=["150px", "300px", "auto"],
-                            value=pd.DataFrame(columns=['ID', 'Name', 'Description'])
+                            value=process_rules_to_df(startup_rules)
                         )
                         
                         # Hidden textbox to store the JSON for KB integration
                         extracted_rules_display = gr.Textbox(
                             label="Extracted Rules (JSON)",
-                            value="Extracted rules will appear here...",
+                            value=json.dumps(startup_rules, indent=2) if startup_rules else "No rules loaded",
                             lines=15,
                             interactive=False,
                             visible=False
