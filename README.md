@@ -15,19 +15,47 @@ Welcome to the Capstone project! This repository provides an intelligent, agent-
 2. See [ARCHITECTURE.md](./ARCHITECTURE.md) for setup and technical details.
 3. See [BUSINESS.md](./BUSINESS.md) for business use cases and workflow.
 
+## Session Persistence & Data Management
+
+**🔄 Automatic Session Continuity**: The system now includes comprehensive session persistence that automatically saves and restores your work between application sessions.
+
+### Key Persistence Features
+- **📚 Knowledge Base Persistence**: Automatically saves uploaded documents, embeddings, and RAG data
+- **📋 Rules Management**: Persistent storage of extracted business rules with version tracking
+- **📊 Change Logging**: Complete audit trail of all modifications with timestamps and metadata
+- **🔄 Session Recovery**: Automatic restoration of previous session data on application startup
+- **💾 Data Safety**: All work is automatically preserved with no data loss between sessions
+
+### Persistence File Structure
+```
+data/sessions/
+├── knowledge_base.pkl      # Processed documents with embeddings (pickle format)
+├── extracted_rules.json    # Business rules in structured JSON format
+├── change_log.json        # Complete change history and audit trail
+└── session_metadata.json  # Session tracking and timestamps
+```
+
+### Session Management UI
+Located in the **Configuration tab** under "Session & Data Persistence":
+- **Session Status**: View current session information and data statistics
+- **New Session**: Clear all current data and start fresh 
+- **View Changes**: Display complete change log for current session
+- **Session Summary**: Overview of knowledge base size, rules count, and recent activity
+
 ## Langraph Workflow Orchestration
 
-This system uses **LangGraph StateGraph** as the primary workflow orchestration engine for intelligent business rule management.
+This system uses **LangGraph StateGraph** as the primary workflow orchestration engine for intelligent business rule management with **comprehensive session persistence**.
 
 ### 🏗️ LangGraph StateGraph Architecture
 
 **Core Implementation:**
-- **`utils/workflow_orchestrator.py`** - Main LangGraph StateGraph implementation
-- **`BusinessRuleWorkflow`** class with 9-node StateGraph configuration
+- **`utils/workflow_orchestrator.py`** - Main LangGraph StateGraph implementation with 9-node architecture
+- **`utils/persistence_manager.py`** - Comprehensive session persistence and data management
+- **`BusinessRuleWorkflow`** class with 9-node StateGraph configuration and persistent state
 - **`WorkflowState` TypedDict** for structured data flow between nodes with dynamic config loading
-- **Conditional routing functions** for intelligent decision making
-- **State management** with enhanced conversation history and context preservation
-- **Modularized utilities** integration with config_manager and file_generation_utils
+- **Conditional routing functions** for intelligent decision making and persistent storage integration
+- **State management** with enhanced conversation history, context preservation, and automatic persistence
+- **Modularized utilities** integration with config_manager, file_generation_utils, and persistence_manager
 
 **StateGraph Node Structure:**
 ```python
@@ -79,6 +107,9 @@ self.graph.add_conditional_edges(
 🛡️ **Error Handling**: Dedicated error management nodes with graceful fallback mechanisms  
 📊 **State Management**: TypedDict-based state preservation with enhanced conversation history processing  
 ⚙️ **Dynamic Configuration**: Runtime config loading with modularized utility integration  
+💾 **Session Persistence**: Automatic data preservation with comprehensive persistence management  
+🔄 **Data Continuity**: Seamless restoration of knowledge base and rules between sessions  
+📋 **Change Tracking**: Complete audit trail of all modifications and system changes  
 
 ### 📊 LangGraph StateGraph Features
 
@@ -92,6 +123,9 @@ self.graph.add_conditional_edges(
 • **Real-time state tracking** visible in chat responses with workflow metrics  
 • **Compatible** with existing RAG knowledge base system integration  
 • **Modularized utilities** integration with config_manager and file_generation_utils  
+• **Session persistence integration** with automatic knowledge base and rules storage  
+• **Persistent state management** with change logging and metadata tracking  
+• **Data continuity** across application restarts with session recovery capabilities  
 
 ### 📖 How to Use LangGraph StateGraph
 
@@ -101,6 +135,9 @@ self.graph.add_conditional_edges(
 4. **Configure**: Adjust LangGraph workflow settings in the Configuration tab
 5. **Generate**: Use StateGraph-orchestrated file generation for DRL/GDST output
 6. **Analyze**: Review workflow metrics and state transitions for debugging and optimization
+7. **Persist**: All workflow results are automatically saved with session persistence
+8. **Resume**: Continue previous work seamlessly with automatic session restoration
+9. **Track**: Monitor complete change history and audit trail through session management
 
 ### � LangGraph Workflow Execution Flow
 
@@ -193,15 +230,45 @@ The **LangGraph StateGraph** orchestrates business rule processing through this 
 - **Enhanced conversation context** processing with improved history handling
 - **Live status updates** track workflow progression through nodes
 - **Dynamic configuration** loading with modularized utility integration
+- **Persistent data flow** with automatic session state preservation
+- **Change tracking** for complete audit trail and version control
+- **Error recovery** with session continuity and rollback capabilities
+
+## Modular Architecture & Code Organization
+
+### 🏗️ Complete Architecture Refactoring (June 2025)
+The system has undergone comprehensive modularization with **50% reduction** in main application file size and **separation of concerns** architecture:
+
+#### 📋 New Utility Modules
+- **`utils/ui_utils.py`** (288 lines) - UI-specific helper functions and Gradio interface utilities
+- **`utils/chat_utils.py`** (252 lines) - Chat logic and conversation state management  
+- **`utils/file_generation_utils.py`** (82 lines) - Business rule file generation orchestration
+- **`utils/persistence_manager.py`** (350+ lines) - Comprehensive session persistence and data management
+- **`utils/config_manager.py`** (Enhanced) - Configuration management with save & apply functionality
+
+#### 🎯 Modular Benefits
+- **Single Responsibility**: Each module has a clear, focused purpose
+- **Enhanced Testability**: Utility functions can be tested in isolation
+- **Code Reusability**: Functions can be reused across different interfaces
+- **Better Maintainability**: Business logic separated from UI concerns
+- **Enterprise-Ready**: Structure suitable for professional development environments
 
 ## Documentation
 - [Business Documentation](./BUSINESS.md)
 - [Architecture & Technical Documentation](./ARCHITECTURE.md)
 - [Demo Flow](./Capstone_Demo_Flow.md)
 - [Changelog](./gemini-gradio-poc/docs/CHANGELOG.md)
+- [Session Persistence Documentation](./gemini-gradio-poc/docs/SESSION_PERSISTENCE.md)
 
 ## Accessibility Resources
 - **Audio Guide**: An audio TLDR guide is available at [gemini-gradio-poc/audio/intelligent_business_rules_guide.wav](./gemini-gradio-poc/audio/intelligent_business_rules_guide.wav). This serves as a mini-training on how to use the intelligent business rule management tool effectively. It goes over the content in [Capstone_Demo_Flow.md](https://github.com/nerealegui/capstone/blob/fee758e35c16387e2ca0d3a7cf4c659a1b7761b7/Capstone_Demo_Flow.md)
+
+## System Requirements & Setup
+- **Python 3.8+** with required dependencies in requirements.txt
+- **Google Gemini API Key** for LLM functionality
+- **Gradio Interface** for web-based interaction
+- **Session Storage**: Automatic creation of data/sessions/ directory for persistence
+- **Memory Requirements**: Sufficient space for knowledge base embeddings and session data
 
 ---
 
