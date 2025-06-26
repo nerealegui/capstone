@@ -2,8 +2,6 @@
 
 This guide explains how to build and deploy the Capstone Gradio Application using Docker.
 
-📖 **For the main project overview, features, and architecture**, see **[../README.md](../README.md)**.
-
 ## Prerequisites
 
 - Docker installed and running
@@ -15,7 +13,7 @@ This guide explains how to build and deploy the Capstone Gradio Application usin
 ### Option 1: One-Command Deploy (Recommended)
 
 ```bash
-./docker/quick-start.sh
+./quick-start.sh
 ```
 
 This script will:
@@ -71,29 +69,29 @@ GRADIO_SERVER_PORT=7860
 
 ### Using the Full Build Script
 
-The `docker/docker-build.sh` script provides more options:
+The `docker-build.sh` script provides more options:
 
 ```bash
 # Build image only
-./docker/docker-build.sh build
+./docker-build.sh build
 
 # Build and run with logs
-./docker/docker-build.sh run
+./docker-build.sh run
 
 # Stop the container
-./docker/docker-build.sh stop
+./docker-build.sh stop
 
 # Restart the container
-./docker/docker-build.sh restart
+./docker-build.sh restart
 
 # View logs
-./docker/docker-build.sh logs
+./docker-build.sh logs
 
 # Clean up (remove container and image)
-./docker/docker-build.sh clean
+./docker-build.sh clean
 
 # Show help
-./docker/docker-build.sh help
+./docker-build.sh help
 ```
 
 ### Data Persistence
@@ -124,7 +122,7 @@ Once running, the application will be available at:
 2. **Permission denied**:
    ```bash
    # Make scripts executable
-   chmod +x docker/docker-build.sh docker/quick-start.sh
+   chmod +x docker-build.sh quick-start.sh
    ```
 
 3. **API Key not working**:
@@ -141,7 +139,7 @@ docker-compose logs -f
 docker logs -f capstone-gradio-app
 
 # Using the build script
-./docker/docker-build.sh logs
+./docker-build.sh logs
 ```
 
 ### Health Check
@@ -177,7 +175,7 @@ docker stop capstone-gradio-app
 docker rm capstone-gradio-app
 
 # Using the build script
-./docker/docker-build.sh stop
+./docker-build.sh stop
 ```
 
 ## File Structure
@@ -187,10 +185,8 @@ capstone/
 ├── Dockerfile              # Main Docker configuration
 ├── docker-compose.yml      # Docker Compose configuration
 ├── .dockerignore           # Files to exclude from Docker build
+├── docker-build.sh         # Advanced build script
+├── quick-start.sh          # Simple one-command deploy
 ├── .env                    # Environment variables (create this)
-├── docker/                 # Docker-related files and scripts
-│   ├── README.md           # This file - Docker documentation
-│   ├── docker-build.sh     # Advanced build script
-│   └── quick-start.sh      # Simple one-command deploy
 └── gemini-gradio-poc/      # Application source code
 ```
