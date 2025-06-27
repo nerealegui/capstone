@@ -19,11 +19,39 @@ Welcome to the Capstone project! This repository provides an intelligent, agent-
 
 The fastest way to get started is using Docker. This approach provides a containerized environment with all dependencies pre-configured.
 
+
+### ⚠️ Important: Google API Key Required
+
+This application requires a Google API key to function. You can obtain one from [Google AI Studio](https://makersuite.google.com/app/apikey).
+
+There are two ways to provide your API key:
+
+1. **Using environment variables** when running the container
+2. **Creating a `.env` file** in the project root directory
+
 ### Option 1: Build and Run Locally
 
+#### Using docker-compose (with .env file)
+
+1. Copy the template env file:
+   ```bash
+   cp .env.example .env
+   ```
+
+2. Edit `.env` and add your Google API key:
+   ```
+   GOOGLE_API_KEY=your_actual_api_key_here
+   ```
+
+3. Build and run using docker-compose:
+   ```bash
+   docker-compose up --build
+   ```
+
+#### Using docker-compose with inline environment variable
+
 ```bash
-# Build and run using docker-compose
-docker-compose up --build
+GOOGLE_API_KEY=your_actual_api_key_here docker-compose up --build
 ```
 
 ### Option 2: Pull from GitHub Container Registry
@@ -34,7 +62,23 @@ You can also pull the pre-built Docker image from GitHub Container Registry:
 # Pull the latest image
 docker pull ghcr.io/nerealegui/capstone:latest
 
-# Run the container
+# Run with API key as environment variable
+docker run -p 7860:7860 \
+  -e GOOGLE_API_KEY=your_actual_api_key_here \
+  -e GRADIO_SERVER_NAME=0.0.0.0 \
+  -e GRADIO_SERVER_PORT=7860 \
+  -e PYTHONPATH=/app \
+  ghcr.io/nerealegui/capstone:latest
+```
+
+Alternatively, you can use a `.env` file:
+
+```bash
+# Pull the latest image
+docker pull ghcr.io/nerealegui/capstone:latest
+
+# Run with API key from .env file
+
 docker run -p 7860:7860 \
   -e GOOGLE_API_KEY=your_api_key \
   -e GRADIO_SERVER_NAME=0.0.0.0 \

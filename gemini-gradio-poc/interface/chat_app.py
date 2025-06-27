@@ -354,13 +354,14 @@ def create_gradio_interface():
                         
                         chat_interface = gr.ChatInterface(
                             fn=chat_and_update_agent3,
-                            chatbot=gr.Chatbot(height=400),
+                            chatbot=gr.Chatbot(height=400, type="messages"),
                             textbox=gr.Textbox(
                                 placeholder="Ask me about business rules, create new rules, or check for conflicts...", 
                                 scale=7
                             ),
                             additional_outputs=[name_display, summary_display, state_rag_df],
                             additional_inputs=[state_rag_df, industry_selector],
+                            type="messages"
                         )
                     
                     # Right panel: Rule Summary with Agent 3 enhancements
