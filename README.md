@@ -19,6 +19,7 @@ Welcome to the Capstone project! This repository provides an intelligent, agent-
 
 The fastest way to get started is using Docker. This approach provides a containerized environment with all dependencies pre-configured.
 
+
 ### ⚠️ Important: Google API Key Required
 
 This application requires a Google API key to function. You can obtain one from [Google AI Studio](https://makersuite.google.com/app/apikey).
@@ -77,6 +78,7 @@ Alternatively, you can use a `.env` file:
 docker pull ghcr.io/nerealegui/capstone:latest
 
 # Run with API key from .env file
+
 docker run -p 7860:7860 \
   -e GOOGLE_API_KEY=your_api_key \
   -e GRADIO_SERVER_NAME=0.0.0.0 \
