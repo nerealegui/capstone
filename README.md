@@ -19,31 +19,31 @@ Welcome to the Capstone project! This repository provides an intelligent, agent-
 
 The fastest way to get started is using Docker. This approach provides a containerized environment with all dependencies pre-configured.
 
-### Quick Docker Start
+### Option 1: Build and Run Locally
 
 ```bash
-# 1. Clone the repository
-git clone https://github.com/nerealegui/capstone.git
-cd capstone
-
-# 2. Create .env file with your Google API key
-echo "GOOGLE_API_KEY=your_actual_api_key_here" > .env
-
-# 3. Deploy with one command
-./docker/quick-start.sh
+# Build and run using docker-compose
+docker-compose up --build
 ```
 
-### Alternative Docker Methods
+### Option 2: Pull from GitHub Container Registry
+
+You can also pull the pre-built Docker image from GitHub Container Registry:
 
 ```bash
-# Using Docker Compose directly
-docker-compose up --build -d
+# Pull the latest image
+docker pull ghcr.io/nerealegui/capstone:latest
 
-# Using advanced build script
-./docker/docker-build.sh run
+# Run the container
+docker run -p 7860:7860 \
+  -e GOOGLE_API_KEY=your_api_key \
+  -e GRADIO_SERVER_NAME=0.0.0.0 \
+  -e GRADIO_SERVER_PORT=7860 \
+  -e PYTHONPATH=/app \
+  ghcr.io/nerealegui/capstone:latest
 ```
 
-**📋 For complete Docker documentation**, including troubleshooting, production deployment, and advanced configurations, see **[docker/README.md](./docker/README.md)**.
+For more detailed information about building and pushing Docker images to GitHub Container Registry, see [GHCR_PUBLISH.md](./GHCR_PUBLISH.md).
 
 ### Access Your Application
 
@@ -237,6 +237,9 @@ The **LangGraph StateGraph** orchestrates business rule processing through this 
 - **Enhanced conversation context** processing with improved history handling
 - **Live status updates** track workflow progression through nodes
 - **Dynamic configuration** loading with modularized utility integration
+- **Persistent data flow** with automatic session state preservation
+- **Change tracking** for complete audit trail and version control
+- **Error recovery** with session continuity and rollback capabilities
 
 ## Session Persistence & Data Management
 
