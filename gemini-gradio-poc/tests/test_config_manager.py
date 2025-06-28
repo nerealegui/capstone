@@ -2,7 +2,6 @@
 
 import unittest
 import pytest
-import json
 import os
 import tempfile
 from unittest.mock import patch

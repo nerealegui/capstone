@@ -1,8 +1,6 @@
 import json
-import os
-from pathlib import Path
 from google.genai import types
-from config.agent_config import DEFAULT_MODEL, GENERATION_CONFIG
+from config.agent_config import DEFAULT_MODEL
 from utils.rag_utils import initialize_gemini_client
 import re  # Add the regex module
 

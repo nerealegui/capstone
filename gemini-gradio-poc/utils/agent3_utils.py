@@ -6,7 +6,6 @@ Implements the enhanced business rules management capabilities.
 import json
 import pandas as pd
 from typing import Dict, List, Any, Tuple, Optional
-from google import genai
 from google.genai import types
 
 from config.agent_config import (

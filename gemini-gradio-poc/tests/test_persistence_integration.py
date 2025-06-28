@@ -7,7 +7,7 @@ import os
 import tempfile
 import shutil
 import pandas as pd
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 # Add the parent directory to the path so we can import from utils  
 import sys

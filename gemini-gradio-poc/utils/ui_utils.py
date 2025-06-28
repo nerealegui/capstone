@@ -6,11 +6,11 @@ This module contains helper functions for UI-related operations.
 import os
 import json
 import pandas as pd
-from typing import Tuple, Dict, Any, List
+from typing import Tuple, Dict, Any
 from datetime import datetime
 from utils.kb_utils import core_build_knowledge_base
-from utils.rule_extractor import extract_rules_from_csv, save_extracted_rules
-from utils.persistence_manager import save_rules, log_change
+from utils.rule_extractor import extract_rules_from_csv
+from utils.persistence_manager import save_rules
 
 
 def load_css_from_file(css_file_path: str) -> str:
@@ -65,8 +65,8 @@ def build_knowledge_base_process(uploaded_files: list, rag_state_df: pd.DataFram
         return
     
     yield f"Processing {len(file_paths)} document(s)...", rag_state_df
-    yield f"Reading documents and extracting text content...", rag_state_df
-    yield f"Generating embeddings for enhanced search capabilities...", rag_state_df
+    yield "Reading documents and extracting text content...", rag_state_df
+    yield "Generating embeddings for enhanced search capabilities...", rag_state_df
     
     # Use default chunk size and overlap
     chunk_size = 500

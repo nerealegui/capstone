@@ -39,12 +39,12 @@ flowchart TD
 
 ## CI/CD Pipeline Tasks Summary
 
-| Stage                             | Tasks                                                                 | Responsibilities |
-|-----------------------------------|-----------------------------------------------------------------------|------------------|
-| **Automated Validation**         | - Lint rule/KB files<br/>- Syntax checks<br/>- Run unit/integration/semantic tests | GitHub Actions, Testing Framework |
-| **Version Control & Traceability** | - Commit changes to Git<br/>- Generate changelogs<br/>- Maintain rollback capability | Git, Automated Documentation |
-| **Batch Processing & User Acceptance** | - Batch updates<br/>- Wait for user acceptance before proceeding | User Interface, Workflow Orchestrator |
-| **Deployment Automation**        | - Deploy files or artifacts<br/>- Generate Drools-compatible output for ingestion | Deployment Scripts, Container Registry |
+| Stage                             | Tasks                                                                 | Status | Responsibilities |
+|-----------------------------------|-----------------------------------------------------------------------|--------|------------------|
+| **Automated Validation**         | - Lint rule/KB files<br/>- Syntax checks<br/>- Run unit/integration/semantic tests | ✅ **IMPLEMENTED** | GitHub Actions, Testing Framework |
+| **Version Control & Traceability** | - Commit changes to Git<br/>- Generate changelogs<br/>- Maintain rollback capability | ✅ **IMPLEMENTED** | Git, Automated Documentation |
+| **Batch Processing & User Acceptance** | - Batch updates<br/>- Wait for user acceptance before proceeding | ✅ **IMPLEMENTED** | User Interface, Workflow Orchestrator |
+| **Deployment Automation**        | - Deploy files or artifacts<br/>- Generate Drools-compatible output for ingestion | ✅ **IMPLEMENTED** | Deployment Scripts, Container Registry |
 
 ## Current GitHub Actions Workflows
 
@@ -69,24 +69,63 @@ flowchart TD
 
 ### 2. Test Workflow (test.yml)
 
-**Status:** Currently commented out but contains comprehensive test framework
+**Status:** ✅ **ACTIVE** - Comprehensive test and validation pipeline
 
-**Planned Steps:**
+**Triggers:**
+- Pull requests to `main` branch
+- Push to `main` branch
+
+**Steps:**
 1. **Setup Python environment** - Python 3.12 with dependencies
-2. **Run individual test suites:**
-   - `test_agent2.py` - Agent 2 functionality tests
-   - `test_agent3.py` - Agent 3 conflict analysis tests
-   - `test_build_kb.py` - Knowledge base building tests
+2. **Run linting with ruff** - Code style and quality checks
+3. **Run syntax checking** - Python syntax validation
+4. **Run test suites:**
    - `test_config_manager.py` - Configuration management tests
-   - `test_json_response_handler.py` - JSON response handling tests
-   - `test_rule_extractor.py` - Rule extraction tests
-3. **Import validation** - Verify module imports work correctly
-4. **PR feedback** - Automated comment with test results
+   - `test_persistence_manager.py` - Data persistence tests
+5. **Import validation** - Verify module imports work correctly
+6. **PR feedback** - Automated comment with test results
 
 **Responsibilities:**
-- Comprehensive test coverage for all major components
-- Individual test file tracking and failure reporting
+- Code quality assurance through linting
+- Syntax validation for all Python files
+- Unit test execution with result reporting
 - Automated feedback on pull requests
+
+### 3. Deploy Workflow (deploy.yml)
+
+**Status:** ✅ **ACTIVE** - Manual deployment pipeline for business rules
+
+**Triggers:**
+- Manual workflow dispatch with environment selection
+- Configurable approval requirements
+- Batch processing support
+
+**Steps:**
+1. **Validate Business Rules**
+   - Rule syntax and format validation
+   - Generate Drools-compatible artifacts (DRL, GDST)
+   - Upload artifacts with versioning
+
+2. **User Acceptance** (Optional)
+   - Manual approval gate for production deployments
+   - Environment-specific approval workflows
+   - Batch tracking and audit trail
+
+3. **Deploy to Environment**
+   - Download validated artifacts
+   - Deploy Drools-compatible files
+   - Health checks and monitoring
+   - Deployment notifications
+
+4. **Rollback** (If needed)
+   - Automatic rollback on deployment failure
+   - Rollback procedures and logging
+
+**Responsibilities:**
+- Business rule validation and artifact generation
+- Multi-environment deployment with approval gates
+- Automated rollback and recovery procedures
+- Comprehensive audit trail and notifications
 
 ## Pipeline Implementation Details
 

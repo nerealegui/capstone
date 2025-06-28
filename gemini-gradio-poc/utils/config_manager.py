@@ -293,8 +293,8 @@ def save_and_apply_config(agent1_prompt: str, agent2_prompt: str, agent3_prompt:
         success = save_config(config)
         if success:
             apply_config_to_runtime(config)
-            return f"✓ Configuration saved and applied successfully!", True
+            return "✓ Configuration saved and applied successfully!", True
         else:
-            return f"❌ Failed to save configuration.", False
+            return "❌ Failed to save configuration.", False
     except Exception as e:
         return f"❌ Error saving and applying configuration: {str(e)}", False
