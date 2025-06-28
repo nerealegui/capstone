@@ -227,8 +227,8 @@ def create_gradio_interface():
                                 info="This agent extracts business rules from documents"
                             )
                         
-                        with gr.Accordion("Agent 2 Prompt (Rule Validation)", open=False):
-                            gr.Markdown("Configure the prompt for the rule validation agent.")
+                        with gr.Accordion("Agent 2 Prompt (DRL/GDST file generation)", open=False):
+                            gr.Markdown("Configure the prompt for the DRL/GDST file generation agent.")
                             agent2_prompt_box = gr.Textbox(
                                 value=startup_agent2_prompt, 
                                 label="Agent 2 Prompt", 
