@@ -7,9 +7,7 @@ import os
 import tempfile
 import shutil
 import pandas as pd
-import json
 from unittest.mock import patch
-from datetime import datetime
 
 # Add the parent directory to the path so we can import from utils
 import sys
@@ -26,12 +24,7 @@ from utils.persistence_manager import (
     get_session_metadata,
     session_exists,
     clear_session,
-    get_session_summary,
-    PERSISTENCE_DIR,
-    KB_FILE,
-    RULES_FILE,
-    CHANGELOG_FILE,
-    SESSION_METADATA_FILE
+    get_session_summary
 )
 
 

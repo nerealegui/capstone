@@ -3,7 +3,6 @@ Tests for JSON Response Handler utility.
 """
 
 import unittest
-import json
 import sys
 from pathlib import Path
 

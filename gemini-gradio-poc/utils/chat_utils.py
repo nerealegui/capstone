@@ -5,7 +5,7 @@ This module contains the core chat logic separated from UI concerns.
 
 import json
 import pandas as pd
-from typing import Dict, List, Any, Tuple
+from typing import Dict, Any, Tuple
 from config.agent_config import AGENT1_PROMPT, DEFAULT_MODEL, GENERATION_CONFIG
 from utils.json_response_handler import JsonResponseHandler
 from utils.rag_utils import rag_generate, initialize_gemini_client
@@ -148,10 +148,10 @@ def chat_with_agent3(user_input: str, history: list, rag_state_df: pd.DataFrame,
                 
             # Add status information to the response
             status_info = "\n\n---\n**Workflow Status:**\n"
-            status_info += f"✅ Agent 1: Rule parsed successfully\n"
+            status_info += "✅ Agent 1: Rule parsed successfully\n"
             status_info += f"✅ Agent 3: Analyzed {rule_response.get('conflicts_found', 0)} conflicts\n"
             if workflow_result.get("drl_content"):
-                status_info += f"✅ Agent 2: Generated DRL/GDST files\n"
+                status_info += "✅ Agent 2: Generated DRL/GDST files\n"
             if workflow_result.get("verification_result"):
                 status_info += f"✅ Files verified: {workflow_result['verification_result']}\n"
                 

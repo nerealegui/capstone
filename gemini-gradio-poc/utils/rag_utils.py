@@ -265,7 +265,7 @@ def rag_generate(query: str, df: pd.DataFrame, agent_prompt: str, model_name: st
     print(f"Performing RAG generation for query: '{query}'")
     
     # Debug: Show history at entry point
-    print(f"\n=== DEBUG: History Analysis ===")
+    print("\n=== DEBUG: History Analysis ===")
     print(f"History type: {type(history)}")
     print(f"History length: {len(history) if history else 0}")
     if history:
@@ -287,7 +287,7 @@ def rag_generate(query: str, df: pd.DataFrame, agent_prompt: str, model_name: st
                     print(f"  {key}: {str(item[key])[:100]}...")
             else:
                 print(f"  Content preview: {str(item)[:100]}...")
-    print(f"=== END DEBUG: History Analysis ===\n")
+    print("=== END DEBUG: History Analysis ===\n")
 
     # Ensure client is initialized
     gemini_client_instance = initialize_gemini_client() # Get the initialized Client instance
@@ -421,7 +421,7 @@ def rag_generate(query: str, df: pd.DataFrame, agent_prompt: str, model_name: st
     )
 
     # Debug: Show final contents structure before API call
-    print(f"\n=== DEBUG: Final Contents Structure ===")
+    print("\n=== DEBUG: Final Contents Structure ===")
     print(f"Total content items: {len(contents)}")
     for idx, content in enumerate(contents):
         print(f"\nContent {idx}:")
@@ -430,7 +430,7 @@ def rag_generate(query: str, df: pd.DataFrame, agent_prompt: str, model_name: st
             text_preview = content.parts[0].text[:100] if hasattr(content.parts[0], 'text') else 'N/A'
             print(f"  Text preview: {text_preview}...")
             print(f"  Text length: {len(content.parts[0].text) if hasattr(content.parts[0], 'text') else 0}")
-    print(f"=== END DEBUG: Final Contents Structure ===\n")
+    print("=== END DEBUG: Final Contents Structure ===\n")
 
     # --- Call the LLM with the constructed 'contents' list ---
     try:
@@ -494,7 +494,7 @@ def rag_generate(query: str, df: pd.DataFrame, agent_prompt: str, model_name: st
             # If successful, re-serialize to ensure proper JSON formatting
             return json.dumps(parsed_json)
         except ValueError:
-            print(f"Warning: LLM response is not valid JSON even after cleaning.")
+            print("Warning: LLM response is not valid JSON even after cleaning.")
             print(f"Raw LLM Response received:\n{llm_response_text[:300]}...")
             return json.dumps({
                  "name": "LLM JSON Error",

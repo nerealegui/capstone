@@ -2,7 +2,6 @@
 Tests for Agent 3 functionality - conversational interaction, conflict detection, and impact analysis.
 """
 
-import pytest
 import pandas as pd
 import json
 from unittest.mock import patch, MagicMock

@@ -5,7 +5,6 @@
 import os
 import sys
 import subprocess
-import platform
 from pathlib import Path
 
 def get_os():
@@ -45,26 +44,26 @@ def ensure_virtualenv():
                  sys.exit(1)
         else:
             print("Virtual environment found, but not active.")
-        print(f"\n⚠️  Please activate the virtual environment before running this script again.")
-        print(f"The command depends on your operating system and shell:\n")
+        print("\n⚠️  Please activate the virtual environment before running this script again.")
+        print("The command depends on your operating system and shell:\n")
 
         if current_os == 'Windows':
             # Provide instructions for common Windows shells
-            print(f"  If using Command Prompt (cmd.exe):")
+            print("  If using Command Prompt (cmd.exe):")
             print(f"    cd {Path(__file__).parent}") # Go to script directory first
-            print(f"    .\\venv\\Scripts\\activate.bat")
-            print(f"\n  If using PowerShell:")
+            print("    .\\venv\\Scripts\\activate.bat")
+            print("\n  If using PowerShell:")
             print(f"    cd {Path(__file__).parent}") # Go to script directory first
-            print(f"    .\\venv\\Scripts\\Activate.ps1")
-            print(f"\n  If using Git Bash or WSL Bash:")
+            print("    .\\venv\\Scripts\\Activate.ps1")
+            print("\n  If using Git Bash or WSL Bash:")
             print(f"    cd {Path(__file__).parent}") # Go to script directory first
-            print(f"    source ./venv/Scripts/activate")
+            print("    source ./venv/Scripts/activate")
         else: # macOS and Linux
-            print(f"  If using Bash, Zsh, or other standard Unix shells:")
+            print("  If using Bash, Zsh, or other standard Unix shells:")
             print(f"    cd {Path(__file__).parent}") # Go to script directory first
-            print(f"    source ./venv/bin/activate") # Note: bin/activate for Unix-like
+            print("    source ./venv/bin/activate") # Note: bin/activate for Unix-like
 
-        print(f"\nAfter activating the environment, run the script again from that same directory:\n")
+        print("\nAfter activating the environment, run the script again from that same directory:\n")
         print(f"    python {Path(__file__).name}\n")
 
         sys.exit(1) # Exit as the user needs to activate manually

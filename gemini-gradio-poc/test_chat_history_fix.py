@@ -9,7 +9,6 @@ import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from utils.workflow_orchestrator import BusinessRuleWorkflow
-import pandas as pd
 
 def test_chat_history_processing():
     """Test that conversation history is properly processed for follow-up questions."""
