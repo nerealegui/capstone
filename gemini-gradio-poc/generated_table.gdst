@@ -1,0 +1,179 @@
+<decision-table52>
+  <tableName>Assign Employees to Medium Restaurants</tableName>
+  <rowNumberCol>
+    <hideColumn>false</hideColumn>
+    <width>-1</width>
+  </rowNumberCol>
+  <descriptionCol>
+    <hideColumn>false</hideColumn>
+    <width>-1</width>
+  </descriptionCol>
+  <attributeCols>
+    <attributeCol>
+      <hideColumn>false</hideColumn>
+      <width>-1</width>
+      <attribute>salience</attribute>
+      <fieldType>NUMERIC</fieldType>
+      <header>Salience</header>
+      <defaultValue>1</defaultValue>
+    </attributeCol>
+  </attributeCols>
+  <conditionCols>
+    <pattern>
+      <factType>Restaurant</factType>
+      <field>size</field>
+      <fieldType>STRING</fieldType>
+      <operator>==</operator>
+      <constraintValueType>1</constraintValueType>
+      <expression>size</expression>
+      <header>Restaurant Size</header>
+      <hideColumn>false</hideColumn>
+      <width>-1</width>
+    </pattern>
+    <pattern>
+      <factType>Restaurant</factType>
+      <field>sales</field>
+      <fieldType>NUMERIC</fieldType>
+      <operator>>=</operator>
+      <constraintValueType>1</constraintValueType>
+      <expression>minSales</expression>
+      <header>Minimum Sales</header>
+      <hideColumn>false</hideColumn>
+      <width>-1</width>
+    </pattern>
+    <pattern>
+      <factType>Restaurant</factType>
+      <field>sales</field>
+      <fieldType>NUMERIC</fieldType>
+      <operator>&lt;=</operator>
+      <constraintValueType>1</constraintValueType>
+      <expression>maxSales</expression>
+      <header>Maximum Sales</header>
+      <hideColumn>false</hideColumn>
+      <width>-1</width>
+    </pattern>
+  </conditionCols>
+  <actionCols>
+    <setFieldCol>
+      <field>employeeCount</field>
+      <fieldType>NUMERIC</fieldType>
+      <expression>employeeCount + 10</expression>
+      <header>Assign Employees</header>
+      <hideColumn>false</hideColumn>
+      <width>-1</width>
+      <factType>Restaurant</factType>
+    </setFieldCol>
+    <insertFactCol>
+      <factType>String</factType>
+      <expression>"Assigned 10 employees to restaurant: " + $restaurant.getName()</expression>
+      <header>Log Message</header>
+      <hideColumn>true</hideColumn>
+      <width>-1</width>
+      <factField>message</factField>
+      <type>String</type>
+    </insertFactCol>
+  </actionCols>
+  <auditLog>
+    <filter class="org.drools.guvnor.client.modeldriven.dt52.auditlog.DecisionTableAuditLogFilter">
+      <acceptedTypes>
+        <entry>
+          <string>INSERT_COLUMN</string>
+          <boolean>false</boolean>
+        </entry>
+        <entry>
+          <string>DELETE_COLUMN</string>
+          <boolean>false</boolean>
+        </entry>
+        <entry>
+          <string>UPDATE_COLUMN</string>
+          <boolean>false</boolean>
+        </entry>
+        <entry>
+          <string>INSERT_ROW</string>
+          <boolean>false</boolean>
+        </entry>
+        <entry>
+          <string>DELETE_ROW</string>
+          <boolean>false</boolean>
+        </entry>
+        <entry>
+          <string>UPDATE_ROW</string>
+          <boolean>false</boolean>
+        </entry>
+      </acceptedTypes>
+    </filter>
+    <entries/>
+  </auditLog>
+  <imports>
+    <imports/>
+  </imports>
+  <rules>
+    <rule>
+      <description>Assign to medium restaurants</description>
+      <attributeCols>
+        <attributeCol>
+          <defaultValue>1</defaultValue>
+          <value>1</value>
+        </attributeCol>
+      </attributeCols>
+      <conditionCols>
+        <pattern>
+          <factType>Restaurant</factType>
+          <field>size</field>
+          <fieldType>STRING</fieldType>
+          <operator>==</operator>
+          <constraintValueType>1</constraintValueType>
+          <expression>size</expression>
+          <header>Restaurant Size</header>
+          <hideColumn>false</hideColumn>
+          <width>-1</width>
+          <value>medium</value>
+        </pattern>
+        <pattern>
+          <factType>Restaurant</factType>
+          <field>sales</field>
+          <fieldType>NUMERIC</fieldType>
+          <operator>&gt;=</operator>
+          <constraintValueType>1</constraintValueType>
+          <expression>minSales</expression>
+          <header>Minimum Sales</header>
+          <hideColumn>false</hideColumn>
+          <width>-1</width>
+          <value>100</value>
+        </pattern>
+        <pattern>
+          <factType>Restaurant</factType>
+          <field>sales</field>
+          <fieldType>NUMERIC</fieldType>
+          <operator>&lt;=</operator>
+          <constraintValueType>1</constraintValueType>
+          <expression>maxSales</expression>
+          <header>Maximum Sales</header>
+          <hideColumn>false</hideColumn>
+          <width>-1</width>
+          <value>200</value>
+        </pattern>
+      </conditionCols>
+      <actionCols>
+        <setFieldCol>
+          <field>employeeCount</field>
+          <fieldType>NUMERIC</fieldType>
+          <expression>employeeCount + 10</expression>
+          <header>Assign Employees</header>
+          <hideColumn>false</hideColumn>
+          <width>-1</width>
+          <factType>Restaurant</factType>
+          <value></value>
+        </setFieldCol>
+        <insertFactCol>
+           <factType>String</factType>
+            <expression>"Assigned 10 employees to restaurant: " + $restaurant.getName()</expression>
+          <header>Log Message</header>
+          <hideColumn>true</hideColumn>
+           <width>-1</width>
+         </insertFactCol>
+      </actionCols>
+    </rule>
+  </rules>
+</decision-table52>
+```

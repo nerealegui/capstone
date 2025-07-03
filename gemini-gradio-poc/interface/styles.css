@@ -1,0 +1,80 @@
+/* Enhanced UI Styling for Business Rules Engine */
+footer {
+    visibility: hidden;
+}
+
+/* Main container improvements */
+.gradio-container {
+    max-width: 1400px !important;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Section styling with cards */
+.config-section {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.kb-section {
+    background: linear-gradient(135deg, #fefbff 0%, #f8f4ff 100%);
+    border: 1px solid #e9d5ff;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(139, 92, 246, 0.1);
+}
+
+.rules-section {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* Section headers */
+.section-header {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Octicon styling */
+.octicon {
+    width: 20px;
+    height: 20px;
+}
+
+/* Blue Color Palette */
+.blue-4 .octicon {
+    fill: #218bff !important;
+}
+
+.blue-5 .octicon {
+    fill: #0969da !important;
+}
+
+/* File generation status styling */
+.file-status {
+    background-color: #f0f9ff;
+    border-left: 4px solid #0284c7;
+    padding: 12px 16px;
+    margin: 16px 0;
+    border-radius: 4px;
+    font-size: 0.95rem;
+}
+
+.file-status p {
+    margin: 0;
+    line-height: 1.5;
+}

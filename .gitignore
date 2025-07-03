@@ -1,0 +1,22 @@
+.env
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+venv/
+env/
+.venv/
+.env/
+# Additional cache and temp files
+*.egg-info/
+.coverage
+.tox/
+dist/
+build/
+*.so
+
+# Session data (user-specific)
+gemini-gradio-poc/data/sessions/
+gemini-gradio-poc/extracted_rules.json
+gemini-gradio-poc/temp_rules.txt

@@ -1,0 +1,12 @@
+```drl
+package rules;
+
+rule "Assign Employees to Medium Restaurants"
+    salience 1
+    when
+        $restaurant : Restaurant( size == "medium", sales >= 100, sales <= 200 )
+    then
+        $restaurant.setEmployeeCount($restaurant.getEmployeeCount() + 10);
+        update($restaurant);
+        System.out.println("Assigned 10 employees to restaurant: " + $restaurant.getName());
+end

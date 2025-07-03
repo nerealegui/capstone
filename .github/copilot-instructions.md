@@ -1,0 +1,11 @@
+- Always use the Google Gen AI SDK as a reference. This is the URL https://googleapis.github.io/python-genai/index.html
+- Use google.genai whenever possible over google.generativeai and verify the proposed method exists in the API before proposing a new solution
+- The interface is built with Gradio and this documentation should be taken as reference for any new iteration https://www.gradio.app/docs/gradio/interface
+- The repository I'm working on is https://github.com/nerealegui/capstone 
+- Always propose a plan before writing the code
+- Use the following format for the plan:
+  - **Plan**: 
+    - Step 1: [Description of step 1]
+    - Step 2: [Description of step 2]
+    - ...
+- Use the following styling for the UI: https://primer.style/css/storybook/?path=/docs/introduction--docs

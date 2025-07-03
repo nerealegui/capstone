@@ -1,0 +1,95 @@
+# Docker ignore file for Capstone Gradio App
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+*.md
+!README.md
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+
+# Jupyter Notebooks
+notebooks/
+*.ipynb
+
+# Test files
+tests/
+test_*.py
+
+# Configuration files that shouldn't be in Docker
+.env
+*.env
+.env.local
+.env.production
+
+# Data files that change frequently
+gemini-gradio-poc/data/sessions/
+gemini-gradio-poc/conversations/chats/
+gemini-gradio-poc/logs/
+
+# Generated files
+gemini-gradio-poc/generated_*.drl
+gemini-gradio-poc/generated_*.gdst
+
+# Restaurant docs (if not needed in container)
+restaurant-docs/
+
+# Other project files
+ARCHITECTURE.md
+BUSINESS.md
+Capstone_Demo_Flow.md
+config/
+data/

@@ -1,0 +1,19 @@
+2025-06-04T21:38:29.328462 - Orchestrating rule: LLM Response Parse Error
+2025-06-04T21:38:32.995268 - Orchestrating rule: LLM Response Parse Error
+2025-06-04T21:39:10.042377 - Orchestrating rule: Medium Restaurant Staffing
+2025-06-04T21:39:12.616814 - Orchestrating rule: Medium Restaurant Staffing
+2025-06-04T21:40:13.278610 - Orchestrating rule: Medium Restaurant Staffing
+2025-06-04T21:55:56.418733 - Orchestrating rule: Employee Assignment - Medium Restaurant
+2025-06-04T22:28:33.650535 - Orchestrating rule: Staff Assignment Rule
+2025-06-04T22:28:56.872995 - Orchestrating rule: Staff Assignment Rule
+2025-06-04T22:36:13.275008 - Orchestrating rule: Employee Assignment to Medium Restaurants
+2025-06-06T19:14:58.908854 - Orchestrating rule: Test Rule
+2025-06-06T19:14:58.915850 - Orchestrating rule: New Discount Rule
+2025-06-22T14:52:50.278986 - Orchestrating rule: total_sales_staff_allocation
+2025-06-22T15:00:58.952456 - Orchestrating rule: classify_restaurant_size
+2025-06-22T15:01:29.567600 - Orchestrating rule: classify_restaurant_size
+2025-06-22T15:04:32.930506 - Orchestrating rule: staff_allocation_medium_restaurant_sales
+2025-06-22T15:10:36.704956 - Orchestrating rule: total_sales_staff_allocation
+2025-06-22T15:18:15.565243 - Orchestrating rule: total_sales_staff_allocation
+2025-06-26T18:08:50.489089 - Orchestrating rule: classify_restaurant_size
+2025-06-26T17:15:41.726804 - Orchestrating rule: total_sales_staff_allocation
