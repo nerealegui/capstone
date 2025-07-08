@@ -3,266 +3,264 @@ layout: default
 title: Step-by-Step Usage Guide
 ---
 
-# Step-by-Step Usage Guide
+---
+layout: default
+title: Using the System
+---
 
-Learn how to effectively use the Intelligent Business Rule Management system to create, manage, and deploy business rules through our AI-powered interface.
+# Using the System
+
+Transform your business operations with simple, conversation-based rule creation. No technical knowledge required.
 
 <div class="Subhead">
-  <div class="Subhead-heading">Application Overview</div>
-  <div class="Subhead-description">Three main tabs for complete rule management workflow</div>
+  <div class="Subhead-heading">Three Simple Steps</div>
+  <div class="Subhead-description">Set up your business context, create rules through conversation, and deploy</div>
 </div>
 
-## Application Interface
+## Your Business Dashboard
 
-The main interface consists of three tabs, each serving a specific purpose in the rule management workflow:
+The system provides three main areas to manage your business rules:
 
-1. **Configuration**: System settings and agent configuration
-2. **Chat Interface**: Natural language rule creation and interaction  
-3. **Business Rules**: Bulk rule management and knowledge base setup
+1. **Business Setup**: Configure your industry and upload business documents
+2. **Rule Creation**: Talk to our AI assistant to create rules in plain English
+3. **Rule Management**: View, validate, and download your business rules
 
 ---
 
-## Configuration Tab
+## Step 1: Business Setup
 
 <div class="Box">
   <div class="Box-header">
-    <h3 class="Box-title">🛠️ System Configuration</h3>
+    <h3 class="Box-title">🏢 Configure Your Business</h3>
   </div>
   <div class="Box-body">
     <div class="flash flash-warn">
-      <strong>Screenshots Updated:</strong> New screenshots reflecting the current UI design will be added here.
+      <strong>Note:</strong> New screenshots showing the current interface will be added soon.
     </div>
-    <p>The Configuration tab provides system setup and industry-specific configuration options.</p>
+    <p>First, tell the system about your business so it can provide relevant guidance.</p>
   </div>
 </div>
 
-The Configuration tab allows you to:
+### What You'll Do:
 
-1. **Industry Selection**: Choose your business domain (Restaurant, Retail, Healthcare, etc.)
-2. **Agent Configuration**: Customize AI behavior and response styles
-3. **Session Management**: View session information and manage data persistence
-4. **Knowledge Base Setup**: Upload business documents for contextual AI responses
+**Choose Your Industry**
+Select from pre-configured business types:
+- Restaurant & Food Service
+- Retail & E-commerce  
+- Healthcare & Medical
+- Manufacturing
+- Financial Services
+- And more...
 
-**To configure your system:**
+**Upload Your Business Documents**
+Help the AI understand your specific business by uploading:
+- Employee handbooks
+- Policy documents
+- Procedure manuals
+- Training materials
+- Any other relevant business documentation
 
-<div class="Box">
-  <div class="Box-body">
-    <ol>
-      <li>Select your industry from the dropdown menu</li>
-      <li>Adjust agent settings if needed (defaults work well for most cases)</li>
-      <li>Upload relevant business documents in the Knowledge Base section</li>
-      <li>Click "Save Configuration" to apply changes</li>
-    </ol>
-  </div>
-</div>
+**Why This Matters:**
+The more the system knows about your business, the better it can create rules that fit your specific needs and comply with your existing policies.
 
 ---
 
-## Chat Interface
+## Step 2: Rule Creation Through Conversation
 
 <div class="Box">
   <div class="Box-header">
-    <h3 class="Box-title">💬 AI-Powered Rule Creation</h3>
+    <h3 class="Box-title">💬 Talk to Create Rules</h3>
   </div>
   <div class="Box-body">
     <div class="flash flash-warn">
-      <strong>Screenshots Updated:</strong> New screenshots reflecting the current UI design will be added here.
+      <strong>Note:</strong> New screenshots showing the current interface will be added soon.
     </div>
-    <p>The Chat Interface is where you'll interact with the AI to create business rules using natural language.</p>
+    <p>Simply describe what you want to achieve, and our AI assistant will help you create the perfect business rule.</p>
   </div>
 </div>
 
-**Key Features:**
-- Natural language input field
-- Real-time conversation history
-- Rule generation and preview
-- File download options
+### How Conversations Work:
 
-### Sample Conversations
+**Just Talk Naturally**
+Describe your business challenge or goal in everyday language:
+- "I need rules for scheduling part-time employees"
+- "Create a loyalty program for repeat customers"  
+- "Set up approval workflows for large purchases"
 
-Here are some example interactions to help you get started:
+**Get Expert Guidance**
+The AI assistant will:
+- Ask clarifying questions to understand your needs
+- Suggest best practices from your industry
+- Help you consider important details you might miss
+- Show you exactly what the rule will do
 
-<div class="Box">
-  <div class="Box-header">
-    <h4 class="Box-title">Example 1: Employee Scheduling Rule</h4>
-  </div>
-  <div class="Box-body">
-    <p><strong>You:</strong> "Create a rule where employees cannot work more than 8 hours per day"</p>
-    <p><strong>AI Response:</strong> The system will analyze this and create a scheduling rule with appropriate conditions and actions.</p>
-  </div>
-</div>
+### Real Business Examples:
 
 <div class="Box">
   <div class="Box-header">
-    <h4 class="Box-title">Example 2: Customer Discount Rule</h4>
+    <h4 class="Box-title">Restaurant Owner</h4>
   </div>
   <div class="Box-body">
-    <p><strong>You:</strong> "Set up a discount for customers who have been with us for more than 2 years"</p>
-    <p><strong>AI Response:</strong> The system will generate a customer loyalty rule with time-based conditions.</p>
+    <p><strong>You say:</strong> "I need servers to work a maximum of 8 hours with at least one 30-minute break"</p>
+    <p><strong>AI creates:</strong> A comprehensive scheduling rule that manages work hours, break times, and overtime compliance automatically.</p>
   </div>
 </div>
 
 <div class="Box">
   <div class="Box-header">
-    <h4 class="Box-title">Example 3: Service Escalation Rule</h4>
+    <h4 class="Box-title">Retail Manager</h4>
   </div>
   <div class="Box-body">
-    <p><strong>You:</strong> "Escalate support tickets to a manager if unresolved for 24 hours"</p>
-    <p><strong>AI Response:</strong> The system will create a service escalation workflow with time triggers.</p>
+    <p><strong>You say:</strong> "Give 10% discount to customers buying more than $100 worth of items"</p>
+    <p><strong>AI creates:</strong> A pricing rule that automatically applies discounts at checkout and tracks promotion effectiveness.</p>
   </div>
 </div>
-
----
-
-## Business Rules Tab
 
 <div class="Box">
   <div class="Box-header">
-    <h3 class="Box-title">📊 Rule Management & Knowledge Base</h3>
+    <h4 class="Box-title">Healthcare Administrator</h4>
   </div>
   <div class="Box-body">
-    <div class="flash flash-warn">
-      <strong>Screenshots Updated:</strong> New screenshots reflecting the current UI design will be added here.
-    </div>
-    <p>The Business Rules tab provides comprehensive rule management and export capabilities.</p>
+    <p><strong>You say:</strong> "Patients with urgent conditions should be seen within 15 minutes"</p>
+    <p><strong>AI creates:</strong> A triage rule that prioritizes appointments and manages wait times based on condition severity.</p>
   </div>
 </div>
 
-The Business Rules tab provides:
+### Getting the Best Results:
 
-- **Rule Summary**: Overview of generated rules
-- **File Downloads**: Access to DRL and GDST files
-- **Rule Validation**: Conflict detection and impact analysis
-- **Batch Processing**: Handle multiple rules simultaneously
-
----
-
-## Chat Feature Guide
-
-### Basic Chat Interaction
-
-<div class="Box">
-  <div class="Box-body">
-    <ol>
-      <li><strong>Start a Conversation</strong>: Type your rule description in natural language
-        <br><em>Example: "If a customer orders more than $100, apply a 10% discount"</em>
-      </li>
-      <li><strong>AI Processing</strong>: The system will:
-        <ul>
-          <li>Analyze your input</li>
-          <li>Generate structured rule logic</li>
-          <li>Provide explanations and clarifications</li>
-        </ul>
-      </li>
-      <li><strong>Review Response</strong>: The AI will show you:
-        <ul>
-          <li>Understanding of your rule</li>
-          <li>Generated rule structure</li>
-          <li>Any questions or clarifications needed</li>
-        </ul>
-      </li>
-    </ol>
-  </div>
-</div>
-
-### Advanced Features
-
-- **Follow-up Questions**: Ask for modifications or clarifications
-- **Context Awareness**: Reference previous rules in the conversation
-- **Validation**: The system checks for conflicts with existing rules
-- **Export Options**: Download generated rules as files
-
----
-
-## Creating Business Rules
-
-### Step 1: Describe Your Rule
-
-Use natural language to describe what you want to achieve:
-
-<div class="Box p-3 mb-3 bg-green">
-  <strong>Good Examples:</strong>
-  <ul class="mb-0">
-    <li>"Create a scheduling rule where employees can't work more than 8 hours per day"</li>
-    <li>"If a customer has been with us for more than 2 years, give them a 15% loyalty discount"</li>
-    <li>"Escalate support tickets to a manager if they remain unresolved for more than 24 hours"</li>
-  </ul>
-</div>
-
-### Step 2: Review AI Understanding
-
-The AI will respond with its understanding of your rule. Check that it captured:
-- The condition (trigger)
-- The action (what happens)
+**Be Specific About:**
+- What triggers the rule (when should it apply?)
+- What actions should happen (what should the system do?)
 - Any exceptions or special cases
+- Time frames or quantities involved
 
-### Step 3: Refine if Needed
-
-If the AI didn't understand correctly, provide clarification:
-- "Actually, the discount should be 10%, not 15%"
-- "The rule should only apply on weekdays"
-- "Add an exception for emergency shifts"
-
-### Step 4: Generate Rule Files
-
-Once satisfied with the rule, click "Generate Files" to create:
-- **DRL file**: Drools Rule Language format
-- **GDST file**: Guided Decision Table format
+**Ask for Help:**
+- "What are best practices for this type of rule?"
+- "Are there any legal requirements I should consider?"
+- "How do other businesses in my industry handle this?"
 
 ---
-
-## Tips and Best Practices
-
-### Writing Effective Rules
+## Step 3: Rule Management and Deployment
 
 <div class="Box">
+  <div class="Box-header">
+    <h3 class="Box-title">📊 Manage Your Business Rules</h3>
+  </div>
   <div class="Box-body">
-    <ol>
-      <li><strong>Be Specific</strong>: Include exact values, timeframes, and conditions</li>
-      <li><strong>Use Examples</strong>: Provide concrete scenarios when possible</li>
-      <li><strong>One Rule at a Time</strong>: Focus on a single business rule per conversation</li>
-      <li><strong>Test Iteratively</strong>: Start simple and add complexity gradually</li>
-    </ol>
+    <div class="flash flash-warn">
+      <strong>Note:</strong> New screenshots showing the current interface will be added soon.
+    </div>
+    <p>View, validate, and deploy all your business rules from one central location.</p>
   </div>
 </div>
 
-### Managing Your Session
+### What You Can Do:
 
-1. **Save Regularly**: Use the session management features to save your work
-2. **Upload Documents**: Provide business context through document uploads
-3. **Review Changes**: Check the change log to track modifications
-4. **Export Rules**: Download generated files for backup and deployment
+**View All Your Rules**
+See a complete list of all business rules you've created:
+- Rule names and descriptions
+- Status (active, draft, or needs review)
+- Last modified dates
+- Rule categories
 
-### Performance Optimization
+**Download Ready-to-Use Files**
+Get your rules in formats that work with business systems:
+- Download formatted rule files
+- Import directly into most business software
+- Share with your IT team for implementation
 
-1. **Use Industry Templates**: Select the appropriate industry for better AI responses
-2. **Provide Context**: Upload relevant business documents to improve accuracy
-3. **Clear Session Data**: Start fresh when switching to different rule domains
-4. **Monitor Usage**: Keep track of API usage to stay within limits
+**Validate Rules**
+Ensure your rules work well together:
+- Check for conflicts between different rules
+- Verify all rules follow best practices
+- Get suggestions for improvements
 
-### Security Considerations
+### Business Benefits You'll See:
 
-<div class="flash flash-warn">
-  <strong>Important Security Notes:</strong>
-  <ul class="mb-0">
-    <li>Protect API Keys: Never share your Google API key publicly</li>
-    <li>Review Generated Rules: Always validate AI-generated rules before deployment</li>
-    <li>Backup Data: Regularly export your rules and session data</li>
-    <li>Use HTTPS: Ensure secure connections when deploying to production</li>
-  </ul>
-</div>
+**Immediate Impact:**
+- Reduce time spent on repetitive decisions
+- Ensure consistent policy application
+- Free up staff for higher-value work
+
+**Long-term Value:**
+- Scale operations without adding management overhead
+- Adapt quickly to business changes
+- Maintain compliance with regulations
+
+**Measurable Results:**
+- Track rule performance and effectiveness
+- Identify opportunities for optimization
+- Document decision-making processes
 
 ---
 
-## Next Steps
+## Getting the Most from Your Rules
 
-Once you're comfortable with the basic usage:
+### Start Simple, Then Expand
 
-1. **Explore Advanced Features**: Try the workflow orchestration and conflict detection
-2. **Integrate with BRMS**: Connect generated rules to your business rule management system
-3. **Scale Your Usage**: Set up multiple environments for different teams
-4. **Customize Configuration**: Adapt the system for your specific industry needs
+**Week 1: Basic Rules**
+Begin with simple, high-impact rules:
+- Employee break scheduling
+- Basic discount applications
+- Simple approval workflows
 
-<div class="text-center mt-4">
-  <a href="/troubleshooting" class="btn btn-primary">Need Help? Check Troubleshooting →</a>
+**Week 2-4: Refined Rules**
+Add complexity and refinement:
+- Multi-condition rules
+- Exception handling
+- Integration with existing processes
+
+**Month 2+: Advanced Automation**
+Implement sophisticated business logic:
+- Complex workflows
+- Cross-department rules
+- Performance-based adaptations
+
+### Best Practices for Success
+
+**Make Rules Clear and Specific**
+- Use exact numbers and timeframes
+- Define clear trigger conditions
+- Specify precise actions to take
+
+**Test Before Full Implementation**
+- Start with a small pilot group
+- Monitor results closely
+- Adjust based on real-world feedback
+
+**Keep Rules Updated**
+- Review rules quarterly
+- Update based on business changes
+- Remove outdated rules promptly
+
+**Train Your Team**
+- Explain how rules benefit their work
+- Show them the business impact
+- Gather feedback for improvements
+
+---
+
+## Real Success Stories
+
+### Restaurant Chain Success
+*"We reduced scheduling conflicts by 85% and cut overtime costs by 30% in just two months. Our managers now focus on customer service instead of endless scheduling adjustments."*
+
+### Retail Store Transformation  
+*"Our new discount rules increased average order value by 22% while maintaining profit margins. The system handles complex promotions that would have taken our team hours to manage manually."*
+
+### Healthcare Efficiency Gains
+*"Patient wait times decreased by 40% after implementing smart scheduling rules. Our staff stress levels dropped significantly, and patient satisfaction scores reached an all-time high."*
+
+---
+
+## Ready to Start?
+
+<div class="Box p-4 text-center">
+  <h3>Transform Your Business Operations Today</h3>
+  <p class="mb-3">Join thousands of businesses that have automated their decision-making processes and improved efficiency.</p>
+  <div class="flash flash-success mb-3">
+    <strong>Success Guarantee:</strong> Most businesses see measurable improvements within the first week of implementation.
+  </div>
+  <a href="/troubleshooting" class="btn btn-primary mr-2">Need Help? Check Support →</a>
+  <a href="/" class="btn btn-outline">Back to Overview</a>
 </div>

@@ -3,289 +3,224 @@ layout: default
 title: Troubleshooting
 ---
 
-# Troubleshooting
+---
+layout: default
+title: Help & Support
+---
 
-Having issues with the Intelligent Business Rule Management system? This guide covers common problems and their solutions.
+# Help & Support
+
+Need assistance with your business rule system? We've got you covered with solutions to common questions and issues.
 
 <div class="Subhead">
-  <div class="Subhead-heading">Quick Solutions</div>
-  <div class="Subhead-description">Most issues can be resolved with these common fixes</div>
+  <div class="Subhead-heading">Quick Help</div>
+  <div class="Subhead-description">Find answers to the most common questions and get back to creating rules</div>
 </div>
 
-## Common Issues
+## Getting Started Issues
 
-### 1. Application Won't Start
+### "I can't access the system"
 
 <div class="Box">
   <div class="Box-header">
-    <h4 class="Box-title">🚫 Docker container fails to start or Python script crashes</h4>
+    <h4 class="Box-title">🔒 System won't load or shows error messages</h4>
   </div>
   <div class="Box-body">
-    <strong>Solutions:</strong>
+    <strong>Quick Fixes:</strong>
     <ul>
-      <li>Verify your Google API key is correct and active</li>
-      <li>Check that port 7860 is available: <code>lsof -i :7860</code></li>
-      <li>Ensure Docker is running (for Docker setup)</li>
-      <li>Verify Python version is 3.8+ (for manual setup)</li>
-      <li>Check system resources (memory, disk space)</li>
+      <li><strong>Check your internet connection</strong> - The system needs internet access to work</li>
+      <li><strong>Try a different web browser</strong> - Chrome, Firefox, or Safari work best</li>
+      <li><strong>Clear your browser cache</strong> - Sometimes old data interferes</li>
+      <li><strong>Contact your IT team</strong> - They may need to configure access permissions</li>
+      <li><strong>Wait a few minutes and try again</strong> - Temporary service issues usually resolve quickly</li>
     </ul>
   </div>
 </div>
 
-### 2. API Key Issues
+### "The AI isn't understanding my requests"
 
 <div class="Box">
   <div class="Box-header">
-    <h4 class="Box-title">🔑 "Invalid API key" or authentication errors</h4>
+    <h4 class="Box-title">🤖 AI gives incorrect or confusing responses</h4>
   </div>
   <div class="Box-body">
-    <strong>Solutions:</strong>
+    <strong>Improve Your Results:</strong>
     <ul>
-      <li>Verify your API key at <a href="https://makersuite.google.com/app/apikey">Google AI Studio</a></li>
-      <li>Check that the key has access to Gemini models</li>
-      <li>Ensure the <code>.env</code> file is in the correct location and properly formatted</li>
-      <li>Restart the application after updating the API key</li>
-      <li>Make sure there are no extra spaces or characters in the API key</li>
-    </ul>
-  </div>
-</div>
-
-### 3. Chat Not Responding
-
-<div class="Box">
-  <div class="Box-header">
-    <h4 class="Box-title">💬 Messages sent but no AI response</h4>
-  </div>
-  <div class="Box-body">
-    <strong>Solutions:</strong>
-    <ul>
-      <li>Check your internet connection</li>
-      <li>Verify the Google API key is working</li>
-      <li>Look for error messages in the browser console (F12)</li>
-      <li>Try refreshing the page</li>
-      <li>Check if you've reached API rate limits</li>
-      <li>Ensure the application is fully loaded before sending messages</li>
-    </ul>
-  </div>
-</div>
-
-### 4. Files Not Generating
-
-<div class="Box">
-  <div class="Box-header">
-    <h4 class="Box-title">📁 Rule files (DRL/GDST) are not created or download fails</h4>
-  </div>
-  <div class="Box-body">
-    <strong>Solutions:</strong>
-    <ul>
-      <li>Ensure the rule description is clear and complete</li>
-      <li>Check that the AI understood your rule correctly</li>
-      <li>Verify there are no conflicts with existing rules</li>
-      <li>Try rephrasing your rule description with more specific details</li>
-      <li>Check the Generation Status panel for error messages</li>
-    </ul>
-  </div>
-</div>
-
-### 5. Knowledge Base Upload Issues
-
-<div class="Box">
-  <div class="Box-header">
-    <h4 class="Box-title">📚 Documents won't upload or knowledge base won't build</h4>
-  </div>
-  <div class="Box-body">
-    <strong>Solutions:</strong>
-    <ul>
-      <li>Check file formats (PDF, DOCX, TXT are supported)</li>
-      <li>Verify file size limits (usually under 10MB per file)</li>
-      <li>Ensure documents contain readable text</li>
-      <li>Try uploading files one at a time</li>
-      <li>Check for special characters in file names</li>
+      <li><strong>Be more specific</strong> - Instead of "schedule employees," try "schedule part-time employees for maximum 6 hours per day"</li>
+      <li><strong>Use examples</strong> - "Like when a customer orders more than $100, apply a 10% discount"</li>
+      <li><strong>Break complex rules into parts</strong> - Create simple rules first, then combine them</li>
+      <li><strong>Use business language</strong> - Describe what you want to achieve in everyday terms</li>
+      <li><strong>Ask follow-up questions</strong> - "What information do you need to create this rule better?"</li>
     </ul>
   </div>
 </div>
 
 ---
 
-## Diagnostic Steps
+## Using the System Effectively
 
-### Checking System Status
+### "My rules don't seem to work as expected"
 
 <div class="Box">
   <div class="Box-header">
-    <h4 class="Box-title">🔍 System Diagnostics</h4>
+    <h4 class="Box-title">⚠️ Rules produce unexpected results</h4>
   </div>
   <div class="Box-body">
-    <p>Run these commands to diagnose system issues:</p>
+    <strong>Troubleshooting Steps:</strong>
+    <ul>
+      <li><strong>Review the rule description</strong> - Make sure it captures exactly what you want</li>
+      <li><strong>Test with simple examples</strong> - Try the rule with basic scenarios first</li>
+      <li><strong>Check for conflicts</strong> - Multiple rules might be interfering with each other</li>
+      <li><strong>Start over if needed</strong> - Sometimes it's faster to create a new, clearer rule</li>
+      <li><strong>Ask for validation</strong> - Use the system's rule checking features</li>
+    </ul>
+  </div>
+</div>
+
+### "I can't find my previous rules"
+
+<div class="Box">
+  <div class="Box-header">
+    <h4 class="Box-title">📁 Rules or conversations have disappeared</h4>
+  </div>
+  <div class="Box-body">
+    <strong>Recovery Options:</strong>
+    <ul>
+      <li><strong>Check the Rule Management section</strong> - All rules are saved there automatically</li>
+      <li><strong>Look in a different browser tab</strong> - You might have multiple sessions open</li>
+      <li><strong>Download backup files regularly</strong> - Export your rules as files for safekeeping</li>
+      <li><strong>Check with your IT team</strong> - They may have backup copies of your data</li>
+      <li><strong>Recreate important rules</strong> - The AI can help you quickly rebuild lost rules</li>
+    </ul>
+  </div>
+</div>
+
+---
+
+## Business Process Questions
+
+### "How do I handle complex business scenarios?"
+
+<div class="Box">
+  <div class="Box-header">
+    <h4 class="Box-title">🏢 Multi-step or complex business processes</h4>
+  </div>
+  <div class="Box-body">
+    <strong>Best Approach:</strong>
+    <ul>
+      <li><strong>Break it down</strong> - Divide complex processes into smaller, manageable rules</li>
+      <li><strong>Start with the most important part</strong> - Focus on the rule that has the biggest impact</li>
+      <li><strong>Use your industry template</strong> - Pre-built templates handle common complex scenarios</li>
+      <li><strong>Upload your procedures</strong> - Let the AI learn from your existing business documentation</li>
+      <li><strong>Build incrementally</strong> - Add complexity gradually as you become more comfortable</li>
+    </ul>
+  </div>
+</div>
+
+### "How do I ensure rules comply with regulations?"
+
+<div class="Box">
+  <div class="Box-header">
+    <h4 class="Box-title">⚖️ Legal compliance and regulatory requirements</h4>
+  </div>
+  <div class="Box-body">
+    <strong>Compliance Steps:</strong>
+    <ul>
+      <li><strong>Upload your compliance documents</strong> - Include policy manuals, legal requirements, etc.</li>
+      <li><strong>Specify regulatory constraints</strong> - Tell the AI about specific laws that apply</li>
+      <li><strong>Ask for compliance checks</strong> - Request validation against industry standards</li>
+      <li><strong>Have legal review final rules</strong> - Always get professional review for critical rules</li>
+      <li><strong>Keep documentation</strong> - Save rule creation conversations for audit trails</li>
+    </ul>
+  </div>
+</div>
+
+---
+
+## Performance and Results
+
+### "The system is running slowly"
+
+<div class="Box">
+  <div class="Box-header">
+    <h4 class="Box-title">🐌 Slow responses or loading times</h4>
+  </div>
+  <div class="Box-body">
+    <strong>Speed Improvements:</strong>
+    <ul>
+      <li><strong>Simplify your requests</strong> - Focus on one rule at a time</li>
+      <li><strong>Use fewer uploaded documents</strong> - Large files can slow processing</li>
+      <li><strong>Clear old conversation history</strong> - Start fresh sessions periodically</li>
+      <li><strong>Check your internet speed</strong> - Slow connections affect performance</li>
+      <li><strong>Try during off-peak hours</strong> - System load varies throughout the day</li>
+    </ul>
+  </div>
+</div>
+
+### "I'm not seeing the business impact I expected"
+
+<div class="Box">
+  <div class="Box-header">
+    <h4 class="Box-title">📊 Rules aren't delivering expected results</h4>
+  </div>
+  <div class="Box-body">
+    <strong>Optimization Tips:</strong>
+    <ul>
+      <li><strong>Start with high-impact rules</strong> - Focus on processes that consume the most time</li>
+      <li><strong>Measure before and after</strong> - Track specific metrics to see improvement</li>
+      <li><strong>Get team feedback</strong> - Ask staff how rules are affecting their work</li>
+      <li><strong>Refine based on results</strong> - Adjust rules based on real-world performance</li>
+      <li><strong>Be patient</strong> - Some benefits take time to fully realize</li>
+    </ul>
+  </div>
+</div>
+
+---
+</div>
+
+## Need More Help?
+
+<div class="Box">
+  <div class="Box-header">
+    <h3 class="Box-title">📞 Getting Additional Support</h3>
+  </div>
+  <div class="Box-body">
+    <p>If you're still having trouble, here are your next steps:</p>
     
-    <h5>Docker Setup:</h5>
-    <pre><code># Check if Docker is running
-docker --version
-docker-compose --version
-
-# Check container status
-docker-compose ps
-
-# View container logs
-docker-compose logs</code></pre>
-
-    <h5>Manual Setup:</h5>
-    <pre><code># Check Python version
-python --version
-
-# Check if virtual environment is active
-echo $VIRTUAL_ENV
-
-# Check installed packages
-pip list | grep gradio</code></pre>
-  </div>
-</div>
-
-### Network Connectivity
-
-<div class="Box">
-  <div class="Box-header">
-    <h4 class="Box-title">🌐 Testing API Connectivity</h4>
-  </div>
-  <div class="Box-body">
-    <p>Test your connection to Google's APIs:</p>
-    <pre><code># Test API key (replace with your actual key)
-curl -H "Content-Type: application/json" \
-     -d '{"contents":[{"parts":[{"text":"Hello"}]}]}' \
-     "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=YOUR_API_KEY"</code></pre>
-  </div>
-</div>
-
----
-
-## Error Messages
-
-### Common Error Messages and Solutions
-
-<div class="Box">
-  <div class="Box-header">
-    <h4 class="Box-title">❌ "ModuleNotFoundError: No module named 'gradio'"</h4>
-  </div>
-  <div class="Box-body">
-    <strong>Cause:</strong> Required Python packages not installed<br>
-    <strong>Solution:</strong> Install requirements: <code>pip install -r requirements.txt</code>
-  </div>
-</div>
-
-<div class="Box">
-  <div class="Box-header">
-    <h4 class="Box-title">❌ "GOOGLE_API_KEY environment variable not set"</h4>
-  </div>
-  <div class="Box-body">
-    <strong>Cause:</strong> API key not configured<br>
-    <strong>Solution:</strong> Set up your <code>.env</code> file with a valid Google API key
-  </div>
-</div>
-
-<div class="Box">
-  <div class="Box-header">
-    <h4 class="Box-title">❌ "Address already in use" (Port 7860)</h4>
-  </div>
-  <div class="Box-body">
-    <strong>Cause:</strong> Another application is using port 7860<br>
-    <strong>Solution:</strong> 
+    <h4>For Business Users:</h4>
     <ul>
-      <li>Stop the other application: <code>lsof -ti:7860 | xargs kill -9</code></li>
-      <li>Or change the port in docker-compose.yml or environment variables</li>
+      <li><strong>Contact your IT team</strong> - They can help with technical setup issues</li>
+      <li><strong>Schedule a consultation</strong> - Get personalized help with your specific business rules</li>
+      <li><strong>Join our community</strong> - Learn from other businesses using the system</li>
+      <li><strong>Access training resources</strong> - Video tutorials and guides for common scenarios</li>
+    </ul>
+    
+    <h4>For IT Teams:</h4>
+    <ul>
+      <li><strong>Technical documentation</strong> - Detailed setup and configuration guides</li>
+      <li><strong>API documentation</strong> - Integration guides and reference materials</li>
+      <li><strong>GitHub repository</strong> - Source code and technical discussions</li>
+      <li><strong>Support tickets</strong> - Direct assistance with technical issues</li>
     </ul>
   </div>
 </div>
 
-<div class="Box">
-  <div class="Box-header">
-    <h4 class="Box-title">❌ "403 Forbidden" or "401 Unauthorized"</h4>
-  </div>
-  <div class="Box-body">
-    <strong>Cause:</strong> API key issues or quota exceeded<br>
-    <strong>Solution:</strong> 
-    <ul>
-      <li>Verify API key is correct and has proper permissions</li>
-      <li>Check your Google Cloud quotas and billing</li>
-      <li>Ensure the API key has access to Gemini models</li>
-    </ul>
-  </div>
-</div>
+### Success Tips
 
----
-
-## Performance Issues
-
-### Slow Response Times
-
-<div class="Box">
-  <div class="Box-header">
-    <h4 class="Box-title">🐌 Application or AI responses are slow</h4>
-  </div>
-  <div class="Box-body">
-    <strong>Potential Solutions:</strong>
-    <ul>
-      <li>Check your internet connection speed</li>
-      <li>Monitor Google API quota usage</li>
-      <li>Reduce the size of uploaded documents</li>
-      <li>Clear browser cache and refresh</li>
-      <li>Use a more powerful machine for local development</li>
-    </ul>
-  </div>
-</div>
-
-### High Memory Usage
-
-<div class="Box">
-  <div class="Box-header">
-    <h4 class="Box-title">💾 System running out of memory</h4>
-  </div>
-  <div class="Box-body">
-    <strong>Solutions:</strong>
-    <ul>
-      <li>Increase Docker memory allocation</li>
-      <li>Clear session data regularly</li>
-      <li>Process smaller batches of documents</li>
-      <li>Monitor system resources: <code>docker stats</code></li>
-    </ul>
-  </div>
-</div>
-
----
-
-## Getting Additional Help
-
-<div class="Box">
-  <div class="Box-header">
-    <h3 class="Box-title">📞 Support Resources</h3>
-  </div>
-  <div class="Box-body">
-    <ol>
-      <li><strong>Check Logs</strong>: Look for error messages in the terminal/console</li>
-      <li><strong>Review Documentation</strong>: Refer to <a href="https://github.com/nerealegui/capstone/blob/main/ARCHITECTURE.md">ARCHITECTURE.md</a> for technical details</li>
-      <li><strong>Demo Flow</strong>: Follow the step-by-step guide in <a href="https://github.com/nerealegui/capstone/blob/main/Capstone_Demo_Flow.md">Capstone_Demo_Flow.md</a></li>
-      <li><strong>GitHub Issues</strong>: Report bugs or request features on the <a href="https://github.com/nerealegui/capstone">repository</a></li>
-    </ol>
-  </div>
-</div>
-
-### Before Reporting Issues
-
-When reporting a problem, please include:
-
-<div class="Box p-3 mb-3 bg-yellow">
+<div class="Box p-3 mb-3 bg-green">
+  <strong>Remember:</strong>
   <ul class="mb-0">
-    <li>Your operating system and version</li>
-    <li>Python version (if using manual setup)</li>
-    <li>Docker version (if using Docker setup)</li>
-    <li>Steps to reproduce the issue</li>
-    <li>Error messages or logs</li>
-    <li>Screenshots (if relevant)</li>
+    <li>Start simple and build complexity gradually</li>
+    <li>Most issues are resolved by being more specific in your requests</li>
+    <li>The AI learns from your business documents, so upload relevant materials</li>
+    <li>Don't hesitate to ask for clarification or try different approaches</li>
+    <li>Document your successful rules for future reference</li>
   </ul>
 </div>
 
 ---
 
 <div class="text-center mt-4">
-  <a href="/" class="btn btn-outline">← Back to Main Guide</a>
-  <a href="https://github.com/nerealegui/capstone/issues" class="btn btn-primary">Report an Issue</a>
+  <a href="/" class="btn btn-outline">← Back to Overview</a>
+  <a href="/usage" class="btn btn-primary">Continue Using the System</a>
 </div>
