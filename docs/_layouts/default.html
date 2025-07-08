@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ page.title }} | {{ site.title }}</title>
     <link rel="stylesheet" href="https://unpkg.com/@primer/css@^20.2.4/dist/primer.css">
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <meta name="description" content="{{ page.description | default: site.description }}">
+    {% seo %}
 </head>
 <body>
     <div class="Header">
