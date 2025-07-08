@@ -9,12 +9,15 @@ Welcome to the Capstone project! This repository provides an intelligent, agent-
 
 ## Quick Start
 
+**📖 New users should start with the [Usage Guide](https://nerealegui.github.io/capstone/) for detailed setup instructions and screenshots.**
+
 1. Clone the repository:
     ```bash
     git clone https://github.com/nerealegui/capstone.git
     ```
-2. See [ARCHITECTURE.md](./ARCHITECTURE.md) for setup and technical details.
-3. See [BUSINESS.md](./BUSINESS.md) for business use cases and workflow.
+2. See the [comprehensive usage guide](https://nerealegui.github.io/capstone/) for complete setup instructions with screenshots.
+3. See [ARCHITECTURE.md](./ARCHITECTURE.md) for technical details.
+4. See [BUSINESS.md](./BUSINESS.md) for business use cases and workflow.
 
 ## 🐳 Docker Deployment
 
@@ -335,6 +338,7 @@ The system has undergone comprehensive modularization with **50% reduction** in 
 - **Enterprise-Ready**: Structure suitable for professional development environments
 
 ## Documentation
+- [Usage Guide](https://nerealegui.github.io/capstone/)
 - [Business Documentation](./BUSINESS.md)
 - [Architecture & Technical Documentation](./ARCHITECTURE.md)
 - [CI/CD Pipeline Documentation](./CI_CD_PIPELINE.md)

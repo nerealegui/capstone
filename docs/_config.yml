@@ -1,0 +1,36 @@
+title: Intelligent Business Rule Management - Usage Guide
+description: A comprehensive guide for using the Intelligent Business Rule Management application with AI-powered rule creation
+theme: minima
+baseurl: ""
+url: "https://nerealegui.github.io/capstone"
+
+plugins:
+  - jekyll-feed
+  - jekyll-sitemap
+  - jekyll-seo-tag
+
+markdown: kramdown
+highlighter: rouge
+
+# Navigation
+navigation:
+  - title: Home
+    url: /
+  - title: Setup
+    url: /setup
+  - title: Usage
+    url: /usage
+  - title: Troubleshooting
+    url: /troubleshooting
+
+# GitHub repository
+github_username: nerealegui
+repository: capstone
+
+# SEO
+author: nerealegui
+twitter:
+  username: nerealegui
+
+# Google Analytics (optional)
+# google_analytics: UA-NNNNNNNN-N
