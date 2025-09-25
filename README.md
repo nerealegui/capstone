@@ -2,6 +2,22 @@
 
 Welcome to the Capstone project! This repository provides an intelligent, agent-based business rule management system that empowers non-technical users to create, manage, and deploy business rules with ease.
 
+## Repository Summary
+
+This repository contains a **complete intelligent business rule management platform** that transforms natural language into executable business rules using AI agents:
+
+- **🎯 Purpose**: Democratize business rule creation for non-technical users through AI-powered natural language processing
+- **🤖 AI-Powered**: Uses Google Gemini API with multi-agent orchestration (LangGraph StateGraph) for intelligent rule processing
+- **🌐 User Interface**: Gradio-based web application with chat interface, business rules management, and real-time workflow visualization
+- **📁 File Generation**: Automatically generates Drools DRL and GDST files from natural language descriptions
+- **💾 Session Persistence**: Comprehensive data management with automatic session continuity and audit trails
+- **🐳 Deployment Ready**: Docker containerization with CI/CD pipeline and GitHub Container Registry integration
+- **🏗️ Enterprise Architecture**: Modular design with separation of concerns, extensive testing, and professional code organization
+
+**Technology Stack**: Python 3.8+, Google Gemini API, Gradio, LangGraph, Pandas, Docker, GitHub Actions
+
+---
+
 - For business context, goals, use cases, and feature descriptions, see [BUSINESS.md](./BUSINESS.md).
 - For technical architecture, diagrams, and workflow, see [ARCHITECTURE.md](./ARCHITECTURE.md).
 - For CI/CD pipeline documentation and deployment workflows, see [CI_CD_PIPELINE.md](./CI_CD_PIPELINE.md).
