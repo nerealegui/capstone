@@ -326,8 +326,8 @@ The system has undergone comprehensive modularization with **50% reduction** in 
 - **`utils/file_generation_utils.py`** (82 lines) - Business rule file generation orchestration
 - **`utils/persistence_manager.py`** (350+ lines) - Comprehensive session persistence and data management
 - **`utils/config_manager.py`** (Enhanced) - Configuration management with save & apply functionality
-- **`utils/order_history_utils.py`** - Order history tracking and management for rule operations
-- **`utils/order_history_ui_utils.py`** - UI formatting utilities for order history display
+- **`utils/order_history_utils.py`** (234 lines) - Order history tracking and management for rule operations with pagination and filtering
+- **`utils/order_history_ui_utils.py`** (179 lines) - UI formatting utilities for order history display with statistics generation
 
 #### 🎯 Modular Benefits
 - **Single Responsibility**: Each module has a clear, focused purpose

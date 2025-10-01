@@ -1,7 +1,5 @@
 # Changelog for Capstone Repository
 
-# Changelog
-
 ## [2025-10-01] - Order History Feature Implementation
 
 ### ✨ **New Feature: Order History**
@@ -87,8 +85,8 @@
 - **Structure**:
   ```json
   {
-    "order_id": "ORD-20251001123456789012",
-    "order_date": "2025-10-01T12:34:56.789012",
+    "order_id": "ORD-{{YYYYMMDDHHMMSSΜΜΜΜΜΜ}}",
+    "order_date": "{{ISO-8601 timestamp}}",
     "rule_name": "Discount Rule",
     "operation_type": "created",
     "status": "completed",
