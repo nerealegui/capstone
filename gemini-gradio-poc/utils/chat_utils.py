@@ -11,6 +11,7 @@ from utils.json_response_handler import JsonResponseHandler
 from utils.rag_utils import rag_generate, initialize_gemini_client
 from utils.workflow_orchestrator import run_business_rule_workflow
 from utils.agent3_utils import analyze_rule_conflicts, assess_rule_impact
+from utils.order_history_utils import create_order
 
 # Module-level variable to store the last rule response
 last_rule_response = {}
@@ -157,6 +158,22 @@ def chat_with_agent3(user_input: str, history: list, rag_state_df: pd.DataFrame,
                 
             # Store for UI updates
             last_rule_response = rule_response
+            
+            # Track order history for this rule operation
+            try:
+                rule_name = rule_response.get("name", "Unnamed Rule")
+                operation_type = "created"
+                if workflow_result.get("drl_content"):
+                    operation_type = "generated"
+                
+                create_order(
+                    rule_name=rule_name,
+                    operation_type=operation_type,
+                    rule_data=rule_response,
+                    status="completed"
+                )
+            except Exception as order_error:
+                print(f"Warning: Failed to create order history entry: {order_error}")
                 
         else:
             # Default rule_response for non-rule conversations
