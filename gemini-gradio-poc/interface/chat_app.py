@@ -37,6 +37,12 @@ from utils.persistence_manager import (
     get_session_summary,
     get_change_log
 )
+from utils.order_history_ui_utils import (
+    format_order_history_for_display,
+    format_order_details,
+    format_order_statistics,
+    get_empty_state_message
+)
 
 # Global variables
 rule_response = {}  # Used for UI updates
@@ -405,6 +411,169 @@ def create_gradio_interface():
                                 inputs=[industry_selector],
                                 outputs=[file_generation_status, decision_drl_file, decision_gdst_file]
                             )
+            
+            # Tab 4: Order History
+            with gr.Tab("Order History"):
+                gr.Markdown("""
+                # 📦 Order History
+                View the history of all rule operations and transactions. Track when rules were created, modified, or generated.
+                """)
+                
+                with gr.Row():
+                    # Left panel: Order list and filters
+                    with gr.Column(elem_classes=["config-section"], scale=2):
+                        gr.HTML('<div class="section-header">Order Management</div>')
+                        
+                        # Filters and controls
+                        with gr.Row():
+                            order_status_filter = gr.Dropdown(
+                                choices=["all", "completed", "pending", "failed"],
+                                value="all",
+                                label="Filter by Status",
+                                scale=1
+                            )
+                            order_operation_filter = gr.Dropdown(
+                                choices=["all", "created", "modified", "generated", "deleted", "analyzed"],
+                                value="all",
+                                label="Filter by Operation",
+                                scale=1
+                            )
+                            refresh_orders_btn = gr.Button("🔄 Refresh", variant="secondary", scale=1)
+                        
+                        # Pagination controls
+                        with gr.Row():
+                            order_page_number = gr.Number(
+                                value=1,
+                                label="Page",
+                                precision=0,
+                                minimum=1,
+                                scale=1
+                            )
+                            order_per_page = gr.Dropdown(
+                                choices=[5, 10, 20, 50],
+                                value=10,
+                                label="Items per page",
+                                scale=1
+                            )
+                        
+                        # Order list table
+                        order_history_table = gr.Dataframe(
+                            headers=["Order ID", "Date", "Rule Name", "Operation", "Status"],
+                            label="Order History",
+                            interactive=False,
+                            wrap=True,
+                            height=400
+                        )
+                        
+                        order_status_msg = gr.Textbox(
+                            label="Status",
+                            value="Loading orders...",
+                            interactive=False,
+                            lines=1
+                        )
+                    
+                    # Right panel: Order details and statistics
+                    with gr.Column(elem_classes=["rules-section"], scale=1):
+                        gr.HTML('<div class="section-header">Order Details & Statistics</div>')
+                        
+                        # Order details section
+                        with gr.Accordion("View Order Details", open=True):
+                            order_id_input = gr.Textbox(
+                                label="Order ID",
+                                placeholder="Enter Order ID (e.g., ORD-20250101120000)",
+                                lines=1
+                            )
+                            view_order_btn = gr.Button("View Details", variant="primary")
+                            order_details_display = gr.Markdown(
+                                value="Select an order to view details",
+                                label="Order Details"
+                            )
+                        
+                        # Statistics section
+                        with gr.Accordion("Statistics", open=True):
+                            order_stats_display = gr.Markdown(
+                                value=format_order_statistics(),
+                                label="Order Statistics"
+                            )
+                            refresh_stats_btn = gr.Button("🔄 Refresh Statistics", variant="secondary")
+                
+                # Event handlers for order history tab - defined here to be inside Blocks context
+                def load_orders_handler(page, per_page, status_filter, operation_filter):
+                    """Load and display orders with filters."""
+                    try:
+                        df, status = format_order_history_for_display(
+                            page=int(page),
+                            per_page=int(per_page),
+                            filter_status=status_filter,
+                            filter_operation=operation_filter
+                        )
+                        
+                        # Show empty state if no orders
+                        if df.empty:
+                            return df, get_empty_state_message()
+                        
+                        return df, status
+                    except Exception as e:
+                        return gr.update(), f"Error loading orders: {str(e)}"
+                
+                def view_order_details_handler(order_id):
+                    """View details for a specific order."""
+                    if not order_id or not order_id.strip():
+                        return "Please enter an Order ID"
+                    return format_order_details(order_id.strip())
+                
+                def refresh_stats_handler():
+                    """Refresh order statistics."""
+                    return format_order_statistics()
+                
+                # Connect event handlers
+                refresh_orders_btn.click(
+                    load_orders_handler,
+                    inputs=[order_page_number, order_per_page, order_status_filter, order_operation_filter],
+                    outputs=[order_history_table, order_status_msg]
+                )
+                
+                order_status_filter.change(
+                    load_orders_handler,
+                    inputs=[order_page_number, order_per_page, order_status_filter, order_operation_filter],
+                    outputs=[order_history_table, order_status_msg]
+                )
+                
+                order_operation_filter.change(
+                    load_orders_handler,
+                    inputs=[order_page_number, order_per_page, order_status_filter, order_operation_filter],
+                    outputs=[order_history_table, order_status_msg]
+                )
+                
+                order_page_number.change(
+                    load_orders_handler,
+                    inputs=[order_page_number, order_per_page, order_status_filter, order_operation_filter],
+                    outputs=[order_history_table, order_status_msg]
+                )
+                
+                order_per_page.change(
+                    load_orders_handler,
+                    inputs=[order_page_number, order_per_page, order_status_filter, order_operation_filter],
+                    outputs=[order_history_table, order_status_msg]
+                )
+                
+                view_order_btn.click(
+                    view_order_details_handler,
+                    inputs=[order_id_input],
+                    outputs=[order_details_display]
+                )
+                
+                refresh_stats_btn.click(
+                    refresh_stats_handler,
+                    outputs=[order_stats_display]
+                )
+                
+                # Initialize order history on load
+                demo.load(
+                    load_orders_handler,
+                    inputs=[order_page_number, order_per_page, order_status_filter, order_operation_filter],
+                    outputs=[order_history_table, order_status_msg]
+                )
 
         # --- Event Actions (must be inside Blocks context) ---
         build_kb_button.click(

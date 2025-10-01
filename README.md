@@ -326,6 +326,8 @@ The system has undergone comprehensive modularization with **50% reduction** in 
 - **`utils/file_generation_utils.py`** (82 lines) - Business rule file generation orchestration
 - **`utils/persistence_manager.py`** (350+ lines) - Comprehensive session persistence and data management
 - **`utils/config_manager.py`** (Enhanced) - Configuration management with save & apply functionality
+- **`utils/order_history_utils.py`** (234 lines) - Order history tracking and management for rule operations with pagination and filtering
+- **`utils/order_history_ui_utils.py`** (179 lines) - UI formatting utilities for order history display with statistics generation
 
 #### 🎯 Modular Benefits
 - **Single Responsibility**: Each module has a clear, focused purpose
@@ -333,6 +335,37 @@ The system has undergone comprehensive modularization with **50% reduction** in 
 - **Code Reusability**: Functions can be reused across different interfaces
 - **Better Maintainability**: Business logic separated from UI concerns
 - **Enterprise-Ready**: Structure suitable for professional development environments
+
+## Order History Feature
+
+### 📦 Track Rule Operations
+The **Order History** feature provides comprehensive tracking of all business rule operations:
+
+#### Key Features
+- **Automatic Tracking**: Every rule creation, modification, and generation is automatically recorded
+- **Detailed Order View**: See complete information about each rule operation including:
+  - Order ID and timestamp
+  - Rule name and operation type
+  - Status (completed, pending, failed)
+  - Associated rule data and metadata
+- **Advanced Filtering**: Filter orders by status and operation type
+- **Pagination**: Navigate through large order histories efficiently
+- **Statistics Dashboard**: View aggregate statistics about rule operations
+
+#### Order History Tab
+Access the Order History tab from the main interface to:
+- View all past rule operations in a sortable table
+- Filter by status (completed, pending, failed)
+- Filter by operation type (created, modified, generated, deleted, analyzed)
+- View detailed information about specific orders
+- Track statistics about rule operations over time
+
+#### Usage
+1. Navigate to the **Order History** tab in the application
+2. Use filters to narrow down orders by status or operation type
+3. Click on pagination controls to navigate through pages
+4. Enter an Order ID in the details section to view comprehensive order information
+5. Refresh statistics to see up-to-date operation metrics
 
 ## Documentation
 - [Business Documentation](./BUSINESS.md)
