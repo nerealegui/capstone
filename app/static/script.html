@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Script - DevHub</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <nav>
+                <a href="/" class="logo">Dev<span>Hub</span></a>
+                <ul class="nav-links">
+                    <li><a href="/platform">Platform</a></li>
+                    <li><a href="/integrations">Integrations</a></li>
+                    <li><a href="/productivity">Productivity</a></li>
+                    <li><a href="/security">Security</a></li>
+                    <li><a href="/agent">Agent</a></li>
+                    <li><a href="/script">Script</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="container">
+                <h1>Automate with Scripts</h1>
+                <p>Use GitHub Actions and scripting to automate your workflows. From simple tasks to complex pipelines, DevHub makes automation easy.</p>
+            </div>
+        </section>
+
+        <section class="content">
+            <div class="container">
+                <div class="section">
+                    <h2>Scripting and Automation</h2>
+                    <p>DevHub provides powerful scripting capabilities through GitHub Actions, allowing you to automate virtually any workflow in your development process.</p>
+                </div>
+
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">⚙️</div>
+                        <h3>GitHub Actions</h3>
+                        <p>Event-driven automation that responds to any GitHub event.</p>
+                        <ul style="margin-top: 16px;">
+                            <li>Push, PR, and issue triggers</li>
+                            <li>Scheduled workflows</li>
+                            <li>Manual dispatch</li>
+                            <li>Repository events</li>
+                        </ul>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">🔧</div>
+                        <h3>Workflow Templates</h3>
+                        <p>Pre-built templates for common automation scenarios.</p>
+                        <ul style="margin-top: 16px;">
+                            <li>CI/CD pipelines</li>
+                            <li>Code quality checks</li>
+                            <li>Deployment workflows</li>
+                            <li>Release automation</li>
+                        </ul>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">🎯</div>
+                        <h3>Custom Actions</h3>
+                        <p>Build and share custom actions for your specific needs.</p>
+                        <ul style="margin-top: 16px;">
+                            <li>JavaScript actions</li>
+                            <li>Docker container actions</li>
+                            <li>Composite actions</li>
+                            <li>Action marketplace</li>
+                        </ul>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">🔄</div>
+                        <h3>Workflow Orchestration</h3>
+                        <p>Coordinate complex workflows with dependencies and conditions.</p>
+                        <ul style="margin-top: 16px;">
+                            <li>Job dependencies</li>
+                            <li>Conditional execution</li>
+                            <li>Matrix strategies</li>
+                            <li>Reusable workflows</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="section" style="margin-top: 80px;">
+                    <h2>Common Automation Scripts</h2>
+                    <p>Ready-to-use examples for automating your development workflow.</p>
+                </div>
+
+                <div class="feature-card" style="margin-top: 32px;">
+                    <h3>🚀 CI/CD Pipeline</h3>
+                    <p>Automated build, test, and deployment workflow:</p>
+                    <pre style="margin-top: 16px;"><code>name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install dependencies
+        run: npm ci
+      - name: Run tests
+        run: npm test
+      - name: Build
+        run: npm run build
+      
+  deploy:
+    needs: build-and-test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to production
+        run: echo "Deploying to production..."</code></pre>
+                </div>
+
+                <div class="feature-card" style="margin-top: 24px;">
+                    <h3>🧪 Automated Testing</h3>
+                    <p>Run tests across multiple environments and platforms:</p>
+                    <pre style="margin-top: 16px;"><code>name: Test Suite
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node-version: [18, 20, 22]
+    
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+      - run: npm ci
+      - run: npm test</code></pre>
+                </div>
+
+                <div class="feature-card" style="margin-top: 24px;">
+                    <h3>🔐 Security Scanning</h3>
+                    <p>Automated security checks on every commit:</p>
+                    <pre style="margin-top: 16px;"><code>name: Security Scan
+
+on:
+  push:
+  schedule:
+    - cron: '0 0 * * 0'  # Weekly scan
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Run CodeQL analysis
+        uses: github/codeql-action/analyze@v3
+      
+      - name: Run dependency scan
+        uses: actions/dependency-review-action@v4
+      
+      - name: Run secret scanning
+        run: |
+          echo "Scanning for secrets..."</code></pre>
+                </div>
+
+                <div class="section" style="margin-top: 80px;">
+                    <h2>Advanced Automation Patterns</h2>
+                    <p>Sophisticated workflows for complex scenarios.</p>
+                </div>
+
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <h3>🔄 Auto-Merge</h3>
+                        <p>Automatically merge PRs that pass all checks:</p>
+                        <ul style="margin-top: 16px;">
+                            <li>Status check validation</li>
+                            <li>Review approval requirements</li>
+                            <li>Conflict detection</li>
+                            <li>Merge strategy selection</li>
+                        </ul>
+                    </div>
+
+                    <div class="feature-card">
+                        <h3>📊 Report Generation</h3>
+                        <p>Generate automated reports and dashboards:</p>
+                        <ul style="margin-top: 16px;">
+                            <li>Test coverage reports</li>
+                            <li>Performance metrics</li>
+                            <li>Security audit logs</li>
+                            <li>Dependency updates</li>
+                        </ul>
+                    </div>
+
+                    <div class="feature-card">
+                        <h3>🏷️ Auto-Labeling</h3>
+                        <p>Automatically label issues and PRs:</p>
+                        <ul style="margin-top: 16px;">
+                            <li>File path based labels</li>
+                            <li>Content analysis</li>
+                            <li>Priority assignment</li>
+                            <li>Team routing</li>
+                        </ul>
+                    </div>
+
+                    <div class="feature-card">
+                        <h3>📦 Release Automation</h3>
+                        <p>Automate the entire release process:</p>
+                        <ul style="margin-top: 16px;">
+                            <li>Version bumping</li>
+                            <li>Changelog generation</li>
+                            <li>Asset compilation</li>
+                            <li>Distribution publishing</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="section" style="margin-top: 80px;">
+                    <h2>Scripting Best Practices</h2>
+                    <p>Follow these patterns for maintainable and reliable automation.</p>
+                </div>
+
+                <div class="feature-card" style="margin-top: 32px;">
+                    <h3>✅ Keep Scripts Simple</h3>
+                    <p>Break complex workflows into smaller, reusable pieces. Each action should do one thing well.</p>
+                    <div style="margin-top: 16px;">
+                        <span class="badge badge-success">Modular</span>
+                        <span class="badge badge-success">Testable</span>
+                        <span class="badge badge-info">Maintainable</span>
+                    </div>
+                </div>
+
+                <div class="feature-card" style="margin-top: 24px;">
+                    <h3>🔐 Secure Your Secrets</h3>
+                    <p>Use GitHub Secrets for sensitive data. Never hardcode credentials in your scripts.</p>
+                    <ul style="margin-top: 16px;">
+                        <li>Repository secrets</li>
+                        <li>Organization secrets</li>
+                        <li>Environment secrets</li>
+                        <li>Secret scanning protection</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card" style="margin-top: 24px;">
+                    <h3>🎯 Use Caching</h3>
+                    <p>Speed up workflows with intelligent caching of dependencies and build artifacts.</p>
+                    <pre style="margin-top: 16px;"><code>- uses: actions/cache@v4
+  with:
+    path: ~/.npm
+    key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+    restore-keys: |
+      ${{ runner.os }}-node-</code></pre>
+                </div>
+
+                <div class="feature-card" style="margin-top: 24px;">
+                    <h3>📊 Monitor and Debug</h3>
+                    <p>Use workflow logs, status badges, and notifications to monitor automation health.</p>
+                    <ul style="margin-top: 16px;">
+                        <li>Detailed logging</li>
+                        <li>Failure notifications</li>
+                        <li>Performance tracking</li>
+                        <li>Debug mode</li>
+                    </ul>
+                </div>
+
+                <div class="section" style="margin-top: 80px;">
+                    <h2>Integration with Copilot</h2>
+                    <p>GitHub Copilot can help you write and maintain automation scripts faster than ever.</p>
+                    <div class="feature-grid" style="margin-top: 32px;">
+                        <div class="feature-card">
+                            <h3>✍️ Script Generation</h3>
+                            <p>Describe what you want to automate, and Copilot suggests the workflow YAML.</p>
+                        </div>
+                        <div class="feature-card">
+                            <h3>🐛 Debugging Help</h3>
+                            <p>Get suggestions for fixing failing workflows and understanding error messages.</p>
+                        </div>
+                        <div class="feature-card">
+                            <h3>⚡ Optimization</h3>
+                            <p>Copilot can suggest ways to speed up your workflows and reduce costs.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section" style="margin-top: 80px;">
+                    <h2>Start Automating Today</h2>
+                    <p>Begin with simple workflows and gradually expand your automation coverage. Every automated task is time saved for innovation.</p>
+                    <a href="/" class="btn btn-primary" style="margin-top: 16px;">Back to Home</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 DevHub. A GitHub Copilot Demo Platform.</p>
+        </div>
+    </footer>
+</body>
+</html>

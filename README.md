@@ -7,6 +7,42 @@ Welcome to the Capstone project! This repository provides an intelligent, agent-
 - For CI/CD pipeline documentation and deployment workflows, see [CI_CD_PIPELINE.md](./CI_CD_PIPELINE.md).
 - For a detailed demo walkthrough with examples, see [Capstone_Demo_Flow.md](./Capstone_Demo_Flow.md).
 
+## 🚀 DevHub Demo Site (FastAPI)
+
+A simple demo site showcasing the DevHub platform - an integrated development platform with GitHub Copilot.
+
+### Running the Demo Site (macOS)
+
+1. Create a virtual environment:
+   ```bash
+   python -m venv .venv
+   ```
+
+2. Activate the virtual environment:
+   ```bash
+   source .venv/bin/activate
+   ```
+
+3. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. Run the application:
+   ```bash
+   uvicorn app.main:app --reload
+   ```
+
+5. Open your browser to [http://localhost:8000](http://localhost:8000)
+
+The demo site includes:
+- Platform overview and integrations
+- Inner loop productivity with GitHub Copilot
+- Outer loop automation with PRs and GitHub Actions
+- Security guardrails and compliance
+- Agent at scale narrative
+- Scripting and automation examples
+
 ## Quick Start
 
 1. Clone the repository:
