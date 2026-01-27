@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Productivity - DevHub</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <header>
+        <div class="container header-content">
+            <a href="/" class="logo"><span class="logo-icon">⚡</span> DevHub</a>
+            <nav>
+                <ul>
+                    <li><a href="/platform">Platform</a></li>
+                    <li><a href="/integrations">Integrations</a></li>
+                    <li><a href="/productivity">Productivity</a></li>
+                    <li><a href="/security">Security</a></li>
+                    <li><a href="/agent">AI Agent</a></li>
+                    <li><a href="/script">Scripts</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <div class="content-section">
+                <h2>Productivity Tools</h2>
+                <p>Boost your team's efficiency with DevHub's comprehensive productivity features.</p>
+            </div>
+
+            <div class="content-section">
+                <h2>Code Completion & Suggestions</h2>
+                <p>AI-powered code completion that understands your codebase and suggests contextually relevant code snippets.</p>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">✨</div>
+                        <h3>Smart Autocomplete</h3>
+                        <p>Intelligent code suggestions based on your coding patterns and project context.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🎯</div>
+                        <h3>Code Snippets</h3>
+                        <p>Reusable code templates for common patterns and boilerplate.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🔍</div>
+                        <h3>Quick Navigation</h3>
+                        <p>Jump to definitions, find references, and navigate your codebase instantly.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <h2>Collaboration Features</h2>
+                <ul class="feature-list">
+                    <li>Real-time code collaboration with live cursors</li>
+                    <li>Inline comments and code discussions</li>
+                    <li>Code review workflows with approval gates</li>
+                    <li>Team presence indicators and notifications</li>
+                    <li>Shared workspaces and pair programming tools</li>
+                </ul>
+            </div>
+
+            <div class="content-section">
+                <h2>Task Management</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">📋</div>
+                        <h3>Issue Tracking</h3>
+                        <p>Organize and prioritize work with flexible issue boards.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🎯</div>
+                        <h3>Milestones</h3>
+                        <p>Track progress toward release goals and project milestones.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📊</div>
+                        <h3>Sprint Planning</h3>
+                        <p>Agile sprint planning with burndown charts and velocity tracking.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <h2>Automated Workflows</h2>
+                <p>Save time with automated workflows and custom actions:</p>
+                <div class="code-block">
+name: Build and Test
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run tests
+        run: npm test
+      - name: Deploy
+        if: success()
+        run: npm run deploy
+                </div>
+            </div>
+
+            <div class="content-section">
+                <h2>Developer Experience</h2>
+                <p>Enhance your development workflow with:</p>
+                <ul class="feature-list">
+                    <li>Customizable IDE extensions and plugins</li>
+                    <li>Command palette for quick actions</li>
+                    <li>Keyboard shortcuts for common operations</li>
+                    <li>Dark mode and theme customization</li>
+                    <li>Integrated terminal and debugging tools</li>
+                </ul>
+                <p>
+                    <a href="/agent" class="btn btn-secondary">Try AI Agent</a>
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 DevHub. An enterprise development platform.</p>
+        </div>
+    </footer>
+</body>
+</html>

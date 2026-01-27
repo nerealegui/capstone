@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Integrations - DevHub</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <header>
+        <div class="container header-content">
+            <a href="/" class="logo"><span class="logo-icon">⚡</span> DevHub</a>
+            <nav>
+                <ul>
+                    <li><a href="/platform">Platform</a></li>
+                    <li><a href="/integrations">Integrations</a></li>
+                    <li><a href="/productivity">Productivity</a></li>
+                    <li><a href="/security">Security</a></li>
+                    <li><a href="/agent">AI Agent</a></li>
+                    <li><a href="/script">Scripts</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <div class="content-section">
+                <h2>DevHub Integrations</h2>
+                <p>Connect DevHub with your favorite tools and services for a seamless development experience.</p>
+            </div>
+
+            <div class="content-section">
+                <h2>Development Tools</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">🔧</div>
+                        <h3>Jira</h3>
+                        <p>Sync issues and track progress across your project management tools.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">💬</div>
+                        <h3>Slack</h3>
+                        <p>Get notifications and manage workflows directly from your team chat.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📧</div>
+                        <h3>Email Services</h3>
+                        <p>Integrate with SendGrid, Mailgun, and other email providers.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">☁️</div>
+                        <h3>Cloud Providers</h3>
+                        <p>Deploy to AWS, Azure, GCP, and other cloud platforms.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🗄️</div>
+                        <h3>Databases</h3>
+                        <p>Connect to PostgreSQL, MongoDB, Redis, and more.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📊</div>
+                        <h3>Analytics</h3>
+                        <p>Integrate with Google Analytics, Mixpanel, and other analytics tools.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <h2>API Integration</h2>
+                <p>Build custom integrations using our comprehensive REST API:</p>
+                <div class="code-block">
+curl -X POST https://api.devhub.com/v1/integrations \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "service": "slack",
+    "webhook_url": "https://hooks.slack.com/...",
+    "events": ["push", "pull_request"]
+  }'
+                </div>
+            </div>
+
+            <div class="content-section">
+                <h2>Webhooks</h2>
+                <p>Set up webhooks to receive real-time notifications about events in your projects:</p>
+                <ul class="feature-list">
+                    <li>Push events and commit notifications</li>
+                    <li>Pull request updates and reviews</li>
+                    <li>Build and deployment status</li>
+                    <li>Security alerts and vulnerability scans</li>
+                    <li>Custom event triggers</li>
+                </ul>
+            </div>
+
+            <div class="content-section">
+                <h2>OAuth Apps</h2>
+                <p>Build OAuth applications that integrate with DevHub and access user data securely.</p>
+                <p>
+                    <a href="/security" class="btn btn-secondary">Security Features</a>
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 DevHub. An enterprise development platform.</p>
+        </div>
+    </footer>
+</body>
+</html>

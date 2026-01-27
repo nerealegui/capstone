@@ -7,6 +7,47 @@ Welcome to the Capstone project! This repository provides an intelligent, agent-
 - For CI/CD pipeline documentation and deployment workflows, see [CI_CD_PIPELINE.md](./CI_CD_PIPELINE.md).
 - For a detailed demo walkthrough with examples, see [Capstone_Demo_Flow.md](./Capstone_Demo_Flow.md).
 
+## 🚀 DevHub Demo Environment
+
+A simple FastAPI demo application showcasing a fictional enterprise platform called DevHub. This demo is designed for GitHub Copilot demonstrations.
+
+### Running the DevHub Demo
+
+1. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+2. Start the FastAPI server:
+   ```bash
+   uvicorn app.main:app --reload
+   ```
+
+3. Open your browser and navigate to:
+   - **Home**: http://localhost:8000
+   - **Health Check**: http://localhost:8000/healthz
+   - **API Docs**: http://localhost:8000/docs
+
+### Available Routes
+
+- `/` - Home page
+- `/platform` - Platform overview
+- `/integrations` - Integration capabilities
+- `/productivity` - Productivity tools
+- `/security` - Security features
+- `/agent` - AI Agent capabilities
+- `/script` - Script automation
+- `/healthz` - Health check endpoint (JSON)
+
+### Demo Features
+
+- Static HTML pages with Primer CSS-inspired styling
+- FastAPI backend with route definitions
+- No build step required - simple Python setup
+- Perfect for demonstrating GitHub Copilot code generation and navigation
+
+---
+
 ## Quick Start
 
 1. Clone the repository:

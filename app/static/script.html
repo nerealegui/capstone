@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scripts - DevHub</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <header>
+        <div class="container header-content">
+            <a href="/" class="logo"><span class="logo-icon">⚡</span> DevHub</a>
+            <nav>
+                <ul>
+                    <li><a href="/platform">Platform</a></li>
+                    <li><a href="/integrations">Integrations</a></li>
+                    <li><a href="/productivity">Productivity</a></li>
+                    <li><a href="/security">Security</a></li>
+                    <li><a href="/agent">AI Agent</a></li>
+                    <li><a href="/script">Scripts</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <div class="content-section">
+                <h2>Script Automation</h2>
+                <p>Automate repetitive tasks and workflows with DevHub's powerful scripting capabilities.</p>
+            </div>
+
+            <div class="content-section">
+                <h2>Automation Features</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">⚡</div>
+                        <h3>Custom Scripts</h3>
+                        <p>Write custom automation scripts in your preferred language.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🔄</div>
+                        <h3>Scheduled Jobs</h3>
+                        <p>Run scripts on a schedule with cron expressions.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🎯</div>
+                        <h3>Event Triggers</h3>
+                        <p>Execute scripts in response to repository events.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📊</div>
+                        <h3>Script Library</h3>
+                        <p>Access a library of pre-built scripts for common tasks.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🔗</div>
+                        <h3>API Integration</h3>
+                        <p>Call external APIs and services from your scripts.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📝</div>
+                        <h3>Logging & Monitoring</h3>
+                        <p>Track script execution with detailed logs and metrics.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <h2>Example Script</h2>
+                <p>Here's an example of a DevHub automation script:</p>
+                <div class="code-block">
+# Auto-label pull requests based on files changed
+name: Auto Label PRs
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  label:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Label based on paths
+        uses: actions/labeler@v4
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          configuration-path: .github/labeler.yml
+                </div>
+            </div>
+
+            <div class="content-section">
+                <h2>Common Use Cases</h2>
+                <ul class="feature-list">
+                    <li>Automated code reviews and quality checks</li>
+                    <li>Dependency updates and security patching</li>
+                    <li>Release notes generation and changelog updates</li>
+                    <li>Environment provisioning and teardown</li>
+                    <li>Data migration and database maintenance</li>
+                    <li>Performance testing and benchmarking</li>
+                    <li>Documentation generation and updates</li>
+                </ul>
+            </div>
+
+            <div class="content-section">
+                <h2>Script Marketplace</h2>
+                <p>Browse and install scripts from the DevHub community:</p>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <h3>Auto Merge Bot</h3>
+                        <p>Automatically merge PRs that pass all checks and have required approvals.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>Release Manager</h3>
+                        <p>Automate the release process with versioning and changelog generation.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>Stale Issue Cleaner</h3>
+                        <p>Automatically close or label stale issues and pull requests.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <h2>Script Security</h2>
+                <p>All scripts run in secure, isolated environments with:</p>
+                <ul class="feature-list">
+                    <li>Sandboxed execution preventing unauthorized access</li>
+                    <li>Resource limits (CPU, memory, execution time)</li>
+                    <li>Audit logs for all script executions</li>
+                    <li>Secret management for sensitive credentials</li>
+                    <li>Code signing and verification for marketplace scripts</li>
+                </ul>
+                <p>
+                    <a href="/" class="btn btn-secondary">Back to Home</a>
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 DevHub. An enterprise development platform.</p>
+        </div>
+    </footer>
+</body>
+</html>
