@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security - DevHub</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <a href="/" class="nav-brand">DevHub</a>
+            <ul class="nav-links">
+                <li><a href="/platform">Platform</a></li>
+                <li><a href="/integrations">Integrations</a></li>
+                <li><a href="/productivity">Productivity</a></li>
+                <li><a href="/security">Security</a></li>
+                <li><a href="/agent">Agent at Scale</a></li>
+                <li><a href="/script">Workflows</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1>Security Guardrails</h1>
+        <p class="lead">Built-in security features that protect your code without slowing down development.</p>
+
+        <div class="callout callout-danger">
+            <p><strong>Security First:</strong> DevHub provides comprehensive security scanning and monitoring throughout your entire SDLC.</p>
+        </div>
+
+        <h2>Code Security Scanning</h2>
+        <div class="card-grid">
+            <div class="card">
+                <h3>🔍 Static Analysis</h3>
+                <p>Automatically detect security vulnerabilities in your code before they reach production.</p>
+            </div>
+            <div class="card">
+                <h3>🔐 Secret Detection</h3>
+                <p>Prevent accidental exposure of API keys, passwords, and tokens in your repositories.</p>
+            </div>
+            <div class="card">
+                <h3>📦 Dependency Scanning</h3>
+                <p>Monitor open-source dependencies for known vulnerabilities and get automatic alerts.</p>
+            </div>
+            <div class="card">
+                <h3>🛡️ License Compliance</h3>
+                <p>Track and manage open-source licenses to ensure compliance with your policies.</p>
+            </div>
+        </div>
+
+        <h2>Security Features</h2>
+        <ul class="feature-list">
+            <li>Real-time vulnerability alerts with severity ratings</li>
+            <li>Automated security updates via pull requests</li>
+            <li>Security policy enforcement at commit time</li>
+            <li>Code review security checks and recommendations</li>
+            <li>Supply chain security with SBOM generation</li>
+            <li>Compliance reporting for SOC2, GDPR, and more</li>
+        </ul>
+
+        <div class="callout callout-warning">
+            <p><strong>Shift Left Security:</strong> Catch vulnerabilities early in development—when they're easiest and cheapest to fix.</p>
+        </div>
+
+        <h2>Security Guardrails in Action</h2>
+        <pre><code>// Example: Copilot suggests secure coding patterns
+async function authenticateUser(username, password) {
+    // ✓ Copilot prevents plain-text password storage
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
+    // ✓ Copilot suggests parameterized queries
+    const query = 'SELECT * FROM users WHERE username = ?';
+    const user = await db.query(query, [username]);
+    
+    // ✓ Copilot implements secure comparison
+    return await bcrypt.compare(password, user.hashedPassword);
+}</code></pre>
+
+        <h2>Proactive Security</h2>
+        <div class="card-grid">
+            <div class="card">
+                <h3>🚨 Automated Alerts</h3>
+                <p>Get notified immediately when new vulnerabilities are discovered in your dependencies.</p>
+            </div>
+            <div class="card">
+                <h3>🔄 Auto-Remediation</h3>
+                <p>Automatically generate pull requests to fix known security issues.</p>
+            </div>
+            <div class="card">
+                <h3>📊 Security Dashboard</h3>
+                <p>Comprehensive view of your security posture across all repositories.</p>
+            </div>
+            <div class="card">
+                <h3>🎓 Security Training</h3>
+                <p>In-context security guidance helps developers learn secure coding practices.</p>
+            </div>
+        </div>
+
+        <h2>Compliance & Governance</h2>
+        <p>DevHub helps you maintain compliance and enforce security policies:</p>
+        <ul class="feature-list">
+            <li>Branch protection rules enforce code review requirements</li>
+            <li>Status checks ensure security scans pass before merge</li>
+            <li>Audit logs track all security-related activities</li>
+            <li>Role-based access control (RBAC) for fine-grained permissions</li>
+            <li>Security advisories for transparent vulnerability disclosure</li>
+        </ul>
+
+        <div class="callout callout-success">
+            <p><strong>Industry Leading:</strong> DevHub's security features are trusted by enterprises to protect mission-critical applications.</p>
+        </div>
+
+        <footer>
+            <p>&copy; 2026 DevHub - A Fictional Enterprise Platform for Demo Purposes</p>
+        </footer>
+    </div>
+</body>
+</html>

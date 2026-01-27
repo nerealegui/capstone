@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workflows - DevHub</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <a href="/" class="nav-brand">DevHub</a>
+            <ul class="nav-links">
+                <li><a href="/platform">Platform</a></li>
+                <li><a href="/integrations">Integrations</a></li>
+                <li><a href="/productivity">Productivity</a></li>
+                <li><a href="/security">Security</a></li>
+                <li><a href="/agent">Agent at Scale</a></li>
+                <li><a href="/script">Workflows</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1>Outer Loop Workflows</h1>
+        <p class="lead">Automate your CI/CD pipelines, pull requests, and deployment workflows with GitHub Actions.</p>
+
+        <div class="callout callout-info">
+            <p><strong>Outer Loop Excellence:</strong> Streamline everything from code review to production deployment with powerful automation.</p>
+        </div>
+
+        <h2>What is the Outer Loop?</h2>
+        <p>While the inner loop focuses on coding and local testing, the outer loop encompasses:</p>
+        <ul class="feature-list">
+            <li>Pull request creation and code review</li>
+            <li>Continuous Integration (CI) builds and tests</li>
+            <li>Security and quality checks</li>
+            <li>Deployment to staging and production</li>
+            <li>Monitoring and incident response</li>
+        </ul>
+
+        <h2>GitHub Actions Automation</h2>
+        <div class="card-grid">
+            <div class="card">
+                <h3>🔄 CI/CD Pipelines</h3>
+                <p>Automated builds, tests, and deployments triggered by code changes.</p>
+            </div>
+            <div class="card">
+                <h3>✅ Automated Testing</h3>
+                <p>Run comprehensive test suites on every commit and pull request.</p>
+            </div>
+            <div class="card">
+                <h3>🚀 Continuous Deployment</h3>
+                <p>Deploy to production automatically when tests pass and reviews approve.</p>
+            </div>
+            <div class="card">
+                <h3>🔐 Security Scanning</h3>
+                <p>Automated vulnerability scanning and compliance checks in CI pipeline.</p>
+            </div>
+        </div>
+
+        <h2>Pull Request Workflows</h2>
+        <p>Enhance collaboration and code quality with automated PR workflows:</p>
+
+        <div class="card-grid">
+            <div class="card">
+                <h3>📝 Auto-Labeling</h3>
+                <p>Automatically label PRs based on files changed, size, or content.</p>
+            </div>
+            <div class="card">
+                <h3>👥 Reviewer Assignment</h3>
+                <p>Intelligently assign reviewers based on code ownership and expertise.</p>
+            </div>
+            <div class="card">
+                <h3>✓ Status Checks</h3>
+                <p>Require passing tests and security scans before merge.</p>
+            </div>
+        </div>
+
+        <h2>Example Workflow</h2>
+        <pre><code>name: CI/CD Pipeline
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run tests
+        run: npm test
+      
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Security scan
+        run: npm audit
+  
+  deploy:
+    needs: [test, security]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to production
+        run: ./deploy.sh</code></pre>
+
+        <h2>Workflow Automation Benefits</h2>
+        <ul class="feature-list">
+            <li>Reduce manual work and human error</li>
+            <li>Ensure consistent quality and security checks</li>
+            <li>Accelerate time from code to production</li>
+            <li>Enable rapid iteration and experimentation</li>
+            <li>Provide visibility into deployment status</li>
+            <li>Scale development processes across teams</li>
+        </ul>
+
+        <div class="callout callout-success">
+            <p><strong>Deployment Frequency:</strong> Teams using automated workflows deploy 46x more frequently with 7x lower change failure rates.</p>
+        </div>
+
+        <h2>Advanced Workflow Patterns</h2>
+        <div class="card-grid">
+            <div class="card">
+                <h3>🌍 Multi-Environment</h3>
+                <p>Deploy to dev, staging, and production environments with approval gates.</p>
+            </div>
+            <div class="card">
+                <h3>🎯 Conditional Logic</h3>
+                <p>Execute different workflows based on file changes, labels, or environment.</p>
+            </div>
+            <div class="card">
+                <h3>🔗 Workflow Composition</h3>
+                <p>Reuse workflows across repositories with reusable workflow actions.</p>
+            </div>
+            <div class="card">
+                <h3>📊 Workflow Insights</h3>
+                <p>Monitor workflow performance, success rates, and execution times.</p>
+            </div>
+        </div>
+
+        <h2>Integration with Inner Loop</h2>
+        <p>DevHub seamlessly connects your inner and outer loops:</p>
+        <ul class="feature-list">
+            <li>Pre-commit hooks run local checks before pushing</li>
+            <li>Copilot suggests workflow improvements</li>
+            <li>Real-time CI feedback in your IDE</li>
+            <li>Deployment status visible in pull requests</li>
+            <li>Production metrics linked to commits</li>
+        </ul>
+
+        <footer>
+            <p>&copy; 2026 DevHub - A Fictional Enterprise Platform for Demo Purposes</p>
+        </footer>
+    </div>
+</body>
+</html>
